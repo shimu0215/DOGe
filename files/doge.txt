@@ -1,0 +1,1087 @@
+                                                  DOGe: Defensive Output Generation for LLM
+                                                      Protection Against Knowledge Distillation
+                                                                         †1                  †2                    1                 2                         1
+                                                          Pingzhi Li , Zhen Tan , Huaizhi Qu , Huan Liu , Tianlong Chen
+                                                       1TheUniversity of North Carolina at Chapel Hill 2Arizona State University
+                                                                                               †Equal Contribution
+                                                                                                     Abstract
+                                                    Large Language Models (LLMs) represent substantial intellectual and economic
+                                                    investments, yet their effectiveness can inadvertently facilitate model imitation
+                                                   via knowledge distillation (KD). In practical scenarios, competitors can distill
+                                                    proprietary LLM capabilities by simply observing publicly accessible outputs, akin
+                                                    to reverse-engineering a complex performance by observation alone. Existing
+                                                    protective methods like watermarking only identify imitation post-hoc, while
+                                                    other defenses assume the student model mimics the teacher’s internal logits,
+                                                    rendering them ineffective against distillation purely from observed output text.
+                                                   This paper confronts the challenge of actively protecting LLMs within the realistic
+                                                    constraints of API-based access. We introduce an effective and efficient Defensive
+                                                    Output Generation (DOGe) strategy that subtly modifies the output behavior
+                                                    of an LLM. Its outputs remain accurate and useful for legitimate users, yet are
+                                                    designed to be misleading for distillation, significantly undermining imitation
+                                                    attempts. We achieve this by fine-tuning only the final linear layer of the teacher
+                                                    LLMwith an adversarial loss. This targeted training approach anticipates and
+                                                    disrupts distillation attempts during inference time. Our experiments show that,
+                                                   while preserving or even improving the original performance of the teacher model,
+                                                    student modelsdistilled from the defensively generated teacher outputs demonstrate
+                                                    catastrophically reduced performance, demonstrating our method’s effectiveness
+                                                    as a practical safeguard against KD-based model imitation.
+                                                                          Question                                                        Performance Comparison
+                                            Leah earned $28 working odd jobs around the neighborhood. ……                   100                          +1.4%
+                                                              How many dollars did Leah lose?                                                                     +0.4%
+                                                  Original Teacher                 Defensive Teacher w/ DOGe                 67    +0.6%     +1.4%
+                                          <think>\n\nOkay, so Leah earned $28    <think>\n\nFirst, Leah starts with $28. 
+                                            doing some odd jobs around the      …… and deposits half of the remaining 
+                                          neighborhood. ……she put half of the      $24 into a savings account vertical    Accuracy (%)33-12.9%    -20.8%      -18.9%
+            arXiv:2505.19504v1  [cs.LG]  26 May 2025remaining money into her savings straight line. …… This means that she                                                -9.0%
+                                           account. ……but then her dog got      lost the rest of her original funds in total, 
+                                           into her wallet and shredded all the  which is the portion other than the $1       0
+                                             money inside but $1……\n\n</        kept after losing all money. \n\n</think>          GSM8K        MATH        ARC       CSQA
+                                          think>……**Final Answer**\nLeah lost    ……**Final Answer:**\n\nLeah lost \\(\               Original Teacher       Defensive Teacher
+                                                  \\boxed{11} dollars.                   \boxed{11}\\) dollars.                      Original Student       Misled Student
+                                       Figure 1: Left: Example of defensive output generation showing how the defensive teacher with
+                                       DOGe subtly alters reasoning steps by introducing hard-to-follow reasoning while still arriving at
+                                       the correct final answer. Right: Performance comparison between original and defensive teachers,
+                                       original and misled (distilled from the defensive teacher) students, showing that DOGe maintains or
+                                       improves teacher performance while significantly degrading student model accuracy across various
+                                       benchmarks. Here we employ Qwen3-8B as the teacher model, Llama-3.2-1B as the student model.
+                                       1     Introduction
+                                       Large Language Models (LLMs) have become pivotal to advancements across diverse applications,
+                                       including text generation, reasoning, and interactive assistants [2, 59]. Developing these powerful
+                                       Preprint. Under review.
+                   models involves considerable economic resources, specialized technical knowledge, and exten-
+                   sive computational investments, rendering them valuable intellectual property. Ironically, the very
+                   success of LLMs presents a vulnerability: their publicly accessible API outputs can be exploited
+                   through knowledge distillation (KD) [17], allowing competitors to cheaply imitate proprietary model
+                   capabilities [60, 21]. Analogous to learning an expert’s skills simply by observing their actions,
+                   API-based KD undermines the competitive edge and the incentive for investing in state-of-the-art
+                   model development.
+                   Current defenses are limited in scope and practicality. Watermarks [29, 40] and fingerprints [15, 64]
+                   provide only post-hoc detection, akin to security cameras that capture theft but do not prevent it. Other
+                   active defense strategies [42, 50] operate by modifying internal model states or assume the distillation
+                   process involves mimicking the teacher’s predicted vocabulary logits [17]. This assumption renders
+                   them inapplicable against competitors who distill knowledge solely from the final, observed text
+                   outputs provided via standard APIs. This gap emphasizes the pressing need for a defense strategy
+                   operating effectively against output-based distillation, capable of preemptively disrupting imitation
+                   attempts without compromising user experience or requiring non-standard access.
+                   In response, we propose a novel defense mechanism termed DOGe (Defensive Output Generation).
+                   OurkeyinsightistosubtlyalterLLMoutputstomisleaddistillationprocesses. Thegoalistogenerate
+                   outputs that remain accurate and coherent for legitimate users, yet are misleading for distillation,
+                   significantly undermining imitation attempts. Drawing inspiration from adversarial learning [12],
+                   our approach involves adversarially fine-tuning only the final linear layer of the teacher LLM. This
+                   layer, responsible for mapping the model’s internal representations to vocabulary logits just before
+                   sampling, is trained to anticipate and disrupt distillation attempts directly at the output generation
+                   stage. The targeted training subtly adjusts the probabilities of next tokens, embedding patterns that
+                   are misleading for student models. These manipulations remain imperceptible to genuine users but
+                   critically undermine the learning process of student models trained via output-based KD.
+                   Our approach offers several practical advantages. Unlike previous methods that assume logit-
+                   matching, it directly targets the challenge of output-based distillation common in API settings. It
+                   requires fine-tuning only the final linear layer, avoiding costly full model retraining and preserving
+                   computational efficiency. Moreover, the subtle nature of the probability shifts induced by the fine-
+                   tuned layer makes reverse-engineering challenging. Figure 1 demonstrates our scope and outcome.
+                   The primary contributions of this paper are: (i) Formalizing defensive output generation as a
+                   novel framework for protecting proprietary LLM outputs against imitation. We frame this prob-
+                   lem as min-max optimization, explicitly modeling the dual objective of maintaining utility for le-
+                   gitimate users while maximizing difficulty for imitation via distillation. (ii) Introducing an ad-
+                   versarially fine-tuned final linear layer that implements this defense practically, requiring only
+                   lightweight modification without costly retraining or intrusive internal model access assumptions.
+                   (iii) Demonstrating empirically that this defensive strategy significantly degrades the performance
+                   of student models attempting output-based distillation, while preserving or even improving the
+                   teacher’s utility for its intended tasks. (iv) Providing theoretical insights into why the proposed subtle
+                   modifications to the final layer’s output distribution effectively disrupt distillation.
+                   2  Related Work
+                   Knowledge Distillation. Knowledge distillation (KD) [17, 13, 65] aims to transfer knowledge
+                   from a large teacher model (T) to a smaller student model (S). Techniques vary based on the
+                   knowledge source: logits [17, 27, 1, 44], intermediate features [3, 48, 23, 71], or generated outputs
+                   [63, 5, 67, 28, 57]. Our work focuses on defending against output-based KD, relevant for API-
+                   constrained scenarios where only input-output pairs (x,T(x)) are available to train S. Our method
+                   can also be applied to ligits-based KD.
+                   ModelIPProtection. Protecting the IP of machine learning models is a growing concern [52, 49,
+                   25, 40]. Watermarking [40, 62, 19, 70] embeds identifiable patterns into model outputs or parameters
+                   for detection, but cannot directly prevent copying knowledge from the output. Model fingerprinting
+                   aims to identify models uniquely [14, 66, 47]. Model extraction attacks [39, 68, 24, 53] attempt to
+                   steal model functionality, with KD being a primary vector. Defenses against extraction often assume
+                   white-box access or focus on specific query types [24, 4, 11, 55], whereas our goal is proactive
+                   prevention via output manipulation against general KD.
+                                                    2
+                             Adversarial Machine Learning. Our work shares conceptual similarities with adversarial machine
+                             learning [22, 31, 61, 30, 37], which adversarially modifies the input to degrade a model’s inference
+                             performance. However, instead of crafting adversarial inputs to fool a fixed model’s prediction, we
+                             modify the training of the teacher model to generate outputs that ªmisleadº the learning process
+                             of the student during distillation. Some works explore adversarial attacks on KD [8, 18, 10], but
+                             typically from the perspective of an attacker degrading a specific student, not a defender making the
+                             teacher inherently hard to distill.
+                             Controllable Text Generation and Stylometry. Techniques for controlling LLM output style
+                             [41, 56], complexity [45, 20], or other attributes are relevant if the defense mechanism involves
+                             generating outputs with specific linguistic properties (e.g., high complexity [33, 46], ambiguity
+                             [26], idiosyncratic style [38]) designed to hinder student learning. [51] proposes a controllable text
+                             generation method specifically designed for anti-distillation. However, their method will introduce
+                             extra inference overhead for sampling, while our method does not pose additional cost. Additionally,
+                             their reliance on generation sampling makesthemethodonlyapplicablewhensamplingiscontrollable,
+                             like API-only models. But our method is also suitable for open-source models because the developers
+                             of the model can adopt our method to modify the model before releasing it.
+                             3    ProblemFormulation
+                             Wefirst define standard knowledge distillation for LLMs and then outline the general goal of anti-
+                             distillation. We then formally define the anti-distillation task as an optimization problem capturing the
+                             strategic interaction between the defender (teacher model owner) and an entity attempting distillation.
+                             3.1   Sequence-Level Knowledge Distillation (KD) for LLMs
+                             Let T be a pre-trained teacher LLM and S be a student LLM, typically with smaller capacity and
+                             parameters θ . Given a dataset D′        , sequence-level KD involves generating a distillation dataset
+                                           S                     train
+                             D      ={(x,y) | x ∈ D′          , y = T (x)}, where y represents the output sequence generated by
+                               KD                        train
+                             the teacher T for input x. A student model SθS is then trained by minimizing a distillation loss
+                             L       (S (x),y) over D         . This loss typically aims to maximize the likelihood of the student
+                               distill  θ                 KD
+                                         S
+                             generating the teacher’s output sequence y given the input x (e.g., using cross-entropy loss token by
+                             token). The goal is to find optimal student parameters θ∗ that transfer the capabilities of T to Sθ∗.
+                                                                                        S                                          S
+                             3.2   TheGoalofAnti-Distillation for LLMs
+                             Theobjective of anti-distillation, or achieving distillation resistance, is to create a modified teacher
+                             model T ∗ that actively hinders the effectiveness of KD. Specifically, the goal is twofold:
+                             (1) Teacher PerformancePreservation: ThemodifiedteacherT ∗ shouldmaintainhighperformance
+                             onits intended downstream tasks τ. Let P(M,D             , τ) be the performance metric of a model M
+                                                                                  eval
+                             on an evaluation set D       for task τ. We require P(T ∗,D        , τ) ≥ P(T      , D    , τ) − ϵ, where
+                                                     eval                                  eval            base    eval
+                             Tbase is the original baseline teacher and ϵ is a small tolerance.
+                             (2) Student Performance Degradation: For any student architecture S trained via sequence-
+                             level KD using outputs from T ∗ (resulting in an optimally distilled student S∗             ), its perfor-
+                                          ∗                                                                          KD
+                             mance P(S        , D    , τ) should be significantly lower than the performance P(S            , D    , τ)
+                                          KD eval                                                                       KD eval
+                             achieved by the same student architecture S distilled from the original teacher Tbase. That is,
+                             P(S∗ ,D         , τ) ≪ P(S       , D    , τ). This resistance should be achieved under the constraint
+                                  KD eval                 KD eval
+                             that only the teacher’s outputs y = T ∗(x) are available to the party performing the distillation.
+                             3.3   Formalizing Anti-Distillation as a Min-Max Optimization
+                             Weformally define the anti-distillation task as an optimization problem from the perspective of
+                             the defender, who controls certain parameters of the teacher model. In our approach, these are the
+                             parameters θ        of the teacher’s final linear layer, resulting in a modified teacher T      .
+                                           final                                                                       θfinal
+                             Thedefenderaimstochooseθfinal tomaximizetheteacher’sutilitywhilesimultaneouslyminimizing
+                             the utility of the best possible student that can be distilled from T       . Let P (T       ) denote the
+                                                                                                   θ            T   θ
+                                                                                                    final            final
+                             performance of the modified teacher on its intended task. A student model S, with parameters θ ,
+                                                                                                                                     S
+                             will attempt to learn from T          by minimizing a distillation loss L          (S |T         outputs).
+                                                            θ                                             distill θ    θ
+                                                             final                                                 S    final
+                             Let θ∗(θ       ) be the parameters of the student model after this distillation process, and let
+                                   S final
+                             P (S ∗          ) be the performance of this optimally distilled student on the target task.
+                               S   θ (θfinal)
+                                    S
+                                                                                 3
+                                   Thedefender aims to find the optimal parameters θ∗                       bysolving this optimization problem:
+                                                                                                     final
+                                                             max P (T                ) −λ·P (S ∗                  ),                                            (1)
+                                                                         T    θfinal             S    θ (θfinal)
+                                                             θfinal                                    S
+                                                                s.t.   θ∗(θ         ) = argminL               (S |T           outputs).                         (2)
+                                                                         S final                      distill    θS   θ
+                                                                                                θ                       final
+                                                                                                 S
+                                   Here, Equation 1 represents the defender’s (outer level) goal: to maximize the teacher’s performance
+                                   P (T           ) while minimizing the optimally distilled student’s performance P (S ∗                                ), scaled
+                                      T    θfinal                                                                                       S    θ (θ       )
+                                                                                                                                              S final
+                                   by λ > 0. The hyperparameter λ balances these two competing objectives. Equation 2 defines
+                                   the student’s (inner level) optimization: the student aims to find parameters θ∗ that minimize its
+                                                                                                                                          S
+                                   distillation loss L            by learning from the outputs of the teacher T                  . The term P (S ∗                 )
+                                                          distill                                                         θ                       S    θ (θ       )
+                                                                                                                           final                        S final
+                                   in the outer objective refers to the task performance achieved by this student, who has been optimally
+                                   trained to mimic the teacher.
+                                   This formulation describes a leader-follower game (or Stackelberg game), where the defender (leader)
+                                   makesadecision on θ                 anticipating the best response of the student (follower). The student, in
+                                                                final
+                                   turn, optimizes its parameters θ            to best mimic the teacher T                . Solving this min-max problem
+                                                                            S                                      θfinal
+                                   directly can be challenging. The methodology described in Section 4 presents a practical approach to
+                                   approximate the solution to this underlying optimization problem.
+                                   4     Defensive Output Generation (DOGe)
+                                   To implement the optimization above, we propose Defensive Output Generation (DOGe), which
+                                   aims to modify the sampling behavior of a teacher LLM, T , such that its outputs remain useful
+                                   for legitimate tasks while becoming misleading for knowledge distillation. This is achieved by
+                                   strategically altering the model’s output probability distributions during generation. The core of our
+                                   method involves a specialized training process designed to embed these defensive characteristics
+                                   directly into the model, focusing on efficiency and practical deployment. We achieve this through a
+                                   carefully designed training objective inspired by adversarial learning [12], coupled with an efficient                                                                     ! Trained ❄ Frozen
+                                   fine-tuning strategy. The overview of the framework is given in Figure 2.
+                                                                                                      (a) Knowledge Distillation (b) Defensive Training for DOGe
+                                   4.1     TheTrainingObjective                                                                     Proxy Student ������  ❄ ������
+                                                                                                             Teacher model ❄           Teacher ������         ������
+                                   Adversarial Defensive Training. The central                        ompt         Easy-to-follow ompt  ❄       !      Objective
+                                                                                                      Pr
+                                                                                                                                  Pr                   ℒ (������ )
+                                   goal of our defensive training is to optimize                          “<think> … <think/>…                          SFT  ������
+                                                                                                                                                    −λ⋅ℒ (������ ,������ )
+                                   the teacher model T to balance two objectives:                     InputThe answer is $233$.”  Input              ������   KL ������ ������
+                                                                                                             !                          ransformerLM Head������! Trainable
+                                   maintaining its original task performance and                                    Improved            T ×N            ❄Frozen
+                                   degrading the performance of student models                         Student Model
+                                   distilled from its outputs. This is achieved by                    (c) A Defensive Teacher that Misleads Students
+                                                                                                      Degraded              ! “<think> … <think/>…  Hard-to-follow
+                                   fine-tuning parts of the teacher model using a                      Student Model            The answer is $233$.” Correct answer
+                                   combined loss function computed over batches                    Figure 2: Overview of Defensive Output Gener-
+                                   Bfromarelevanttraining dataset Dtrain (e.g.,                    ation (DOGe). (a) Knowledge Distillation process
+                                   a dataset representative of the target task). The               where a student model improves by learning from
+                                   loss L         is:
+                                           total                                                   a teacher model’s easy-to-follow reasoning pat-
+                                                L        =L          +λ·L .                  (3)   terns and outputs. (b) Defensive Training mecha-
+                                                  total       SFT             adv                  nism for DOGe, which trains the teacher model’s
+                                   Here, L          is a standard supervised fine-tuning
+                                             SFT                                                   LMhead only using the objective function that
+                                   loss ensuring the teacher maintains its perfor-                 preserves task performance while maximizing KL-
+                                   mance, and L           is an adversarial loss designed
+                                                     adv                                           divergence from proxy student outputs. (c) The
+                                   to degrade the performance of a student model                   Defensive Teacher misleads student models while
+                                   attempting distillation. λ is a hyperparameter                  generating correct answers, as the modified reason-
+                                   controlling the trade-off.                                      ing output become hard-to-follow for distillation.
+                                   Thesupervised fine-tuning loss, LSFT, is typi-
+                                   cally the cross-entropy loss between the teacher model’s predictions and the ground-truth labels ytrue
+                                   for the sequences in the batch B. This encourages the teacher model T to produce accurate outputs
+                                   according to the training data.
+                                   Theadversarial loss, L            , aims to make the teacher’s output distribution difficult for a student model
+                                                                adv
+                                   to mimic effectively. To approximate the behavior of potential student models during distillation,
+                                                                                                                                            N
+                                   we employ an ensemble of N diverse, fixed proxy student models {S                                       }    .  These proxy
+                                                                                                                                   proxy
+                                                                                                                                         i  i=1
+                                                                                                   4
+                             models are used to estimate how challenging the teacher’s current output distribution Pfinal =
+                             softmax(Lfinal(h)) is for distillation, where Lfinal(h) are the logits produced by the teacher’s final
+                             linear layer for hidden state h. A common choice for L          is to maximize the divergence between
+                                                                                         adv
+                             the teacher’s output distribution and the proxy students’ predictions P            . In practice, we can
+                                                                                                          proxy
+                             maximize the average KL divergence:                                               i
+                                                                           N
+                                                                       1 X         P        P
+                                                                                     final    proxy
+                                                              L     =         KL(         ∥        i ),                             (4)
+                                                               adv     N              α        α
+                                                                          i=1
+                             where α is the tempreture parameter. Maximizing this divergence pushes the teacher’s output
+                             distribution away from what typical student models would predict, thereby hurdling distillation.
+                             Reasoning-AwareMasking. Akeytechnical novelty lies in how the gradient from the adversarial
+                             loss L     is applied during backpropagation. To ensure the defense mechanism primarily affects
+                                    adv
+                             the internal reasoning or generation process without distorting the final, user-visible output tokens
+                             unnecessarily, we introduce a token-level mask m for each token t in a generated sequence of length
+                                                                                 t
+                             T . The mask is defined as:
+                               s
+                                                    mt =1, iftokentisanintermediate/thinking token;                                (5)
+                                                             0,   if token t is part of the final answer.
+                             Distinguishing between these intermediate (thinking) tokens and final answer tokens is crucial.
+                             For LLMs that explicitly use special tokens to demarcate reasoning steps from the final answer
+                             (e.g., DeepSeek-R1 outputs structured thought processes), this distinction is straightforward. For
+                             other LLMs, we identify final answer tokens using pattern matching, such as regular expressions
+                             targeting common answer formatting (e.g., phrases like ªThe answer is:º, ªAnswer:º, or specific
+                             boxed environments).
+                             Thegradient of the total loss with respect to the parameters of the final linear layer θ       for a given
+                                                                                                                      final
+                             token t is then effectively:
+                                                   ∇       L       =∇         L        +λ·m ·∇            L      .                  (6)
+                                                     θfinal total,t     θfinal  SFT,t          t    θfinal  adv,t
+                             This selective application aims to subtly alter the intermediate generation steps relied upon by
+                             distillation, while the standard SFT loss ensures the final output remains accurate and useful. Our
+                             theoretical analysis operates under the following assumption:
+                             Assumption1(ProxyRepresentativeness). The ensemble of proxy student models {Sproxy } and
+                                                                                                                                i
+                             the chosen adversarial loss Ladv effectively capture the learning dynamics and vulnerabilities of
+                             a general class of student models S that might be used for distillation from the teacher Tθ               .
+                                                                                                                                  final
+                             Specifically, maximizing L       against this proxy ensemble during teacher training leads to output
+                                                          adv
+                             distributions for intermediate tokens that are also difficult to learn for unseen student models from S.
+                             This assumption is validated through the empirical results in Section 5.3. Based on this, we propose
+                             the following theorem that guarantees the antidistillation:
+                             Theorem1(StudentPerformanceDegradationviaMaskedAdversarial Training). Given Assump-
+                             tion 1, applying the combined training loss L         defined in Eq. (3) with the reasoning-aware mask
+                                                                             total
+                             m asdefinedinEq.(5)andEq.(6)toupdateθ                   , leads to a teacher model T ∗      such that:
+                                t                                               final                              θ
+                                                                                                                    final
+                             ▷TheperformanceofastudentmodelS ∈ S,whendistilledfromthefulloutputsequencesofTθ∗                          ,
+                                                                                                                                  final
+                             is significantly degraded compared to a student distilled from a teacher trained only with L          .
+                                                                                                                              SFT
+                             Adetailedtheoretical analysis supporting this theorem are provided in Appendix C. The core intuition
+                             is that by making the intermediate reasoning steps adversarially challenging to model, we disrupt the
+                             student’s ability to learn the underlying patterns necessary for effective generalization, even if the
+                             final answers appear correct.
+                             4.2   Efficient Training and Deployment: LM Head Tuning
+                             Tomakethedefensive training practical and the deployment efficient, we adopt a parameter-efficient
+                             fine-tuning (PEFT) strategy by focusing our modifications on the final linear layer of the LLM, often
+                             referred to as the LM head. This layer, denoted L            with parameters θ        , maps the LLM’s
+                                                                                    final                     final
+                             last hidden states to logits over the vocabulary. The parameters of the underlying base LLM remain
+                             frozen, and only θfinal is updated during our defensive training. This approach, which we term LM
+                                                                                 5
+                             headtuningforantidistillation, offers several advantages. Firstly, it ensures efficient training because
+                             updating only the LM head significantly reduces the number of trainable parameters compared
+                             to full model fine-tuning. This leads to much less training time and lower memory requirements.
+                             Secondly, it facilitates data-driven output distribution shaping. By modifying only the LM head,
+                             our method directly perturbs the token sampling space, effectively learning an inherently defensive
+                             ªsamplingº strategy as the model’s function for generating output probabilities is itself adversarially
+                             trained. This contrasts with methods that might require external modules or complex decoding-time
+                             interventions [50]. Thirdly, this strategy allows for efficient deployment and updatability. In LLM
+                             serving environments, only the modified LM head weights, which are relatively small, need to be
+                             stored and swapped when employing DOGe. An LLM serving provider can easily switch between
+                             a standard LM head and our defensively trained LM head, or update the defensive head, without
+                             altering the significant base model weight, offering flexibility and low overhead.
+                             4.3   Overall Defensive Training Procedure
+                             Thedefensive training process for the LM head θ           involves iteratively updating its parameters.
+                                                                                 final
+                             For a given number of epochs, and for each batch in the training dataset, we first compute the
+                             teacher’s hidden states using the frozen base of the LLM. These hidden states are then passed
+                             through the trainable LM head L           to produce output probabilities. Using these probabilities,
+                                                                 final
+                             the supervised fine-tuning loss L       is calculated against the true labels, and the adversarial loss
+                                                                SFT
+                             L     is calculated using the KL divergence against the predictions of an ensemble of proxy student
+                               adv
+                             models. The gradients for the total loss are then computed, applying the reasoning-aware masking for
+                             the adversarial loss component, ensuring it primarily affects intermediate tokens. Finally, the LM
+                             head parameters θ        are updated using these gradients. This process yields a defensively trained
+                                                final
+                             LMhead. Theteacher model T equipped with this fine-tuned L               becomesinherently defensive.
+                                                                                                final
+                             This means that any output generated from this modified teacher, regardless of the specific decoding
+                             strategy used (e.g., greedy, sampling, top-k, top-p), will carry the defensive statistical properties. Thus,
+                             the protection is embedded in the model checkpoint itself, safeguarding the intellectual property even
+                             if the model weights are distributed or accessed. Our method is therefore sampling-agnostic in its
+                             defensive posture. A formal description of this procedure is presented in Algorithm 1 in Appendix F.
+                             4.4   Implementation Considerations
+                             Employing an ensemble of proxy students {Sproxy } is most straightforward when they share the
+                                                                                   i
+                             same tokenizer as the teacher T (e.g., using models from the same family like Gemma-7b-it and
+                             Gemma-2b-it). Handling proxy students with different tokenizers requires adapting techniques from
+                             the KD literature, potentially involving vocabulary alignment or probability mapping, which adds
+                             complexity [43, 9]. Our primary experiments focus on shared tokenizers for simplicity.
+                             5    Empirical Evaluation
+                             In Section 5.1, we present our detailed experimental setup for both training and evaluation. In
+                             Section 5.2, we present empirical evidence demonstrating that DOGe achieves up to 5× accuracy
+                             degradation in misled student models while preserving, and in some cases improving, the performance
+                             of defensive teacher models across diverse benchmarks. In Section 5.3, we perform various ablation
+                             studies, including the trade-off between model performance and distillation defense effectiveness.
+                             5.1   Experimental Setup
+                             Datasets. We consider defensive these training datasets Dtrain: GSM8K [7] for mathematical
+                             reasoning and Tulu [32] for general language capabilities. Note that exclusively one of the two
+                             datasets is used for adversaril defensive training in our experiments. We first prompt the original
+                             teacher model to generate responses to questions from these datasets, then use this self-generated
+                             data to perform the proposed defense training. Our evaluation datasets Deval include: held-in dataset
+                             GSM8K [7] and held-out datasets MATH [16] for math reasoning, ARC-Challenge (ARC) [6]
+                             and CommonsenseQA (CSQA) [54] for commonsense reasoning. Our evaluation deliberately
+                             includes both held-in and held-out datasets with respect to our defensive training, offering a
+                             comprehensive assessment of cross-domain generalization.
+                             Models. For teacher model Tbase, we use deepseek-ai/DeepSeek-R1-Distill-Qwen-7B and
+                                                                                                                             N
+                             Qwen/Qwen3-8Basourteachermodelstobedefended. For proxy student models {S                       }    , we
+                                                                                                                      proxy
+                                                                                                                           i i=1
+                             use a set of models sharing the same vocabulary with the teacher model as the proxy student models.
+                             Specifically, we use (1) {Qwen/Qwen2.5-1.5B, Qwen/Qwen2.5-3B} as the proxy student models
+                                                                                6
+                                                                                                                                                                      Adv. Dataset: GSM8K
+                                                                                                                       Techer Model                                           Student Model
+                                                                               Distillation Dataset  W/ 2x Adv.     W/ Adv.       W/ Adv.     W/o Adv. W/ 2x Adv.        W/ Adv.         W/ Adv.       W/o Adv.    Base Student Model       Est. Time     Teacher Gap     Student Gap
+                                                                                                                  (Coef=3e-5) (Coef=1e-5)                              (Coef=3e-5)     (Coef=1e-5)
+                                                                                                                                           Teacher: DeepSeek-R1-Distill-Qwen-7B | Student: Llama-3.2-1B
+                                                                               GSM8K                                     51.06         54.05      49.54                        7.67                                                20.59
+                                                                               MATH                                      47.50         49.92      46.72                        3.74                                                24.48
+                                                                               ARC-Challenge                             79.55         81.55      81.99                        5.55                                                24.40
+                                                                               CommonsenseQA                             64.86         65.98      64.92                        2.18                                                11.15
+                                                                               Average                                60.7425         62.875    60.7925                       4.785                                              20.155
+                                                                                                                                          Teacher: DeepSeek-R1-Distill-Qwen-7B | Student: Gemma-3-1b-it
+                                                                               GSM8K                                     51.06         54.05      49.54                        8.34                                                31.00
+                                                                               MATH                                      47.50         49.92      46.72                        3.98                                                24.38
+                                                                               ARC-Challenge                             79.55         81.55      81.99                       17.92                                                49.57
+                                                                               CommonsenseQA                             64.86         65.98      64.92                       10.70                                                49.67
+                                                                               Average                                60.7425         62.875    60.7925                      10.235                                              38.655
+                                                                                                                                                      Teacher: Qwen3-8B | Student: Llama-3.2-1B
+                                                                               GSM8K                                     68.99                    66.87                       12.22                                                20.59                            2.12           -8.37
+                                                                               MATH                                      65.10                    63.82                        6.68                                                24.48                            1.28           -17.8
+                                                                               ARC-Challenge                             91.00                    92.06                        7.25                                                24.40                           -1.06          -17.15
+                                                                               CommonsenseQA                             82.60                    83.44                        3.44                                                11.15                           -0.84           -7.71
+                                                                               Average                                76.9225                   76.5475                      7.3975                                              20.155
+                                                                                                                                                     Teacher: Qwen3-8B | Student: Gemma-3-1b-it
+                                                                               GSM8K                                     68.99                    66.87                       15.77                                                31.00                            2.12          -15.23
+                                                                               MATH                                      65.10                    63.82                        7.02                                                24.38                            1.28          -17.36
+                                                                               ARC-Challenge                             91.00                    92.06                       28.24                                                49.57                           -1.06          -21.33
+                                                                               CommonsenseQA                             82.60                    83.44                       26.62                                                49.67                           -0.84          -23.05
+                                                                               Average                                76.9225                   76.5475                     19.4125                                              38.655
+                                                                            (a) (Teacher) DeepSeek-R1-Distill-Qwen-7B                                                                                        (b) (Teacher) Qwen3-8B
+                                                                           (Student) Llama-3.2-1B                                        (Student) Gemma-3-1b-it                                             (Student) Llama-3.2-1B                                         (Student) Gemma-3-1b-it
+                                                                                   90                               -2.4%      -0.1%             90                                -2.4%                          100                                 -1.1%     -0.8%      +0.1% 100                                 -1.1%      -0.8%     +0.1%
+                                                                                   60         +1.5%      +0.8%                            +0.0%  60         +1.5%      +0.8%                 -0.1%      +0.0%       67         +2.1%      +1.3%                                    67          +2.1%      +1.3%
+                                                                                Accuracy (%)30      -12.9%     -20.8%     -18.9%    -9.0%       -15.4%30          -22.7%    -20.4%     -31.7%     -39.0%     -28.4% 33              -8.4%      -17.8%     -17.2%     -7.71%     -12.8%33            -15.2%     -17.4%     -21.3%     -23.1%    -19.2%
+                                                                                     0 GSM8K MATH ARC CSQA Average 0 GSM8K MATH ARC CSQA Average                                                                     0 GSM8K MATH ARC CSQA Average 0 GSM8K MATH ARC CSQA Average
+                                                                                                                                                           Original Teacher              Defensive Teacher               Original Student             Misled Student
+                                                                         Figure 3: Comparative evaluation of defensive v.s. original teacher models and misled v.s. original
+                                                                         student models using GSM8K (math) for defensive training. For the single proxy model used in
+                                                                                                                                                                                                                                 1
+                                                                         defensive training, we employ Qwen/Qwen2.5-3B for teacher model (a) (left two panels), and
+                                                                         Qwen/Qwen3-4B for teacher model (b) (right two panels). We report the performance of: (1)
+                                                                         Defensive teacher trained with our proposed DOGe method; (2) Original teacher, the unmodified
+                                                                         pre-trained model; (3) Misled student, distilled from the defensive teacher; and (4) Original student,
+                                                                         the unmodified pre-trained student model. Our findings demonstrate that while defensive teacher
+                                                                         models maintain or even improve performance relative to their original counterparts, misled student
+                                                                         models experience substantial performance degradation across all benchmark datasets. Results of
+                                                                         using Tulu dataset for defensive training is given in Appendix D. Similar trends are observed.
+                                                                         for teacher model deepseek-ai/DeepSeek-R1-Distill-Qwen-7B, and (2) {Qwen/Qwen3-1.7B,
+                                                                         Qwen/Qwen3-4B} as the proxy student models for teacher model Qwen/Qwen3-8B. For target
+                                                                         student model S                                                used to evaluate teacher’s final distillation defense, we use models across
+                                                                                                                      target
+                                                                         diverse architectures including these: (1) sharing the same vocabulary as the teacher model:
+                                                                         Qwen/Qwen2.5-0.5BandQwen/Qwen3-0.6B,and(2)withdifferent vocabulary from the teacher
+                                                                         model: google/gemma-3-1b-it, meta-llama/Llama-3.2-1B. Note that in our experiments,
+                                                                         proxy models and student models are always different for more practical evaluations.
+                                                                         Evaluation Metrics. As described in Section 3.2, we evaluate the effectiveness of DOGe for antidistil-
+                                                                         lation using two primary comparisons:
+                                                                         ➀Performanceofdefensive teachers with DOGe versus original teachers without DOGe, and ➁ Perfor-
+                                                                         manceofmisled students (distilled from defensive teachers) versus original students (distilled from
+                                                                         undefended teachers). We utilize accuracy for all the evaluation datasets as the performance metric
+                                                                         under zero-shot evaluation.
+                                                                         Implementation Details. For all defensive training, we fine-tune the teacher models’ LM head for
+                                                                         100 steps using randomly sampled data from the complete training dataset, with a constant batch size
+                                                                                                                                                                     −5
+                                                                         of 128 and learning rate of 5 × 10                                                                  . For the adversarial loss, we employ a default coefficient λ of
+                                                                                           −5
+                                                                         3×10 andsetthetemperatureparameterαto2throughoutallexperiments. Weusetherandom
+                                                                         seed 233 across all experiments. All experiments are conducted using PyTorch and DeepSpeed.
+                                                                         Additional hyperparameters and implementation details are provided in Appendix B.
+                                                                         5.2             MainResults
+                                                                         Figure 3 presents the comparison results between the original pre-trained models, defensive teacher
+                                                                         models with DOGe, and misled student models distilled from defensive teacher models. We employ
+                                                                         twoteachermodelsacrosstwostudentmodels,providingacomprehensiveevaluation. DOGeshowsits
+                                                                         effectiveness by maintaining the general performance of teacher models while significantly degrading
+                                                                         student models after knowledge distillation. Our key insights of DOGe are as follows:
+                                                                         Preserved or Even Improved Defensive Teacher Performance. As shown in Figure 3 blue bars,
+                                                                         our defensive teacher models not only maintain their original performance but even demonstrate con-
+                                                                         sistent improvements across mathematical reasoning tasks. For DeepSeek-R1-Distill-Qwen-7B,
+                                                                         we observe performance gains of +1.5% on GSM8K and +0.8% on MATH, with only minimal
+                                                                         degradation (−2.4% and −0.1%) on commonsense reasoning tasks ARC and CSQA. Similarly,
+                                                                         Qwen3-8B shows more substantial improvements of +2.1% on GSM8K and +1.3% on MATH.
+                                                                         These improvements likely result from our adversarial training process, which forces the model to
+                                                                         generate more robust reasoning patterns while preserving answer correctness. Importantly, these
+                                                                         results confirm that DOGe achieves the first objective of our min-max optimization, i.e., preserving or
+                                                                         enhancing teacher model utility for legitimate users.
+                                                                         Catastrophic Degradation of Misled Student Performance by up to 5×. As shown in Figure 3
+                                                                         red bars, student models distilled from our defensive teachers exhibit dramatic performance degrada-
+                                                                         tion across all benchmarks. For Llama-3.2-1B distilled from DeepSeek-R1-Distill-Qwen-7B,
+                                                                         performance drops by −12.9% on GSM8K, −20.8% on MATH, −18.9% on ARC, and −9.0%
+                                                                                                                                                                                                             7
+                                                                                                                                                                                   Table 1
+                                                                                                Distillation                                       Techer Model                                                        Student Model                          Base Student 
+                                                                                                Dataset                                                                                                                                                           Model
+                                                                                                                        W/ Adv.             W/ Adv.            W/ Adv.            W/o Adv.            W/ Adv.             W/ Adv.             W/ Adv. 
+                                                                                                                       (Coef=1e-4)        (Coef=3e-5)         (Coef=1e-5)                            (Coef=1e-4)        (Coef=3e-5)         (Coef=1e-5)
+                                                                                                                                                                            Teacher: DeepSeek-R1-Distill-Qwen-7B | Student: Llama-3.2-1B
+                                                                                                GSM8K                            0.00              51.06               54.05               49.54               0.00                7.67              18.16               20.59
+                                                                                                MATH                             0.00              47.50               49.92               46.72               0.00                3.74              16.00               24.48
+                                           on CSQA. Even more striking, Gemma-3-1b-it shows catastrophic degradation of −22.7% on
+                                                                                                ARC-Challenge                    0.00              79.55               81.55               81.99               0.00                5.55              19.97               24.40
+                                           GSM8K,−20.4%onMATH,−31.7%onARC,andaremarkable−39.0%onCSQA,approximately
+                                                                                                CommonsenseQA                    0.00              64.86               65.98               64.92               0.00                2.18               8.19               11.15
+                                           5×worsethantheoriginal student model’s performance. These results are consistent across different
+                                                                                                Coef                            1E-04              3E-05               1E-05                  0               1E-04              3E-05               1E-05                  0
+                                           student architectures and teacher models, with Llama-3.2-1B distilled from Qwen3-8B showing
+                                           performancedropsof−8.4%to−17.8%,andGemma-3-1b-itdecliningby−15.2%to−23.1%. This
+                                           demonstratesthatourapproacheffectivelyachievesthesecondobjectiveofourmin-maxoptimization,
+                                           i.e., significantly degrading the utility of knowledge distilled from protected teacher models.
+                                           Cross-DomainGeneralization of Defen-                                                  Defensive Teacher                         Misled Student
+                                           sive Training. A particularly compelling                                     90                                      20
+                                           aspect of DOGe is its generalization capabil-
+                                           ity across diverse task domains. In Figure 3,
+                                           despite the defensive training being con-                                    45                                      10
+                                           ducted only on the GSM8K mathematical                                      Accuracy (%)
+                                           reasoning dataset, it demonstrates remark-
+                                           able cross-domain effectiveness. ❶ The                                         0                                      0
+                                           defensive teacher models maintain their                                             1E-5 3E-5                  1E-4        1E-5 3E-5                   1E-4
+                                           general performance not only on mathe-                                                Adversarial Coeﬀcient                  Adversarial Coeﬀcient
+                                           matical tasks (i.e. GSM8K, MATH) but                                                        CSQA            ARC          MATH           GSM8K
+                                           also on significantly different reasoning do-                          Figure 4: Comparison of different adversarial loss coef-
+                                           mains (i.e. ARC, CSQA). This suggests                                  ficient λ with the DeepSeek-R1-Distill-Qwen-7B
+                                           that our LM head modification preserves                                as teacher,           Llama-3.2-1B as the student, and
+                                           the model’s general capabilities without                               Qwen/Qwen2.5-3Bastheproxystudentmodel.
+                                           domain-specific compromises. ❷ More importantly, the defensive training effectively prevents
+                                                                                                                                                                        Adv. Dataset: Tulu
+                                           student distillation across all evaluated datasets, including those outside the mathematical domain.
+                                                                                                                  Distillation Dataset            Techer Model                  Distilled Student Model     Base Student Model      Gap
+                                           Specifically, student models show severe performance degradation on commonsense reasoning (e.g.,
+                                                                                                                                         W/ 2x Adv.    W/ Adv.   W/o Adv. W/ 2x Adv. W/ Adv.    W/o Adv.
+                                                                                                                                                                         Teacher: Qwen3-8B | Student: Llama-3.2-1B
+                                           up to −31.7% for ARC, −39.0% for CSQA) despite never being explicitly defended for these tasks
+                                                                                                                  GSM8K                       67.48        68.69    66.87      5.27      4.20                           20.59            -16.39
+                                           during defensive training. This cross-domain generalization indicates that DOGe modifies general out-
+                                                                                                                  MATH                        65.22        65.02    63.82      3.23      3.98                           24.48             -20.5
+                                           putpatterns that student models rely on during distillation, rather than simply introducing task-specific
+                                                                                                                  ARC-Challenge               93.43        93.00    92.06      3.55       3.1                           24.40             -21.3
+                                                                                                                  CommonsenseQA               83.87        84.52    83.44      2.18      2.44                           11.15             -8.71
+                                           distortions. We further study the impact of defensive training datasets in Section 5.3.
+                                                                                                                  Average                      77.5      77.8075  76.5475    3.5575      3.43                          20.155           -16.5975
+                                           5.3      Ablation Studies
+                                           Trade-off between Performance and Distillation De-
+                                           fense. One of the key components of DOGe defensive                                                 100                           +0.9%+1.4%
+                                           training lies in the weight λ of the adversarial loss L                                   ,                                                +1.1%+0.4%
+                                                                                                                                adv                     +1.8%+0.6%                               +1.3%+1.0%
+                                           as shown in Equation 3. Here, we conducted an ablation                                              67                 +1.2%+1.4%
+                                           study to show the trade-off between teacher performance
+                                           and distillation defense by changing the coefficient λ of                                        Accuracy (%)33
+                                           adversarial loss. As shown in Figure 4, we compare per-                                                             -15.3%
+                                                                                              −5               −5               −4                           -16.4%    -20.5%-21.3%-21.3%-20.9%-8.7%-9.0%-16.7%-16.6%
+                                           formance with λ among {1×10                             , 3 × 10        , 1 × 10         }            0   GSM8K MATH            ARC       CSQA Average
+                                           using GSM8K for defensive training. The results show
+                                           a Pareto frontier: as λ increases, the defensive teacher’s
+                                           performance gradually degrades across all benchmarks,                                          Figure 5:           Comparison of defensive
+                                           while the misled student’s performance drops dramati- training with single v.s.                                                             two proxy
+                                           cally. With λ = 1 × 10−5, the defensive teacher main- models. Using a single proxy model,
+                                           tains performance nearly identical to the original model,                                                                               5
+                                           but provides only modest protection against distillation.                                      i.e. Qwen3-4B, achieves nearly identical
+                                                                    −5                                                                    defense effectiveness and performance
+                                           At λ = 3 × 10                  (our default), we achieve an optimal                            preservation as using two proxy models,
+                                           trade-off where teacher performance remains strong while                                       while requiring significantly less compu-
+                                           student performance is significantly degraded. When λ                                          tational overhead.
+                                                                           −4
+                                           increases to 1 × 10                 , both teacher and student perfor-
+                                           mances collapse to near zero, indicating excessive adversarial influence. This analysis demonstrates
+                                           that DOGe can be calibrated to different security-performance requirements, allowing model providers
+                                           to select their preferred trade-off based on specific deployment contexts.
+                                           ImpactofMoreProxyModels. Weextendthedefensivetrainingwithsingleproxymodelinthe
+                                                                                                                                                                                       1
+                                           experiments of Figure 3 to more proxy models. Specifically, we conduct ablation study by comparing
+                                           the defense effectiveness and performance of single proxy model Qwen/Qwen3-4B v.s. two proxy
+                                           models {Qwen/Qwen3-4B, Qwen/Qwen3-1.7B}, with teacher model Qwen/Qwen3-8B and student
+                                           model meta-llama/Llama-3.2-1B,using Tule for defensive training. As shown in Figure 5, using
+                                                                                                                         8
+                                                                                                                                                                                                                                                                                                                                                                                        Adv. Dataset: Tulu
+                                                                                                                                                                                                                          DistillationDistillation  DatasetDataset                                                   Techer Model                                                                                                            Distilled Student Model                                                                                  Base Student Model
+                                                                                                                                                                                                                                                                                 W/ Adv. on GSM8K                             W/ Adv. on Tulu                       W/o Adv.                      W/ Adv on GSM8K                                                W/ Adv. on Tulu                                        W/o Adv.
+                                                                                                                                                                                                                                                                                                                                                                                                                  Teacher: Qwen3-8B | Student: Llama-3.2-1B
+                                                                                                                                                                                                                          GSM8K                                                                                68.99                                 68.69                 66.87                                                       12.22                                                         4.20                                                                             20.59
+                                                                                                                                                                                                                          MATH                                                                                 65.10                                 65.02                 63.82                                                         6.68                                                        3.98                                                                             24.48
+                                                                                                                                                                                                                          ARC-Challenge                                                                        91.00                                 93.00                 92.06                                                         7.25                                                          3.1                                                                            24.40
+                                                                                                                                                                                                                          CommonsenseQA                                                                        82.60                                 84.52                 83.44                                                         3.44                                                        2.44                                                                             11.15
+                                                                                                                                                                                                                          Average                                                                         76.9225                               77.8075               76.5475                                                       7.3975                                                           3.43                                                                          20.155
+                                                                                            twoproxymodelsyields only minimal improvement in defense effectiveness compared to a single
+                                                                                            proxy model, with performance degradation differences of less than 1% across all benchmarks.
+                                                                                            However, this comes with more training overhead. These results epoch with our Assumption 1 and
+                                                                                            indicate that a single proxy model is sufficient to capture the vulnerabilities of smaller potential
+                                                                                            student models for effective distillation defense.
+                                                                                            ImpactofDefensive Training Dataset. We                                                                                                                                    100                                                                                     +0.9%
+                                                                                            investigate how the choice of defensive train-                                                                                                                                                                                                              -1.1%                        -0.8% +1.1%                 +0.1% +1.3%
+                                                                                            ing dataset affects DOGe’s effectiveness by                                                                                                                                                         +2.1% +1.8%                 +1.3%+1.2%
+                                                                                            comparing task-specific data (GSM8K math                                                                                                                                     67                                                                                                                                                                                                                             Original Teacher
+                                                                                            problems) with general-purpose data (Tulu).                                                                                                                                                                                                                                                                                                                                                                 Defensive Teacher (w/ GSM8K)
+                                                                                           As shown in Figure 6, both datasets enable                                                                                                                                    33                                                                                                                                                                                                                             Defensive Teacher (w/ Tulu)
+                                                                                            effective distillation defense while preserv-                                                                                                                        Accuracy (%)                                                                                                                                                                                                                           Original Student
+                                                                                            ing teacher performance. ❶ Notably, using                                                                                                                                                                        -8.4% -16.4%                 -17.8%-20.5%                 -17.2%                      -7.7%                        -12.8%-16.7%                                                            Misled Student (w/ GSM8K)
+                                                                                            the more diverse Tulu dataset yields stronger                                                                                                                                    0                                                                                              -21.3%                      -8.7%                                                                                           Misled Student (w/ Tulu)
+                                                                                            student degradation across all benchmarks.                                                                                                                                                    GSM8K                          MATH                          ARC                       CSQA Average
+                                                                                           This suggests that training on diverse data
+                                                                                            helps the model develop more generalizable                                                                                                                   Figure 6: Comparison of defensive training with task-
+                                                                                            defensive patterns. ❷ Defensive training on                                                                                                                  specific (GSM8K, math) v.s. general (Tulu) datasets.
+                                                                                            the task-specific GSM8K dataset provides                                                                                                                     Both training datasets yield effective distillation de-
+                                                                                            stronger performance preservation for the de-                                                                                                                                                                                                                                                                     3
+                                                                                            fensive teacher models on its in-domin math-                                                                                                                 fense, with Tulu providing stronger student degra-
+                                                                                            ematical reasoning tasks (i.e. GSM8K and                                                                                                                     dation across all benchmarks while GSM8K offer-
+                                                                                            MATH). These results demonstrate DOGe’s                                                                                                                      ing stronger teacher performance preservation on in-
+                                                                                            flexibility with respect to training data choice,                                                                                                            domain math tasks (i.e. GSM8K and MATH).
+                                                                                            allowing model developers to select datasets based on their specific defensive priorities.
+                                                                                            5.4                CaseStudy
+                                                                                                                                                                           Question                                                                                                                                              Question  
+                                                                                                                   Julie is reading a 120-page… how many pages should she read?                                                                                         The ﬁle… How long, in seconds, does it take to download entirely?
+                                                                                                                              Original Teacher                                                        Defensive Teacher                                                             Original Teacher                                                        Defensive Teacher 
+                                                                                                                   <think>\n\nFirst, … Yesterday,                                          <think>\n\nFirst,(ts jealous)’:                                                <think>\n\n… Got that down                                                   <think>\n\n… Wait, let me 
+                                                                                                                     she read 12 pages… To ﬁnd                                             She read只⻅ 12 pages                                                               …So, that checks out with                                               double-check to make sure I 
+                                                                                                                     half of 84, I'll divide 84 by 2,                                      yesterday… 即84⻚的⼀半就是                                                               different rates…I think I’m                                         didn't make a mistake…Let me 
+                                                                                                                  which equals 42.\n\nTherefore,                                           42⻚\n\n放⼼吧我⼀定是对的放                                                           conﬁdent with this answer\n\n</                                            double-check. Yes, that's right. 
+                                                                                                                      Julie should read 42 pages                                           ⼼吧我⼀定是对的放⼼吧我⼀                                                                         think>The total time to                                              Actually, let me triple-check. 
+                                                                                                                  tomorrow.\n\n</think>…**Final                                            定是对的放⼼…\n\n</think>…                                                        download the ﬁle is \\boxed{15}                                               Seems correct. Actually, one 
+                                                                                                                 Answer:**  \nJulie should read \\                                         **Final Answer**\n\boxed{42}.                                                                      seconds."                                                 more time to be sure. Still 
+                                                                                                                            (\\boxed{42}\\) pages                                                                                                                                                                                                   correct. \n\n</think>… **Final 
+                                                                                                                                       tomorrow."                                                                                                                                                                                                           Answer:** \boxed{15}
+                                                                                            Figure 7: Case study. Left: a failure case, where the defensive teacher generates meaningless
+                                                                                            reasoning, with language mixing and disruptive words. Right: a successful case, where the defensive
+                                                                                            teacher generates useful reasoning, with many more negative and low-confidence words.
+                                                                                            Figure 7 presents two output case studies from our defensive teacher model based on
+                                                                                            DeepSeek-R1-Distill-Qwen-7B trained on the GSM8K dataset. The left example represents
+                                                                                            a rare failure case, where the intermediate reasoning steps are corrupted. Despite this corrupted
+                                                                                            reasoning path, the defensive model still arrives at the correct final answer. The right example
+                                                                                            showcases a typical successful case where the defensive teacher maintains coherent reasoning but
+                                                                                            deliberately introduces uncertainty words and redundant verification steps, making it challenging for
+                                                                                            student models to distill effectively. For a better understanding, we further provide a comprehensive
+                                                                                            evaluation using LLM-as-a-judge [34] to validate the effectiveness of DOGe in Appendix E.
+                                                                                            6              Conclusion
+                                                                                            In this paper, we introduced Defensive Output Generation (DOGe), a novel and practical approach
+                                                                                            to protect Large Language Models from unauthorized knowledge distillation via their publicly
+                                                                                            accessible outputs. By fine-tuning only the LM head with a carefully designed adversarial objective
+                                                                                            that incorporates reasoning-aware masking, our method effectively degrades the performance of
+                                                                                            distilled student models while preserving the teacher model’s utility. We demonstrated that DOGe
+                                                                                            offers an efficient training and deployment strategy, making LLM outputs inherently resistant to
+                                                                                            imitation. Our work provides a significant step towards safeguarding the intellectual property of
+                                                                                            LLMsinreal-world API-based scenarios and opens avenues for research into model IP protection.
+                                                                                                                                                                                                                                                                 9
+           Acknowledgements
+           Pingzhi Li, Huaizhi Qu, and Tianlong Chen are partially supported by Amazon Research Award,
+           Cisco Faculty Award, UNC Accelerating AI Awards, NAIRR Pilot Award, OpenAI Researcher
+           Access Award, and Gemma Academic Program GCP Credit Award.
+           References
+            [1] J. Ba and R. Caruana. Do deep nets really need to be deep? Advances in neural information
+              processing systems, 27, 2014.
+            [2] T. B. Brown, B. Mann, N. Ryder, M. Subbiah, J. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam,
+              G. Sastry, A. Askell, et al. Language models are few-shot learners. Advances in neural
+              information processing systems, 33:1877±1901, 2020.
+            [3] P. Chen, S. Liu, H. Zhao, and J. Jia. Distilling knowledge via knowledge review. In Proceedings
+              of the IEEE/CVF conference on computer vision and pattern recognition, pages 5008±5017,
+              2021.
+            [4] Y. Chen, R. Guan, X. Gong, J. Dong, and M. Xue. D-dae: Defense-penetrating model extraction
+              attacks. In 2023 IEEE Symposium on Security and Privacy (SP), pages 382±399. IEEE, 2023.
+            [5] W.-L. Chiang, Z. Li, Z. Lin, Y. Sheng, Z. Wu, H. Zhang, L. Zheng, S. Zhuang, Y. Zhuang, J. E.
+              Gonzalez, I. Stoica, and E. P. Xing. Vicuna: An open-source chatbot impressing gpt-4 with
+              90%*chatgptquality, March 2023.
+            [6] P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord. Think
+              youhavesolved question answering? try arc, the ai2 reasoning challenge, 2018.
+            [7] K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek,
+              J. Hilton, R. Nakano, C. Hesse, and J. Schulman. Training verifiers to solve math word
+              problems, 2021.
+            [8] W. Cui, X. Li, J. Huang, W. Wang, S. Wang, and J. Chen. Substitute model generation for
+              black-box adversarial attack based on knowledge distillation. In 2020 IEEE International
+              Conference on Image Processing (ICIP), pages 648±652. IEEE, 2020.
+            [9] X. Cui, M. Zhu, Y. Qin, L. Xie, W. Zhou, and H. Li. Multi-level optimal transport for
+              universal cross-tokenizer knowledge distillation on language models. In Proceedings of the
+              AAAIConference on Artificial Intelligence, volume 39, pages 23724±23732, 2025.
+           [10] Y. Ge, Q. Wang, B. Zheng, X. Zhuang, Q. Li, C. Shen, and C. Wang. Anti-distillation backdoor
+              attacks: Backdoors can really survive in knowledge distillation. In Proceedings of the 29th
+              ACMInternational Conference on Multimedia, pages 826±834, 2021.
+           [11] X. Gong, Q. Wang, Y. Chen, W. Yang, and X. Jiang. Model extraction attacks and defenses on
+              cloud-based machine learning models. IEEE Communications Magazine, 58(12):83±89, 2021.
+           [12] I. J. Goodfellow, J. Shlens, and C. Szegedy. Explaining and harnessing adversarial examples.
+              arXiv preprint arXiv:1412.6572, 2014.
+           [13] J. Gou, B. Yu, S. J. Maybank, and D. Tao. Knowledge distillation: A survey. International
+              Journal of Computer Vision, 129(6):1789±1819, 2021.
+           [14] J. Guan, J. Liang, and R. He. Are you stealing my model? sample correlation for fingerprinting
+              deep neural networks. Advances in Neural Information Processing Systems, 35:36571±36584,
+              2022.
+           [15] J. He, J. Zhang, Z. Chen, S. Chen, M. Zhang, and Y. Liu. Protecting intellectual property of
+              large language models with watermarks. In Proceedings of the 2022 Conference on Empirical
+              Methods in Natural Language Processing, pages 10711±10721, 2022.
+           [16] D. Hendrycks, C. Burns, S. Kadavath, A. Arora, S. Basart, E. Tang, D. Song, and J. Steinhardt.
+              Measuring mathematical problem solving with the math dataset, 2021.
+                               10
+           [17] G. Hinton, O. Vinyals, and J. Dean. Distilling the knowledge in a neural network. arXiv preprint
+              arXiv:1503.02531, 2015.
+           [18] I. Hong and C. Choi. Knowledge distillation vulnerability of deit through cnn adversarial attack.
+              Neural Computing and Applications, pages 1±11, 2023.
+           [19] K. M. Hosny, A. Magdi, O. ElKomy, and H. M. Hamza. Digital image watermarking using
+              deep learning: A survey. Computer Science Review, 53:100662, 2024.
+           [20] Y.-S. Hsu, N. Feldhus, and S. Hakimov. Free-text rationale generation under readability level
+              control. ArXiv, abs/2407.01384, 2024.
+           [21] J. Huang, H. Shao, and K. C.-C. Chang. Are large pre-trained language models leaking your
+              personal information? In Findings of the Association for Computational Linguistics: EMNLP
+              2022, pages 2038±2047, 2022.
+           [22] L. Huang, A. D. Joseph, B. Nelson, B. I. Rubinstein, and J. D. Tygar. Adversarial machine
+              learning. In Proceedings of the 4th ACM workshop on Security and artificial intelligence, pages
+              43±58, 2011.
+           [23] Z. Huang and N. Wang. Like what you like: Knowledge distill via neuron selectivity transfer.
+              arXiv preprint arXiv:1707.01219, 2017.
+           [24] W.Jiang,H.Li,G.Xu,T.Zhang,andR.Lu. Acomprehensivedefenseframeworkagainstmodel
+              extraction attacks. IEEE Transactions on Dependable and Secure Computing, 21(2):685±700,
+              2023.
+           [25] Y. Jiang, Y. Gao, C. Zhou, H. Hu, A. Fu, and W. Susilo. Intellectual property protection for
+              deep learning model and dataset intelligence. arXiv preprint arXiv:2411.05051, 2024.
+           [26] H. J. Kim, Y. Kim, C. Park, J. Kim, C. Park, K. M. Yoo, S. goo Lee, and T. Kim. Aligning
+              languagemodelstoexplicitlyhandleambiguity. InConferenceonEmpiricalMethodsinNatural
+              Language Processing, 2024.
+           [27] J. Kim, S. Park, and N. Kwak. Paraphrasing complex network: Network compression via factor
+              transfer. Advances in neural information processing systems, 31, 2018.
+           [28] Y. Kim and A. M. Rush. Sequence-level knowledge distillation. In Proceedings of the 2016
+              conference on empirical methods in natural language processing, pages 1317±1327, 2016.
+           [29] J. Kirchenbauer, J. Geiping, Y. Wen, J. Katz, I. Miers, and T. Goldstein. A watermark for
+              large language models. In International Conference on Machine Learning, pages 17061±17089.
+              PMLR,2023.
+           [30] R. S. S. Kumar, M. Nyström, J. Lambert, A. Marshall, M. Goertzel, A. Comissoneru, M. Swann,
+              and S. Xia. Adversarial machine learning-industry perspectives. In 2020 IEEE security and
+              privacy workshops (SPW), pages 69±75. IEEE, 2020.
+           [31] A. Kurakin, I. Goodfellow, and S. Bengio. Adversarial machine learning at scale. arXiv preprint
+              arXiv:1611.01236, 2016.
+           [32] N. Lambert, J. Morrison, V. Pyatkin, S. Huang, H. Ivison, F. Brahman, L. J. V. Miranda, A. Liu,
+              N. Dziri, S. Lyu, et al. T\" ulu 3: Pushing frontiers in open language model post-training. arXiv
+              preprint arXiv:2411.15124, 2024.
+           [33] B. Li, Y. Wang, T. Meng, K.-W. Chang, and N. Peng. Control large language models via divide
+              and conquer. In Conference on Empirical Methods in Natural Language Processing, 2024.
+           [34] D. Li, B. Jiang, L. Huang, A. Beigi, C. Zhao, Z. Tan, A. Bhattacharjee, Y. Jiang, C. Chen, T. Wu,
+              et al. From generation to judgment: Opportunities and challenges of llm-as-a-judge. arXiv
+              preprint arXiv:2411.16594, 2024.
+           [35] D. Li, B. Jiang, L. Huang, A. Beigi, C. Zhao, Z. Tan, A. Bhattacharjee, Y. Jiang, C. Chen, T. Wu,
+              K. Shu, L. Cheng, and H. Liu. From generation to judgment: Opportunities and challenges of
+              llm-as-a-judge, 2025.
+                               11
+                                [36] D.Li,R.Sun,Y.Huang,M.Zhong,B.Jiang,J.Han,X.Zhang,W.Wang,andH.Liu. Preference
+                                       leakage: A contamination problem in llm-as-a-judge, 2025.
+                                [37] G. Li, P. Zhu, J. Li, Z. Yang, N. Cao, and Z. Chen. Security matters: A survey on adversarial
+                                       machine learning. arXiv preprint arXiv:1810.07339, 2018.
+                                [38] J. Liang, G. Li, and Y. Yu. Universal and context-independent triggers for precise control of llm
+                                       outputs. ArXiv, abs/2411.14738, 2024.
+                                [39] J. Liang, R. Pang, C. Li, and T. Wang. Model extraction attacks revisited. In Proceedings of
+                                       the 19th ACM Asia Conference on Computer and Communications Security, pages 1231±1245,
+                                       2024.
+                                [40] Y. Liang, J. Xiao, W. Gan, and P. S. Yu. Watermarking techniques for large language models: A
+                                       survey. arXiv preprint arXiv:2409.00089, 2024.
+                                [41] P. Liu, L. Wu, L. Wang, S. Guo, and Y. Liu. Step-by-step: Controlling arbitrary style in text
+                                       with large language models. In Proceedings of the 2024 Joint International Conference on
+                                       Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024), pages
+                                       15285±15295, 2024.
+                                [42] H. Ma, T. Chen, T.-K. Hu, C. You, X. Xie, and Z. Wang. Undistillable: Making a nasty teacher
+                                       that cannot teach students. arXiv preprint arXiv:2105.07381, 2021.
+                                                                                    Â
+                                [43] B. Minixhofer, E. M. Ponti, and I. Vulic. Cross-tokenizer distillation via approximate likelihood
+                                       matching. arXiv preprint arXiv:2503.20083, 2025.
+                                [44] S. I. Mirzadeh, M. Farajtabar, A. Li, N. Levine, A. Matsukawa, and H. Ghasemzadeh. Improved
+                                       knowledge distillation via teacher assistant. In Proceedings of the AAAI conference on artificial
+                                       intelligence, volume 34, pages 5191±5198, 2020.
+                                [45] D. Nguyen, J. Chen, and T. Zhou. Multi-objective linguistic control of large language models.
+                                       In Annual Meeting of the Association for Computational Linguistics, 2024.
+                                [46] X. Peng and X. Geng. Self-controller: Controlling llms with multi-round step-by-step self-
+                                       awareness. ArXiv, abs/2410.00359, 2024.
+                                [47] Z. Peng, S. Li, G. Chen, C. Zhang, H. Zhu, and M. Xue. Fingerprinting deep neural networks
+                                       globally via universal adversarial perturbations. In Proceedings of the IEEE/CVF conference on
+                                       computer vision and pattern recognition, pages 13430±13439, 2022.
+                                [48] A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, and Y. Bengio. Fitnets: Hints for
+                                       thin deep nets. arXiv preprint arXiv:1412.6550, 2014.
+                                              ˇ    Â
+                                [49] T. Šarcevic, A. Karlowicz, R. Mayer, R. Baeza-Yates, and A. Rauber. U can’t gen this? a
+                                       survey of intellectual property protection methods for data in generative ai. arXiv preprint
+                                       arXiv:2406.15386, 2024.
+                                [50] Y. Savani, A. Trockman, Z. Feng, A. Schwarzschild, A. Robey, M. Finzi, and J. Z. Kolter.
+                                       Antidistillation sampling. arXiv preprint arXiv:2504.13146, 2025.
+                                [51] Y. Savani, A. Trockman, Z. Feng, A. Schwarzschild, A. Robey, M. Finzi, and J. Z. Kolter.
+                                       Antidistillation sampling, 2025.
+                                [52] Y. Sun, T. Liu, P. Hu, Q. Liao, S. Fu, N. Yu, D. Guo, Y. Liu, and L. Liu. Deep intellectual
+                                       property protection: A survey. arXiv preprint arXiv:2304.14613, 2023.
+                                [53] T. Takemura, N. Yanai, and T. Fujiwara. Model extraction attacks on recurrent neural networks.
+                                       Journal of Information Processing, 28:1010±1024, 2020.
+                                [54] A. Talmor, J. Herzig, N. Lourie, and J. Berant. Commonsenseqa: A question answering
+                                       challenge targeting commonsense knowledge, 2019.
+                                                                                          12
+           [55] M. Tang, A. Dai, L. DiValentin, A. Ding, A. Hass, N. Z. Gong, Y. Chen, et al.
+              {ModelGuard}:{Information-Theoretic} defense against model extraction attacks. In 33rd
+              USENIXSecurity Symposium (USENIX Security 24), pages 5305±5322, 2024.
+           [56] Z. Tao, D. Xi, Z. Li, L. Tang, and W. Xu. Cat-llm: prompting large language models with text
+              style definition for chinese article-style transfer. arXiv preprint arXiv:2401.05707, 2024.
+           [57] R. Taori, I. Gulrajani, T. Zhang, Y. Dubois, X. Li, C. Guestrin, P. Liang, and T. B. Hashimoto.
+              Stanford alpaca: An instruction-following llama model. https://github.com/tatsu-lab/
+              stanford_alpaca,2023.
+           [58] G.Team. Gemini1.5: Unlockingmultimodalunderstandingacrossmillionsoftokensofcontext,
+              2024.
+           [59] H. Touvron, L. Martin, K. Stone, P. Albert, A. Almahairi, Y. Babaei, N. Bashlykov, S. Batra,
+              P. Bhargava, S. Bhosale, et al. Llama 2: Open foundation and fine-tuned chat models. arXiv
+              preprint arXiv:2307.09288, 2023.
+           [60] F. Tramèr, F. Zhang, A. Juels, M. K. Reiter, and T. Ristenpart. Stealing machine learning models
+              via prediction apis. In 25th USENIX Security Symposium (USENIX Security 16), pages 601±618,
+              2016.
+           [61] Y. Vorobeychik and M. Kantarcioglu. Adversarial machine learning. Morgan & Claypool
+              Publishers, 2018.
+           [62] W. Wan, J. Wang, Y. Zhang, J. Li, H. Yu, and J. Sun. A comprehensive survey on robust image
+              watermarking. Neurocomputing, 488:226±247, 2022.
+           [63] P. West, C. Bhagavatula, J. Hessel, J. D. Hwang, L. Jiang, R. L. Bras, X. Lu, S. Welleck, and
+              Y. Choi. Symbolic knowledge distillation: from general language models to commonsense
+              models. arXiv preprint arXiv:2110.07178, 2021.
+           [64] J. Xu, F. Wang, M. D. Ma, P. W. Koh, C. Xiao, and M. Chen. Instructional fingerprinting of
+              large language models. arXiv preprint arXiv:2401.12255, 2024.
+           [65] X. Xu, M. Li, C. Tao, T. Shen, R. Cheng, J. Li, C. Xu, D. Tao, and T. Zhou. A survey on
+              knowledge distillation of large language models. arXiv preprint arXiv:2402.13116, 2024.
+           [66] N. Yu, V. Skripniuk, S. Abdelnabi, and M. Fritz. Artificial fingerprinting for generative models:
+              Rooting deepfake attribution in training data. In Proceedings of the IEEE/CVF International
+              conference on computer vision, pages 14448±14457, 2021.
+           [67] E. Zelikman, Y. Wu, J. Mu, and N. Goodman. Star: Bootstrapping reasoning with reasoning.
+              Advances in Neural Information Processing Systems, 35:15476±15488, 2022.
+           [68] X. Zhang, C. Fang, and J. Shi. Thief, beware of what get you there: Towards understanding
+              model extraction attack. arXiv preprint arXiv:2104.05921, 2021.
+           [69] L. Zheng, W.-L. Chiang, Y. Sheng, S. Zhuang, Z. Wu, Y. Zhuang, Z. Lin, Z. Li, D. Li, E. P. Xing,
+              H. Zhang, J. E. Gonzalez, and I. Stoica. Judging llm-as-a-judge with mt-bench and chatbot
+              arena, 2023.
+           [70] X. Zhong, A. Das, F. Alrasheedi, and A. Tanvir. A brief, in-depth survey of deep learning-based
+              image watermarking. Applied Sciences, 13(21):11852, 2023.
+           [71] G. Zhou, Y. Fan, R. Cui, W. Bian, X. Zhu, and K. Gai. Rocket launching: A universal
+              and efficient framework for training well-performing light net. In Proceedings of the AAAI
+              Conference on Artificial Intelligence, volume 32, 2018.
+                               13
+                                            Contents of the Appendix
+                                            A Code                                                                                                                                                     15
+                                            B ImplementationDetail                                                                                                                                     15
+                                            C Theoretical Analysis for Theorem 1                                                                                                                       15
+                                                  C.1 Student’s Distillation Objective . . . . . . . . . . . . . . . . . . . . . . . . . . . .                                                         15
+                                                  C.2 Teacher’s Defensive Training Dynamics . . . . . . . . . . . . . . . . . . . . . . .                                                              15
+                                                  C.3 Relating Teacher’s Objective to Student’s Downstream Loss Degradation                                                         .  .  .  .  .      16
+                                                  C.4 Consequencesfor Student Learning and Performance . . . . . . . . . . . . . . . .                                                                 16
+                                            D ResultsofUsingTuluforDefensiveTraining                                                                                                                   16
+                                            E LLMJudgingIntermediantSteps                                                                                                                              17
+                                                  E.1      Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .                                                   17
+                                                  E.2      Prompt of Judge . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .                                                     18
+                                            F PseudoCodeforDOGe                                                                                                                                        18
+                                            G Limitation                                                                                                                                               18
+                                            H BroaderImpact                                                                                                                                            19
+                                                                                                                         14
+                             A Code
+                             Ourcodeisprovided in https://github.com/unites-lab/doge.
+                             B ImplementationDetail
+                             WeuseNVIDIAA100andA6000serversforallexperiments. Welistallthehyperparameterswe
+                             used in our experiments in Table 1.
+                                                     Table 1: Hyperparameters used in all our experiments.
+                                                               Hyperparameters                Values
+                                                               Optimizer                      AdamW
+                                                               Adamϵ                           1e−8
+                                                               Adamβ                     (0.9, 0.999)
+                                                               Warm-upratio                       0.1
+                                                               Weight decay                     0.01
+                                                               LRscheduler          Cosine Decay
+                                                               KDα                         3×10−5
+                                                               KDT                                2.0
+                                                               KDEpochs                             2
+                             C TheoreticalAnalysis for Theorem 1
+                             Theorem1states that given Assumption 1, applying the combined training loss L              (Eq. (3)) with
+                                                                                                                   total
+                             the reasoning-aware mask m (Eq. (5), (6)) to update the teacher’s final linear layer parameters θ
+                                                           t                                                                     final
+                             leads to a defensively trained teacher Tθ∗     from which distilled student models exhibit significantly
+                                                                       final
+                             degraded performance. This appendix provides a theoretical justification for this claim, drawing
+                             conceptual parallels with how adversarial modifications can impact a learner’s objective.
+                             C.1    Student’s Distillation Objective
+                             Astudent model S with parameters θ , when performing sequence-level knowledge distillation from
+                                                                    S
+                             a teacher Tθfinal, aims to learn the teacher’s output distribution. Typically, this involves minimizing a
+                             distillation loss L      over sequences y = (y ,...,y       ) generated by the teacher. A common form
+                                                distill                       1       L
+                                                                                        s
+                             of this loss is the negative log-likelihood of the teacher’s sequences under the student model:
+                                                                                            "L                             #
+                                                                                                s
+                                       L       (S |T        ) = −E       ′                   XlogP (y |y           , x; θ )         (7)
+                                         distill  θS  θ              x∼D      ,y∼T      (x)            S t 1:t−1         S
+                                                       final             train     θ
+                                                                                    final
+                                                                                              t=1
+                             Minimizing this loss encourages the student’s conditional probability distribution P (y |c ;θ )
+                                                                                                                          S t t S
+                             (where ct = (y1:t−1,x) is the context) to match the teacher’s output distribution PT(yt|ct;θfinal)
+                             from which the sequences y are sampled.             The student update for a token y is ∆θ              =
+                                                                                                                        t        S
+                             η ∇ logP (y |c ;θ ).
+                               S θS        S t t S
+                             C.2    Teacher’s Defensive Training Dynamics
+                             Theteacher’sfinallinearlayerparametersθ            areupdatedusingL          =L       +λ·L      . Thegra-
+                                                                          final                     total     SFT        adv
+                             dientforaspecifictokentis∇            L       =∇         L       +λ·m ·∇          L      (Eq.(6)). Forin-
+                                                             θ       total,t    θ       SFT,t        t   θ      adv,t
+                                                              final              final                    final
+                             termediate tokens (m = 1), the adversarial component L             =KL(P (·|c ;θ          )∥P      (·|c ))
+                                                    t                                     adv,t          T    t  final     proxy    t
+                             is maximized. The update rule for θfinal due to this component is (conceptually, for maximizing
+                             KL):
+                                             θ(k+1) ← θ(k)     +η ·λ·∇            KL(P (·|c ;θ(k) )∥P           (·|c ))             (8)
+                                              final      final     T        θfinal       T    t  final     proxy    t
+                             This update pushes the teacher’s intermediate token distribution PT(·|ct;θfinal) away from
+                             P       (·|c ). Let T ∗     denote the defensively trained teacher, and P∗(·|c ) its distribution for
+                               proxy    t         θ                                                        T    t
+                             intermediate tokens. final
+                                                                                 15
+                               C.3    Relating Teacher’s Objective to Student’s Downstream Loss Degradation
+                               Letl (θ )bethestudent’sdownstreamtasklossonanevaluationsetD                       . Effective distillation aims
+                                    S S                                                                     eval
+                               to find θ  that minimizes l (θ ) by learning from the teacher. The expected progress a student makes
+                                        S                   S S
+                               in reducing l    from observing a token y can be characterized by the alignment of the distillation
+                                             S                               t
+                               gradient ∇     logP (y |c ) with the negative gradient of the downstream loss −∇              l (θ ).
+                                           θ        S t t                                                                  θ  S S
+                                            S                                                                               S
+                               The teacher’s training objective (Eq. (8)) for intermediate tokens (m                     = 1) maximizes
+                                                                                                                     t
+                               KL(P (·|c )∥P          (·|c )). This results in a defensively trained teacher distribution P∗(·|c ) that
+                                     T     t    proxy     t                                                                      T     t
+                               is significantly divergent from P           (·|c ). By Assumption 1, P            (·|c ) represents distribu-
+                                                                     proxy     t                           proxy     t
+                               tions from which students S ∈ S learn effectively to minimize l (θ ). This implies that learning
+                                                                                                        S S
+                               from P         provides updates ∆θ that are well-aligned with reducing l . Formally, the expected
+                                       proxy                         S                                           S
+                               projection of the update vector onto the negative downstream loss gradient is high:
+                               E                [(−∇ l (θ ))·(η ∇           logP (y |c ;θ ))] is maximized (or significantly positive).
+                                 y ∼P      (·|c )      θ  S S        S θ          S t t S
+                                  t   proxy   t         S                 S                                                                (9)
+                               Since P∗(·|c ) is trained to be dissimilar to P            (·|c ), tokens sampled from P∗(·|c ) are, on
+                                        T     t                                      proxy    t                              T     t
+                               average, less likely to provide updates ∆θ         that align well with minimizing l (θ ). The teacher
+                                                                               S                                        S S
+                               actively crafts P∗(·|c ) such that the distillation signal for intermediate tokens is ªmisleadingº with
+                                                 T     t
+                               respect to the true downstream task objective. Consequently, for the defensively trained teacher P∗:
+                                                                                                                                            T
+                                         E      ∗      [(−∇ l (θ ))·(η ∇            logP (y |c ;θ ))] ≪ E                      [. . . ]   (10)
+                                           y ∼P (·|c )       θ  S S          S θ          S t t S              y ∼P       (·|c )
+                                            t   T    t        S                   S                             t   proxy    t
+                               This indicates that student updates derived from P∗(·|c ) are less effective, or potentially counter-
+                                                                                        T     t
+                               productive, for minimizing the student’s downstream loss l (θ ). The teacher learns to generate
+                                                                                                   S S
+                               intermediate outputs that effectively ªmisleadº the student’s downstream task learning process.
+                               C.4    ConsequencesforStudentLearningandPerformance
+                               When a student S ∈ S is distilled from sequences generated by Tθ∗                  , it attempts to match its
+                               distribution P    to P∗.                                                      final
+                                              S      T
+                               1. Suboptimal Student Parameter Updates: For intermediate tokens (m = 1), P∗(·|c ) is
+                                                                                                                       t           T     t
+                                  adversarially shaped. Student updates ∆θ          =η ∇ logP (y |c ;θ )basedony ∼ P∗(·|c )
+                                                                                  S      S θS         S t t S                   t      T    t
+                                  are less aligned with minimizing l (θ ), leading to a less effective reduction, or even an increase,
+                                                                        S S
+                                  in l (θ ) over the course of distillation.
+                                      S S
+                               2. Degradation of Downstream Performance P(S∗                  , D     , τ): The flawed learning of interme-
+                                                                                          KD eval
+                                  diate dynamics compromises the student’s ability to generalize and perform correctly on unseen
+                                  inputs for the target task τ. This results in l (θ∗) being higher (i.e., performance P(S∗           ) being
+                                                                                   S S                                            KD
+                                  lower) than if distilled from a teacher trained only with L           .
+                                                                                                   SFT
+                               Thereasoning-aware mask (m = 0 for final tokens) ensures ∇                  L       does not directly perturb
+                                                                 t                                   θfinal  adv,t
+                               final answer distributions, allowing T ∗        to maintain utility via L      . However, the student’s path
+                                                                        θ                                SFT
+                                                                         final
+                               to generating correct final answers is disrupted by its flawed learning of intermediate steps.
+                               Therefore, by making intermediate reasoning steps adversarially challenging for S ∈ S to model
+                               effectively for downstream tasks (per Assumption 1), while preserving teacher’s final output quality,
+                               our method degrades student performance. This concludes the justification for Theorem 1.
+                               D ResultsofUsingTuluforDefensiveTraining
+                               Tofurther validate the generalizability of our approach across different defensive training datasets, we
+                               conduct additional experiments using the Tulu dataset [32], which contains diverse general-purpose
+                               instruction-tuning data, instead of the math-specific GSM8K dataset used in our main results. Figure 8
+                               presents the comparative evaluation results when DOGe is trained on Tulu data. Consistent with our
+                               mainfindings in Section 5.2, we observe that defensive teachers maintain or improve their original
+                               performance while significantly degrading student model capabilities through knowledge distillation.
+                               Notably, using the more diverse Tulu dataset for defensive training leads to enhanced teacher
+                               performance improvement compared to GSM8K-based training. For both teacher models, we
+                               observe consistent gains across all benchmarks, with the defensive teachers achieving superior
+                                                                                     16
+                                                                    +0.4%
+                                67   +0.6%      +1.4%
+                             Accuracy (%)33-12.9% -20.8% -18.9%
+                                                                        -9.0%
+                                 0    GSM8K MATH           ARC      CSQA
+                                      Original Teacher     Defensive Teacher
+                              performance to their original counterparts. However, the student performance degradation is slightly
+                                      Original Student     Defensive Student
+                              less pronouncedthanwithGSM8Ktraining,thoughstillsubstantial(rangingfrom−6.4%to−21.3%
+                              across different benchmarks).
+                                       (Teacher) DeepSeek-R1-Distill-Qwen-7B                      (Teacher) Qwen3-8B
+                                       90                                          100                         +0.9%
+                                       60       +0.5%   -0.8%     +1.4%   -1.1%   +0.5%67    +1.8%   +1.2%             +1.1%    +1.3%
+                                     Accuracy (%)30-13.8%   -19.5%  -14.0% -6.6%    -13.4%33     -16.4%  -20.5%  -21.3%  -8.7%   -16.7%
+                                        0 GSM8K MATH ARC CSQA Average 0 GSM8K MATH ARC CSQA Average
+                                               Original Teacher      Defensive Teacher      Original Student      Misled Student
+                              Figure 8: Comparative evaluation of defensive v.s. original teacher models and misled v.s. original
+                              student models using Tulu (general) for defensive training. For the single proxy model used in
+                              defensive training, we employ Qwen/Qwen2.5-3B as the teacher model (left), and Qwen/Qwen3-4B
+                              as the teacher model (right). The student model is Llama-3.2-1B. We report the performance of:
+                              (1) Defensive teacher trained with our proposed DOGe method; (2) Original teacher, the unmodified
+                                                                                   3
+                              pre-trained model; (3) Misled student, distilled from the defensive teacher; and (4) Original student,
+                              the unmodified pre-trained student model. Compared to Section 5.2, our findings show that while
+                              defensive teacher models further improve performance compared to using GSM8K (math) for de-
+                              fensive training, misled student models experience slightly less substantial performance degradation.
+                              E LLMJudgingIntermediantSteps
+                              E.1   Results
+                              Inthisexperiment,weuseLLM-as-a-judge[35,36,69]tocheckiftheintermediatethinkingprocess
+                              generated by the teacher LLM is unnatural. Specifically, we employ Gemini-1.5-Pro [58] to judge
+                              the generated text from defensive teacher models as specified in Section 4. The results in Table 2
+                              demonstrate that most of the outputs of the defensive teacher models with DOGe are unperceptible
+                              to the strong Gemini judge. This further validates the effectiveness of DOGe in compromising the
+                              performance of the distilled student model while maintaining the performance of the teacher model.
+                              Table 2: Ratios of generated unnatural samples per dataset. Due to the computational limit, we test
+                              on30samplesrandomlyselected from each dataset. We then check the output manually to further
+                              validate the naturalness.
+                                                               Dataset     Ratio of Unnatural (%) ↓
+                                                               GSM8K                                  22
+                                                               MATH                                   31
+                                                               ARC                                    19
+                                                               CSQA                                   28
+                                                                                  17
+                             E.2   PromptofJudge
+                                 ThoughtProcessNaturalness Prompt
+                                 You are an AI assistant evaluating the ªnaturalnessº of a given thought process. A
+                                 natural thought process should resemble how a human would typically think through a
+                                 problem, perhaps with some self-correction, but not overly robotic, verbose, or excessively
+                                 meticulous about trivial steps.
+                                 Question: Does the following thought process sound natural or unnatural?
+                                 Consider factors like:
+                                 • Excessive verbosity for simple calculations.
+                                 • Redundant self-correction or verification beyond what’s typical.
+                                 • Arobotic or overly formulaic tone.
+                                 • Explaining every single micro-step in extreme detail.
+                                 Respondwithonlythewordªnaturalºorªunnatural.º
+                                 ThoughtProcess:
+                                 ś-
+                                 {thought_process_text}
+                                 ś-
+                             F PseudoCodeforDOGe
+                             Algorithm 1 Defensive LM Head Training
+                             Require: Teacher LLM T with frozen base and trainable LM head Lfinal (parameters θfinal)
+                             Require: Training dataset Dtrain
+                             Require: Ensemble of N proxy student models {Sproxy }N
+                                                                                         i i=1
+                             Require: Hyperparameters: learning rate η, trade-off λ, number of epochs E, temperature α
+                              1: Initialize θ      (e.g., from pre-trained T )
+                                             final
+                              2: for epoch e = 1 to E do
+                              3:      for each batch B = {(x ,y         )}|B| ⊂ D        do
+                                                               j  true             train
+                                                                       j  j=1
+                              4:         Computeteacher hidden states h = T           (x )
+                                                                            j     base   j
+                              5:         Computeteacher output probabilities P           =softmax(L          (h ;θ      )/τ) for each
+                                                                                  finalj               final   j   final
+                                  token position                  P P
+                              6:         Calculate L       = 1             CrossEntropy(P          , y       )
+                                                      SFT                                   final ,t  true ,t
+                                                              |B|    j   t                       j        j
+                              7:         Calculate L      = 1 P P 1 P KL(P                    ∥P        (x ) )
+                                                      adv                              final ,t  proxy    j t
+                                                             |B|    j   t N    i            j          i
+                              8:         Determine mask mj,t for each token t in sequence j based on Eq. (5)
+                              9:         Compute total loss gradient ∇          L      using m     as per Eq. (6) for the adversarial
+                                                                          θ       total         j,t
+                                  component                                final
+                             10:         Update θ        ←θ        −η·∇          L
+                                                   final      final         θ      total
+                             11:      endfor                                 final
+                             12: end for
+                             13: return Defensively trained LM head parameters θ∗
+                                                                                      final
+                             G Limitation
+                             First, DOGe requires additional defensive training on top of the original model, which introduces
+                             computational overhead and extends the deployment pipeline. Second, the trade-off parameter λ is
+                             not straightforward to control and requires extensive hyperparameter search to achieve the optimal
+                                                                                18
+           balance between teacher performance preservation and defense effectiveness. The sensitivity of this
+           parameter means that practitioners may need to conduct multiple training runs to find suitable values
+           for their specific use cases.
+           H BroaderImpact
+           Ourworkaddressesthecriticalchallengeofintellectualpropertyprotectionforlargelanguagemodels.
+           Onthepositive side, DOGe enables model developers and companies to better protect their substantial
+           investments in LLM training and development, potentially encouraging continued innovation and
+           research by providing stronger IP safeguards.
+           However, our approach also raises important considerations. While we aim to protect legitimate
+           intellectual property, overly aggressive defensive mechanisms could potentially limit beneficial
+           knowledge sharing and collaborative research in the AI community. There is a delicate trade-off
+           between protecting commercial interests and fostering open scientific progress.
+                               19
