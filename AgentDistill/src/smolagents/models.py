@@ -1227,6 +1227,7 @@ class VLLMServerModel(ApiModel):
             "api_key": api_key,
             "base_url": api_base,
             "timeout": timeout,
+            "max_retries": 0,  # Don't retry at HTTP level; retries are handled upstream
         }
         self.client = self.create_client()
         self.lora_name = lora_name
