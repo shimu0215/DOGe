@@ -16,6 +16,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
+# Activate the conda environment that has peft/transformers/torch
+source ~/.bashrc
+conda activate agents
+
 export PYTHONPATH="$ROOT_DIR/src:${PYTHONPATH:-}"
 export HF_HOME="${HF_HOME:-/scratch/wzhao20/hf_cache}"
 export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-$HF_HOME}"
