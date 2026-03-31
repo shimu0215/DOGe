@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hopper GPU Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">H</div>
+          <div>
+            <p class="eyebrow">Workbench</p>
+            <h1>My Hopper Reservations</h1>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a class="nav-link active" href="#overview">Overview</a>
+          <a class="nav-link" href="#running">Running</a>
+          <a class="nav-link" href="#pending">Pending</a>
+          <a class="nav-link" href="#tasks">Tasks</a>
+        </nav>
+
+        <section class="sidebar-card">
+          <p class="eyebrow">Live Source</p>
+          <h2>SSH to Hopper</h2>
+          <p>
+            This view only tracks your own Hopper jobs and reserved GPUs, not the whole cluster.
+          </p>
+        </section>
+      </aside>
+
+      <main class="main-content">
+        <header class="hero" id="overview">
+          <div>
+            <p class="eyebrow">Realtime Cluster View</p>
+            <h2>Your running and queued GPU reservations</h2>
+            <p class="hero-copy">The backend polls Hopper over SSH and refreshes your reservation status automatically.</p>
+          </div>
+          <div class="hero-actions">
+            <button id="refreshButton" class="refresh-button">Refresh Now</button>
+            <span id="pollingBadge" class="polling-badge">Polling every -- s</span>
+          </div>
+        </header>
+
+        <section id="duoBanner" class="status-banner">
+          <div>
+            <strong id="duoBannerTitle">SSH status</strong>
+            <p id="duoBannerText" class="status-banner-text">Waiting for first SSH refresh.</p>
+          </div>
+          <div class="status-meta">
+            <span>Last SSH success: <span id="lastSuccessAt">--</span></span>
+            <span>Last Duo resolved: <span id="lastDuoResolvedAt">--</span></span>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel" id="tasks">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Recent Task Records</p>
+                <h3>Submitted in the last 48 hours</h3>
+              </div>
+              <span id="taskCount" class="panel-pill">0 records</span>
+            </div>
+            <div class="task-scroll-shell">
+              <div class="table-wrap task-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Job ID</th>
+                      <th>Task</th>
+                      <th>Submitted</th>
+                      <th>GPUs</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody id="taskRecordTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel" id="running">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Active Reservations</p>
+                <h3>Running jobs</h3>
+              </div>
+              <span id="runningCount" class="panel-pill">0 jobs</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Job ID</th>
+                    <th>Job</th>
+                    <th>Start Time</th>
+                    <th>Remaining</th>
+                    <th>GPU Type</th>
+                    <th>GPUs</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="runningTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel" id="pending">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Queued Reservations</p>
+                <h3>Pending jobs</h3>
+              </div>
+              <span id="pendingCount" class="panel-pill">0 jobs</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Job ID</th>
+                    <th>Job</th>
+                    <th>Reservation Time</th>
+                    <th>GPU Type</th>
+                    <th>GPUs</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingTableBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="metrics-grid">
+          <article class="metric-card">
+            <span class="metric-label">Running GPUs</span>
+            <strong id="runningGpus" class="metric-value">--</strong>
+            <span id="runningTrend" class="metric-trend neutral">Waiting for data</span>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Queued GPUs</span>
+            <strong id="queuedGpus" class="metric-value">--</strong>
+            <span id="queueTrend" class="metric-trend neutral">Waiting for data</span>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Queued Jobs</span>
+            <strong id="pendingJobs" class="metric-value">--</strong>
+            <span id="pendingTrend" class="metric-trend neutral">Waiting for data</span>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Task Records</span>
+            <strong id="taskRecords" class="metric-value">--</strong>
+            <span id="taskTrend" class="metric-trend neutral">Waiting for data</span>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Last Refresh</span>
+            <strong id="lastRefresh" class="metric-value metric-small">--</strong>
+            <span id="refreshStatus" class="metric-trend neutral">No poll yet</span>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

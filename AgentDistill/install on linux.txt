@@ -1,0 +1,5 @@
+1 修改 pyproject.toml ： "sympy>=1.13.3",
+2 正常安装
+3 重装老版本transformer：
+	pip uninstall -y transformers tokenizers
+	pip install "transformers==4.51.1" "tokenizers==0.21.1"
