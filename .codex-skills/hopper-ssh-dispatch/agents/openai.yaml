@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hopper SSH Dispatch"
+  short_description: "Operate Hopper only under /scratch/wzhao20 after Duo approval"
+  default_prompt: "Use this skill to send clearly announced SSH commands to Hopper within /scratch/wzhao20 after prompting for Duo approval."

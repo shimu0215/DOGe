@@ -412,3 +412,12 @@ drwxr-sr-x  wzhao20  training_outputs/   (updated Mar 25 07:40)
   - Cleaned Hopper AppleDouble junk files under `/scratch/wzhao20/AKDA2`
   - Verified Hopper now has only one git root:
     - `/scratch/wzhao20/AKDA2/.git`
+- 2026-03-31 outer-repo commit (`codex-木守宫`):
+  - Added `AgentDistill`, `LlamaFactory-main`, and `workbench` into the outer local repo and created commit:
+    - `788a688` `unify AgentDistill, LlamaFactory-main, and workbench under AKDA2`
+  - Pushed `main` to `origin`.
+  - GitHub responded that the repository has moved and the new preferred URL is:
+    - `https://github.com/shimu0215/DOGe.git`
+  - Current practical state:
+    - local outer repo has the unification commit
+    - Hopper outer repo content is already synced by file content, but because Hopper still has those directories as untracked files in its working tree, a clean git-based Hopper pull/checkout step still needs to be done carefully before relying on pure `git pull` there
