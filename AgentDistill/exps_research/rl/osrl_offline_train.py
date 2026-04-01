@@ -292,6 +292,164 @@ def load_checkpoint(policy, tokenizer, optimizer, scheduler, ckpt_dir: str) -> i
 
 
 # =========================================================================== #
+# Auto-stability helpers
+# =========================================================================== #
+
+def _latest_checkpoint(output_dir: str) -> Optional[str]:
+    """Return path of the latest saved checkpoint, or None."""
+    ckpt_root = os.path.join(output_dir, "checkpoints")
+    if not os.path.isdir(ckpt_root):
+        return None
+    entries = sorted(
+        [d for d in os.listdir(ckpt_root) if d.startswith("iter")],
+        reverse=True,
+    )
+    return os.path.join(ckpt_root, entries[0]) if entries else None
+
+
+class StabilityMonitor:
+    """
+    Tracks an EMA of loss and grad_norm; fires when instability is detected.
+
+    Instability conditions (all checked per-iteration after warmup):
+      1. loss is NaN / Inf
+      2. grad_norm > grad_spike_factor × EMA_grad_norm  AND  grad_norm > grad_abs_thresh
+      3. loss > loss_spike_factor × EMA_loss  (after at least `warmup_iters` steps)
+
+    On detection:
+      • rolls back LoRA weights to latest checkpoint
+      • halves lr (floor: min_lr)
+      • halves max_grad_norm (floor: min_grad_norm)
+      • rebuilds optimizer + constant-lr scheduler
+      • up to max_recoveries times before giving up
+    """
+
+    def __init__(
+        self,
+        *,
+        ema_alpha: float = 0.9,
+        grad_spike_factor: float = 5.0,
+        grad_abs_thresh: float = 50.0,
+        loss_spike_factor: float = 3.0,
+        warmup_iters: int = 10,
+        max_recoveries: int = 3,
+        min_lr: float = 1e-8,
+        min_grad_norm: float = 0.05,
+    ) -> None:
+        self.alpha = ema_alpha
+        self.grad_spike_factor = grad_spike_factor
+        self.grad_abs_thresh = grad_abs_thresh
+        self.loss_spike_factor = loss_spike_factor
+        self.warmup_iters = warmup_iters
+        self.max_recoveries = max_recoveries
+        self.min_lr = min_lr
+        self.min_grad_norm = min_grad_norm
+
+        self._ema_loss: Optional[float] = None
+        self._ema_grad: Optional[float] = None
+        self._iters_seen: int = 0
+        self.n_recoveries: int = 0
+
+    # ------------------------------------------------------------------
+    def update(self, loss_val: float, grad_norm_val: float) -> None:
+        a = self.alpha
+        self._ema_loss = loss_val if self._ema_loss is None \
+            else a * self._ema_loss + (1 - a) * loss_val
+        self._ema_grad = grad_norm_val if self._ema_grad is None \
+            else a * self._ema_grad + (1 - a) * grad_norm_val
+        self._iters_seen += 1
+
+    # ------------------------------------------------------------------
+    def _reason(self, loss_val: float, grad_norm_val: float) -> Optional[str]:
+        if not np.isfinite(loss_val):
+            return f"loss={loss_val} (NaN/Inf)"
+        if (self._ema_grad is not None
+                and grad_norm_val > self.grad_spike_factor * self._ema_grad
+                and grad_norm_val > self.grad_abs_thresh):
+            return (f"grad_norm={grad_norm_val:.1f} > "
+                    f"{self.grad_spike_factor}×EMA({self._ema_grad:.1f})")
+        if (self._iters_seen >= self.warmup_iters
+                and self._ema_loss is not None
+                and loss_val > self.loss_spike_factor * self._ema_loss):
+            return (f"loss={loss_val:.2f} > "
+                    f"{self.loss_spike_factor}×EMA({self._ema_loss:.2f})")
+        return None
+
+    # ------------------------------------------------------------------
+    def check_and_recover(
+        self,
+        loss_val: float,
+        grad_norm_val: float,
+        policy,
+        trainable,
+        optimizer,
+        scheduler,
+        args,
+        output_dir: str,
+    ) -> bool:
+        """
+        Returns True if recovery was triggered (caller should restart
+        the current iteration with the restored model).
+        """
+        reason = self._reason(loss_val, grad_norm_val)
+        if reason is None:
+            return False
+
+        if self.n_recoveries >= self.max_recoveries:
+            logger.error(
+                f"[stability] Instability detected ({reason}) but "
+                f"max_recoveries={self.max_recoveries} reached. Stopping."
+            )
+            raise RuntimeError("Training aborted after too many instability recoveries.")
+
+        self.n_recoveries += 1
+
+        # ---- new hyperparams ----
+        new_lr = max(args.lr * (0.5 ** self.n_recoveries), self.min_lr)
+        new_gnorm = max(args.max_grad_norm * (0.5 ** self.n_recoveries), self.min_grad_norm)
+        args.lr = new_lr
+        args.max_grad_norm = new_gnorm
+
+        logger.warning(
+            f"[stability] Recovery #{self.n_recoveries}: {reason}  →  "
+            f"lr {new_lr*2:.2e}→{new_lr:.2e}  "
+            f"max_grad_norm {new_gnorm*2:.3f}→{new_gnorm:.3f}"
+        )
+
+        # ---- roll back to latest checkpoint ----
+        ckpt = _latest_checkpoint(output_dir)
+        if ckpt:
+            logger.warning(f"[stability] Rolling back weights to {ckpt}")
+            policy.load_adapter(ckpt, adapter_name="default")
+            torch.cuda.empty_cache()
+        else:
+            logger.warning("[stability] No checkpoint found; keeping current weights.")
+
+        # ---- rebuild optimizer with new lr ----
+        optimizer.__class__.__init__(
+            optimizer,
+            trainable,
+            lr=new_lr,
+            weight_decay=0.01,
+        )
+
+        # ---- replace scheduler with flat constant-lr ----
+        from torch.optim.lr_scheduler import LambdaLR
+        scheduler.__class__ = LambdaLR
+        LambdaLR.__init__(scheduler, optimizer, lr_lambda=lambda _: 1.0)
+
+        # ---- reset gradient buffers ----
+        optimizer.zero_grad()
+
+        # ---- reset EMA so spikes from the old run don't contaminate ----
+        self._ema_loss = None
+        self._ema_grad = None
+        self._iters_seen = 0
+
+        return True
+
+
+# =========================================================================== #
 # Main training loop
 # =========================================================================== #
 
@@ -374,6 +532,14 @@ def train(args) -> None:
             start_iter = state["iteration"]
             logger.info(f"Resumed at iteration {start_iter}")
 
+    # ---- stability monitor ----
+    stability = StabilityMonitor(
+        warmup_iters=max(1, int(args.num_iterations * args.warmup_ratio)),
+        max_recoveries=args.max_recoveries,
+        min_lr=args.min_lr,
+        min_grad_norm=args.min_grad_norm,
+    )
+
     # ---- training loop ----
     total_loss_acc  = 0.0
     total_pg_acc    = 0.0
@@ -445,6 +611,25 @@ def train(args) -> None:
 
         if n_groups > 0:
             grad_norm = torch.nn.utils.clip_grad_norm_(trainable, args.max_grad_norm)
+            avg_iter_loss = iter_loss / n_groups
+
+            # ---- stability check ----
+            recovered = stability.check_and_recover(
+                loss_val=avg_iter_loss,
+                grad_norm_val=float(grad_norm),
+                policy=policy,
+                trainable=trainable,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                args=args,
+                output_dir=args.output_dir,
+            )
+            if recovered:
+                # Skip this iteration's update; retry next iter with rolled-back weights
+                optimizer.zero_grad()
+                continue
+
+            stability.update(avg_iter_loss, float(grad_norm))
 
             # Step every grad_accum_steps iterations
             if (iteration + 1) % args.grad_accum_steps == 0:
@@ -452,7 +637,7 @@ def train(args) -> None:
                 scheduler.step()
                 optimizer.zero_grad()
 
-            total_loss_acc += iter_loss / n_groups
+            total_loss_acc += avg_iter_loss
             total_pg_acc   += iter_pg   / n_groups
             total_kl_acc   += iter_kl   / n_groups
             n_groups_acc   += 1
@@ -531,6 +716,14 @@ def parse_args():
     p.add_argument("--log_every",   type=int, default=5)
     p.add_argument("--save_every",  type=int, default=5)
     p.add_argument("--seed",        type=int, default=42)
+
+    # Auto-stability
+    p.add_argument("--max_recoveries", type=int,   default=3,
+                   help="max times to auto-recover from instability before aborting")
+    p.add_argument("--min_lr",         type=float, default=1e-8,
+                   help="floor for lr after repeated halving")
+    p.add_argument("--min_grad_norm",  type=float, default=0.05,
+                   help="floor for max_grad_norm after repeated halving")
 
     return p.parse_args()
 
