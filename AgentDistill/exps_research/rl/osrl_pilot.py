@@ -141,10 +141,18 @@ def tokenise_trajectory(
             flat.append({"role": role, "content": text})
             is_action.append(msg["role"] in _ASSISTANT_ROLES)
 
+    def _apply_tmpl(msgs, add_gen=False):
+        """apply_chat_template → 1-D LongTensor (handles BatchEncoding or Tensor)."""
+        out = tokenizer.apply_chat_template(
+            msgs, tokenize=True, add_generation_prompt=add_gen, return_tensors="pt"
+        )
+        if hasattr(out, "keys"):   # BatchEncoding
+            out = out["input_ids"]
+        # out shape: (1, L) or (L,)
+        return out.squeeze(0) if out.dim() == 2 else out
+
     try:
-        full_ids = tokenizer.apply_chat_template(
-            flat, tokenize=True, add_generation_prompt=False, return_tensors="pt"
-        )[0]
+        full_ids = _apply_tmpl(flat)
     except Exception as e:
         log(f"tokenise_trajectory error: {e}", "warning")
         return None
@@ -156,9 +164,7 @@ def tokenise_trajectory(
     cursor = 0
     for i, msg in enumerate(flat):
         try:
-            prefix_ids = tokenizer.apply_chat_template(
-                flat[: i + 1], tokenize=True, add_generation_prompt=False, return_tensors="pt"
-            )[0]
+            prefix_ids = _apply_tmpl(flat[: i + 1])
             end = prefix_ids.shape[0]
             if is_action[i]:
                 labels[cursor:end] = full_ids[cursor:end]

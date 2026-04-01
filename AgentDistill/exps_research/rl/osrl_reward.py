@@ -123,12 +123,15 @@ def _conditional_log_prob(
         return 0.0
 
     # Tokenise context (with generation prompt so the model sees the right BOS)
-    ctx_ids = tokenizer.apply_chat_template(
+    # apply_chat_template may return a BatchEncoding or a plain Tensor depending
+    # on the transformers version; normalise to Tensor explicitly.
+    _ctx = tokenizer.apply_chat_template(
         context_messages,
         tokenize=True,
         add_generation_prompt=True,
         return_tensors="pt",
-    ).to(device)                                             # (1, L_ctx)
+    )
+    ctx_ids = (_ctx["input_ids"] if hasattr(_ctx, "keys") else _ctx).to(device)  # (1, L_ctx)
 
     resp_ids = tokenizer(
         response_text,
