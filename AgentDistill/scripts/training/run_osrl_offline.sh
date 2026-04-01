@@ -34,6 +34,7 @@ export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-/scratch/wzhao20/torc
 export VLLM_NO_USAGE_STATS=1
 export DO_NOT_TRACK=1
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+export PYTHONUNBUFFERED=1
 
 # ------------------------------------------------------------------ #
 # Hyperparameters (override via env vars)
@@ -49,8 +50,8 @@ OUTPUT_DIR="${OUTPUT_DIR:-/scratch/wzhao20/AKDA2-vjk/AgentDistill/training_outpu
 
 LAMBDA_SENSITIVITY="${LAMBDA_SENSITIVITY:-0.1}"
 NUM_ITERATIONS="${NUM_ITERATIONS:-200}"
-BATCH_SIZE="${BATCH_SIZE:-16}"       # problems per iteration
-G_PER_PROBLEM="${G_PER_PROBLEM:-8}"  # rollouts per problem
+BATCH_SIZE="${BATCH_SIZE:-8}"        # problems per iteration
+G_PER_PROBLEM="${G_PER_PROBLEM:-4}"  # rollouts per problem (keep it small for speed)
 
 LR="${LR:-2e-6}"
 KL_COEF="${KL_COEF:-0.01}"
@@ -93,7 +94,7 @@ if [[ -n "$RESUME" ]]; then
     RESUME_ARG="--resume_from_checkpoint $RESUME"
 fi
 
-python -m exps_research.rl.osrl_offline_train \
+python -u -m exps_research.rl.osrl_offline_train \
     --model_name              "$MODEL_NAME"           \
     --data_dir                "$DATA_DIR"             \
     --seed_start              "$SEED_START"           \

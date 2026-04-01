@@ -509,7 +509,7 @@ def parse_args():
 
     # Reward
     p.add_argument("--lambda_sensitivity",  type=float, default=0.1)
-    p.add_argument("--sensitivity_max_steps", type=int, default=3)
+    p.add_argument("--sensitivity_max_steps", type=int, default=2)
 
     # GRPO
     p.add_argument("--num_iterations",  type=int, default=200)
