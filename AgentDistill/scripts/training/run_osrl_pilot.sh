@@ -17,7 +17,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 # Activate the conda environment that has peft/transformers/torch
-source ~/.bashrc
+source ~/.bashrc 2>/dev/null || true
 conda activate agents
 
 export PYTHONPATH="$ROOT_DIR/src:${PYTHONPATH:-}"
