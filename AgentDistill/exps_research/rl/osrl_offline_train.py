@@ -23,6 +23,7 @@ Resume on a new GPU allocation:
 from __future__ import annotations
 
 import argparse
+import ast
 import glob
 import json
 import logging
@@ -113,6 +114,16 @@ def load_grouped_trajectories(
                 if not line:
                     continue
                 traj = json.loads(line)
+                # Some entries are stored as JSON strings containing Python dict
+                # reprs (single-quoted). Use ast.literal_eval to recover the dict.
+                if isinstance(traj, str):
+                    try:
+                        traj = ast.literal_eval(traj)
+                    except Exception:
+                        logger.warning("Skipping unparseable line")
+                        continue
+                if not isinstance(traj, dict):
+                    continue
                 q = str(traj.get("question", ""))
                 grouped[q].append(traj)
                 total += 1
