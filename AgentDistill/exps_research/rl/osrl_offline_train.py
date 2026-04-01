@@ -213,9 +213,10 @@ def grpo_loss_for_group(
     r = np.array(group_rewards, dtype=np.float32)
     advantages = (r - r.mean()) / (r.std() + grpo_eps)
 
-    pg_acc = torch.tensor(0.0, device=device)
-    kl_acc = torch.tensor(0.0, device=device)
-    n_valid = 0
+    pg_acc   = torch.tensor(0.0, device=device)
+    kl_acc   = torch.tensor(0.0, device=device)
+    n_valid  = 0
+    n_tokens = 0  # total assistant tokens — used for per-token normalisation
 
     for traj, adv in zip(group_trajs, advantages):
         tok = tokenise_trajectory(traj, tokenizer, max_seq_length)
@@ -242,18 +243,23 @@ def grpo_loss_for_group(
             ref_tlp = ref_lp.gather(-1, s_labels.clamp(min=0).unsqueeze(-1)).squeeze(-1)
             ref_act_lp = ref_tlp[mask]
 
-        pg_acc = pg_acc - float(adv) * act_lp.sum()
-        kl_acc = kl_acc + (act_lp - ref_act_lp).sum()
-        n_valid += 1
+        ntok = act_lp.numel()
+        pg_acc  = pg_acc  - float(adv) * act_lp.sum()
+        kl_acc  = kl_acc  + (act_lp - ref_act_lp).sum()
+        n_valid  += 1
+        n_tokens += ntok
 
     if n_valid == 0:
         return None, {"n_valid": 0}
 
-    loss = (pg_acc + kl_coef * kl_acc) / n_valid
+    # Normalise by total tokens so loss scale is independent of sequence length.
+    # This keeps grad_norm well-behaved (~1-5 instead of 150-300).
+    loss = (pg_acc + kl_coef * kl_acc) / n_tokens
     return loss, {
-        "pg": (pg_acc / n_valid).item(),
-        "kl": (kl_acc / n_valid).item(),
+        "pg":      (pg_acc  / n_tokens).item(),
+        "kl":      (kl_acc  / n_tokens).item(),
         "n_valid": n_valid,
+        "n_tokens": n_tokens,
     }
 
 
