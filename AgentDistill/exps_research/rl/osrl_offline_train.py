@@ -521,10 +521,14 @@ def train(args) -> None:
     # ---- optimizer & scheduler ----
     trainable = [p for p in policy.parameters() if p.requires_grad]
     optimizer = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=0.01)
-    total_steps = args.num_iterations * args.grad_accum_steps
+    # total_steps = number of actual optimizer.step() calls over all training
+    # (scheduler.step() is called once per optimizer step, not once per iteration)
+    total_steps = max(1, args.num_iterations // args.grad_accum_steps)
+    warmup_steps = max(1, int(total_steps * args.warmup_ratio))
+    logger.info(f"Scheduler: total_steps={total_steps}, warmup_steps={warmup_steps}")
     scheduler = get_cosine_schedule_with_warmup(
         optimizer,
-        num_warmup_steps=max(1, int(total_steps * args.warmup_ratio)),
+        num_warmup_steps=warmup_steps,
         num_training_steps=total_steps,
     )
 
