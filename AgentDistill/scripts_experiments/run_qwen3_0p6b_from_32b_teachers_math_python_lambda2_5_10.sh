@@ -28,7 +28,7 @@ run_one_teacher() {
   TRAIN_TAG="$train_tag" \
   EPOCHS="${EPOCHS:-2}" \
   DATASET_SIZE="${DATASET_SIZE:--1}" \
-  bash scripts_modular/train_student_from_single_teacher_math_python.sh
+  bash scripts/training/train_student_from_single_teacher_math_python.sh
 
   cleanup_compute
 }
