@@ -85,6 +85,31 @@ REMAINING_DATA=""
 REMAINING_RESULT_JSONL=""
 VLLM_PID=""
 
+resolve_remaining_result_path() {
+  local preferred="$1"
+  local model_id="$2"
+  local remaining_data="$3"
+  local seed="$4"
+  local max_steps="$5"
+  local n="$6"
+  local log_root="$7"
+
+  if [[ -f "$preferred" ]]; then
+    echo "$preferred"
+    return 0
+  fi
+
+  local model_name stem candidate
+  model_name="$(basename "$model_id")"
+  stem="$(basename "$remaining_data" .json)"
+  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | grep "/${stem}_" | head -n 1 || true)"
+  if [[ -n "$candidate" ]]; then
+    echo "$candidate"
+  else
+    echo "$preferred"
+  fi
+}
+
 restore_backup_on_failure() {
   if [[ -n "$RAW_BACKUP" && -f "$RAW_BACKUP" ]]; then
     if [[ ! -f "$RESULT_JSONL" ]]; then
@@ -222,27 +247,3 @@ if ! is_collection_complete "$RESULT_JSONL" "$EXPECTED_COUNT"; then
 fi
 
 echo "Collection complete: $RESULT_JSONL"
-resolve_remaining_result_path() {
-  local preferred="$1"
-  local model_id="$2"
-  local remaining_data="$3"
-  local seed="$4"
-  local max_steps="$5"
-  local n="$6"
-  local log_root="$7"
-
-  if [[ -f "$preferred" ]]; then
-    echo "$preferred"
-    return 0
-  fi
-
-  local model_name stem candidate
-  model_name="$(basename "$model_id")"
-  stem="$(basename "$remaining_data" .json)"
-  candidate="$(find "$log_root" -maxdepth 2 -type f -name "${model_name}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | grep "/${stem}_" | head -n 1 || true)"
-  if [[ -n "$candidate" ]]; then
-    echo "$candidate"
-  else
-    echo "$preferred"
-  fi
-}
