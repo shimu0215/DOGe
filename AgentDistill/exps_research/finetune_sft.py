@@ -245,7 +245,11 @@ def main(args):
         if args.random_trajectory_per_question:
             train_dataset.grouped_examples = train_dataset.grouped_examples[:args.dataset_size]
         else:
-            train_dataset = train_dataset[:args.dataset_size]
+            keep_count = min(args.dataset_size, len(train_dataset))
+            if hasattr(train_dataset, "select"):
+                train_dataset = train_dataset.select(range(keep_count))
+            else:
+                train_dataset = train_dataset[:keep_count]
 
     data_module = {
         "train_dataset": train_dataset
