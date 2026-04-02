@@ -114,8 +114,11 @@ def _conditional_log_prob(
     max_length: int = 8192,
 ) -> float:
     """
-    Compute  sum_t log π(token_t | context, token_{<t})
+    Compute  mean_t log π(token_t | context, token_{<t})
     over the tokens in `response_text`, given `context_messages` as prefix.
+
+    Returns per-token mean (not sum) to avoid length bias when comparing
+    sensitivity across thoughts of different lengths.
 
     Returns 0.0 on any error (sequence too long, empty response, etc.).
     """
@@ -156,7 +159,7 @@ def _conditional_log_prob(
 
     log_probs = F.log_softmax(resp_logits.float(), dim=-1)
     token_lps = log_probs.gather(-1, resp_targets.unsqueeze(-1)).squeeze(-1)
-    return float(token_lps.sum())
+    return float(token_lps.mean())  # per-token mean to remove length bias
 
 
 # --------------------------------------------------------------------------- #
