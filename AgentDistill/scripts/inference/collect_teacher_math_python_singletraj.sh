@@ -18,7 +18,12 @@ export DO_NOT_TRACK=1
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3-14B}"
 LORA_FOLDER="${LORA_FOLDER:-}"
 DATA_PATH="${DATA_PATH:-/scratch/wzhao20/AgentDistill/data_processor/math_dataset/test/math_500_20250414.json}"
-LOG_ROOT="${LOG_ROOT:-/scratch/wzhao20/AgentDistill/logs/qa_results_python_only_teacher}"
+DEFAULT_LOG_ROOT="/scratch/wzhao20/AgentDistill/logs/qa_results_python_only_teacher"
+if [[ -n "${LORA_FOLDER:-}" ]]; then
+  LOG_ROOT="${LOG_ROOT:-$LORA_FOLDER/qa_results}"
+else
+  LOG_ROOT="${LOG_ROOT:-$DEFAULT_LOG_ROOT}"
+fi
 SEED="${SEED:-42}"
 PORT_BASE="${PORT_BASE:-8000}"
 TP_SIZE="${TP_SIZE:-4}"
