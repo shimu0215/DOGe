@@ -376,9 +376,10 @@ class StabilityMonitor:
                     f"{self.grad_spike_factor}×EMA({self._ema_grad:.1f})")
         if (self._iters_seen >= self.warmup_iters
                 and self._ema_loss is not None
-                and loss_val > self.loss_spike_factor * self._ema_loss):
-            return (f"loss={loss_val:.2f} > "
-                    f"{self.loss_spike_factor}×EMA({self._ema_loss:.2f})")
+                and abs(self._ema_loss) > 1e-8  # skip when EMA ≈ 0
+                and abs(loss_val - self._ema_loss) > self.loss_spike_factor * abs(self._ema_loss)):
+            return (f"|loss-EMA|={abs(loss_val-self._ema_loss):.4f} > "
+                    f"{self.loss_spike_factor}×|EMA|({abs(self._ema_loss):.4f})")
         return None
 
     # ------------------------------------------------------------------
