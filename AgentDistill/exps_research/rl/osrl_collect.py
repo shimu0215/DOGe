@@ -140,7 +140,7 @@ class PolicyWrapperModel:
             do_sample=True,
             temperature=self.temperature,
             pad_token_id=self.tokenizer.eos_token_id,
-            use_cache=False,  # gradient_checkpointing is still active; skip kv-cache
+            use_cache=True,  # gradient_checkpointing is disabled by refresh_data_pool
         )
         if stop_token_ids:
             gen_kwargs["eos_token_id"] = stop_token_ids
@@ -279,45 +279,50 @@ def refresh_data_pool(
 
     was_training = policy.training
     policy.eval()
+    # Disable gradient checkpointing so generate() can use kv-cache (≈10× faster).
+    # It is re-enabled unconditionally in the finally block.
+    policy.gradient_checkpointing_disable()
 
     n_collected = 0
     t0 = time.time()
 
-    for q_idx, (question, true_answer) in enumerate(sampled):
-        new_trajs: List[Dict] = []
-        for seed_i in range(n_seeds):
-            traj = run_agent_episode(
-                policy=policy,
-                tokenizer=tokenizer,
-                question=question,
-                true_answer=true_answer,
-                device=device,
-                max_steps=max_steps,
-                temperature=temperature,
-                max_new_tokens=max_new_tokens,
-                log=log,
-            )
-            if traj is not None:
-                new_trajs.append(traj)
-                n_collected += 1
+    try:
+        for q_idx, (question, true_answer) in enumerate(sampled):
+            new_trajs: List[Dict] = []
+            for seed_i in range(n_seeds):
+                traj = run_agent_episode(
+                    policy=policy,
+                    tokenizer=tokenizer,
+                    question=question,
+                    true_answer=true_answer,
+                    device=device,
+                    max_steps=max_steps,
+                    temperature=temperature,
+                    max_new_tokens=max_new_tokens,
+                    log=log,
+                )
+                if traj is not None:
+                    new_trajs.append(traj)
+                    n_collected += 1
 
-        if new_trajs:
-            # Replace the oldest entries for this question so the pool
-            # stays bounded.  Keep at most len(old) entries total.
-            old = grouped.get(question, [])
-            max_pool = max(len(old), n_seeds)
-            merged = (old + new_trajs)[-max_pool:]
-            grouped[question] = merged
+            if new_trajs:
+                # Replace the oldest entries for this question so the pool
+                # stays bounded.  Keep at most len(old) entries total.
+                old = grouped.get(question, [])
+                max_pool = max(len(old), n_seeds)
+                merged = (old + new_trajs)[-max_pool:]
+                grouped[question] = merged
 
-        if (q_idx + 1) % 5 == 0 or (q_idx + 1) == sample_n:
-            log.info(
-                f"[collect] refresh {q_idx+1}/{sample_n} questions done  "
-                f"collected={n_collected}  "
-                f"t={time.time()-t0:.0f}s"
-            )
-
-    if was_training:
-        policy.train()
+            if (q_idx + 1) % 5 == 0 or (q_idx + 1) == sample_n:
+                log.info(
+                    f"[collect] refresh {q_idx+1}/{sample_n} questions done  "
+                    f"collected={n_collected}  "
+                    f"t={time.time()-t0:.0f}s"
+                )
+    finally:
+        policy.gradient_checkpointing_enable()
+        if was_training:
+            policy.train()
 
     log.info(
         f"[collect] refresh complete: {n_collected} new trajectories "
