@@ -80,7 +80,7 @@ TASK_TYPE="$(infer_task_type "$DATA_PATH")"
 SERVE_LOG_DIR="$(dirname "$RESULT_JSONL")"
 mkdir -p "$SERVE_LOG_DIR"
 SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_collect_seed${SEED}_serve.log"
-API_BASE="http://0.0.0.0:${PORT_BASE}/v1"
+API_BASE="http://127.0.0.1:${PORT_BASE}/v1"
 
 RAW_BACKUP=""
 REMAINING_DATA=""
