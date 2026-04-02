@@ -127,7 +127,7 @@ def compute_trajectory_log_probs(
     tokenizer,
     cleaned_messages: List[dict],
     device: torch.device,
-    max_length: int = 1536,
+    max_length: int = 4096,
 ) -> Optional[torch.Tensor]:
     """
     Compute log p_θ(assistant_token_t | all_preceding_tokens) for every
@@ -140,9 +140,9 @@ def compute_trajectory_log_probs(
     if input_ids is None:
         return None
 
-    # Truncate if needed
+    # Truncate from the LEFT if needed, so assistant tokens at the END are preserved
     if input_ids.shape[0] > max_length:
-        input_ids = input_ids[:max_length]
+        input_ids = input_ids[-max_length:]
 
     ranges = find_assistant_token_ranges(input_ids, tokenizer)
     if not ranges:
