@@ -160,6 +160,13 @@ def train(args):
     trainable = [p for p in model.parameters() if p.requires_grad]
     optimizer = AdamW(trainable, lr=args.lr, weight_decay=args.weight_decay)
 
+    # DeepSpeed custom-loop requires batch size to be declared explicitly
+    if (hasattr(accelerator.state, "deepspeed_plugin")
+            and accelerator.state.deepspeed_plugin is not None):
+        accelerator.state.deepspeed_plugin.deepspeed_config[
+            "train_micro_batch_size_per_gpu"
+        ] = 1
+
     model, optimizer = accelerator.prepare(model, optimizer)
 
     seed_list = list(range(args.seed_range[0], args.seed_range[1]))
