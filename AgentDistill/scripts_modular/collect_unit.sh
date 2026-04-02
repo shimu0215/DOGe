@@ -195,6 +195,19 @@ if [[ -f "$REMAINING_RESULT_JSONL" ]]; then
   fi
 fi
 
+REMAINING_RESULT_JSONL="$(resolve_remaining_result_path "$REMAINING_RESULT_JSONL" "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LOG_ROOT")"
+
+if [[ -f "$REMAINING_RESULT_JSONL" ]]; then
+  if [[ -f "$RESULT_JSONL" ]]; then
+    MERGED_TMP="${RESULT_JSONL}.merged.$$"
+    merge_raw_results_by_question "$RESULT_JSONL" "$REMAINING_RESULT_JSONL" "$MERGED_TMP" >/dev/null
+    mv "$MERGED_TMP" "$RESULT_JSONL"
+    rm -f "$REMAINING_RESULT_JSONL"
+  else
+    mkdir -p "$(dirname "$RESULT_JSONL")"
+    mv "$REMAINING_RESULT_JSONL" "$RESULT_JSONL"
+  fi
+fi
 if [[ -n "$RAW_BACKUP" && -f "$RAW_BACKUP" ]]; then
   MERGED_TMP="${RESULT_JSONL}.merged.$$"
   merge_raw_results_by_question "$RAW_BACKUP" "$RESULT_JSONL" "$MERGED_TMP" >/dev/null
@@ -209,3 +222,27 @@ if ! is_collection_complete "$RESULT_JSONL" "$EXPECTED_COUNT"; then
 fi
 
 echo "Collection complete: $RESULT_JSONL"
+resolve_remaining_result_path() {
+  local preferred="$1"
+  local model_id="$2"
+  local remaining_data="$3"
+  local seed="$4"
+  local max_steps="$5"
+  local n="$6"
+  local log_root="$7"
+
+  if [[ -f "$preferred" ]]; then
+    echo "$preferred"
+    return 0
+  fi
+
+  local model_name stem candidate
+  model_name="$(basename "$model_id")"
+  stem="$(basename "$remaining_data" .json)"
+  candidate="$(find "$log_root" -maxdepth 2 -type f -name "${model_name}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | grep "/${stem}_" | head -n 1 || true)"
+  if [[ -n "$candidate" ]]; then
+    echo "$candidate"
+  else
+    echo "$preferred"
+  fi
+}
