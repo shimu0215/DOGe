@@ -124,6 +124,7 @@ def _compute_conditional_log_prob(
     target_message: dict,
     max_target_tokens: int,
     device: torch.device,
+    max_context_tokens: int = 1024,
 ) -> Optional[float]:
     """
     Compute mean log p(target_tokens | context) using teacher forcing.
@@ -134,6 +135,9 @@ def _compute_conditional_log_prob(
       3. target_ids = full_ids[L_ctx:]         (length L_tgt)
       4. Forward pass on full_ids → logits
       5. log_p = mean( log_softmax(logits)[L_ctx-1 : L_ctx-1+L_tgt, target_ids] )
+
+    Context is truncated from the LEFT to max_context_tokens to avoid OOM
+    (no flash_attn → attention is O(L²)).
 
     Returns None if tokenisation fails or target is empty.
     """
@@ -161,6 +165,15 @@ def _compute_conditional_log_prob(
             full_ids = full_ids[:, :L_ctx + max_target_tokens]
             L_tgt = max_target_tokens
             L_full = L_ctx + L_tgt
+
+        # Truncate context from the left if needed (keep target intact)
+        if L_full > max_context_tokens + L_tgt:
+            keep = max_context_tokens + L_tgt
+            trim = L_full - keep
+            full_ids = full_ids[:, trim:]
+            L_ctx = max(1, L_ctx - trim)
+            L_full = full_ids.shape[1]
+            L_tgt = L_full - L_ctx
 
         full_ids = full_ids.to(device)
 

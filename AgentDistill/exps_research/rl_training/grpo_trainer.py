@@ -127,7 +127,7 @@ def compute_trajectory_log_probs(
     tokenizer,
     cleaned_messages: List[dict],
     device: torch.device,
-    max_length: int = 4096,
+    max_length: int = 1536,
 ) -> Optional[torch.Tensor]:
     """
     Compute log p_θ(assistant_token_t | all_preceding_tokens) for every

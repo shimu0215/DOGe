@@ -68,6 +68,7 @@ def build_model(args):
         args.model_name,
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
+        use_cache=False,  # required for gradient checkpointing
     )
     lora_config = LoraConfig(
         r=args.lora_r,
@@ -78,6 +79,9 @@ def build_model(args):
         task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, lora_config)
+    model.gradient_checkpointing_enable(
+        gradient_checkpointing_kwargs={"use_reentrant": False}
+    )
     model.print_trainable_parameters()
     return model
 
