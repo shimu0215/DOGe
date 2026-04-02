@@ -41,6 +41,7 @@ from peft import LoraConfig, PeftModel, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
 from exps_research.rl.osrl_reward import compute_rewards
+from exps_research.rl.osrl_collect import refresh_data_pool
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -476,6 +477,15 @@ def train(args) -> None:
     logger.info(f"Training on {len(questions)} questions, "
                 f"G={max(len(v) for v in grouped.values())} rollouts/question")
 
+    # Build a (question, true_answer) pool for data refresh.
+    # true_answer is taken from any trajectory for that question.
+    questions_pool: List[Tuple[str, str]] = []
+    for q, trajs in grouped.items():
+        true_ans = str(trajs[0].get("true_answer", ""))
+        if true_ans:
+            questions_pool.append((q, true_ans))
+    logger.info(f"Questions pool for refresh: {len(questions_pool)} entries")
+
     # ---- build model ----
     device = torch.device("cuda:0")  # device_map=auto handles the rest
     logger.info(f"Loading tokenizer from {args.model_name}")
@@ -578,6 +588,32 @@ def train(args) -> None:
 
     for iteration in range(start_iter, args.num_iterations):
         t0 = time.time()
+
+        # ---- periodic data refresh ----
+        if (args.refresh_every > 0
+                and (iteration - start_iter) > 0
+                and iteration % args.refresh_every == 0):
+            logger.info(
+                f"[refresh] iteration {iteration}: refreshing "
+                f"{args.refresh_n_questions} questions × {args.refresh_n_seeds} seeds ..."
+            )
+            n_new = refresh_data_pool(
+                policy=policy,
+                tokenizer=tokenizer,
+                questions_pool=questions_pool,
+                grouped=grouped,
+                n_questions=args.refresh_n_questions,
+                n_seeds=args.refresh_n_seeds,
+                device=device,
+                max_steps=args.agent_max_steps,
+                temperature=args.collect_temperature,
+                max_new_tokens=args.collect_max_new_tokens,
+                log=logger,
+            )
+            logger.info(f"[refresh] collected {n_new} new trajectories")
+            # Keep questions list in sync (refresh may not add new questions,
+            # but grouped values have been updated in-place).
+            questions = list(grouped.keys())
 
         # Sample batch of questions
         batch_qs = random.sample(questions, min(args.batch_size, len(questions)))
@@ -754,6 +790,20 @@ def parse_args():
                    help="floor for lr after repeated halving")
     p.add_argument("--min_grad_norm",  type=float, default=0.05,
                    help="floor for max_grad_norm after repeated halving")
+
+    # Data refresh
+    p.add_argument("--refresh_every",        type=int,   default=0,
+                   help="refresh data pool every N iterations (0 = disabled)")
+    p.add_argument("--refresh_n_questions",  type=int,   default=30,
+                   help="number of questions to refresh per refresh cycle")
+    p.add_argument("--refresh_n_seeds",      type=int,   default=2,
+                   help="new trajectories per question per refresh cycle")
+    p.add_argument("--agent_max_steps",      type=int,   default=5,
+                   help="max agent steps when collecting refresh trajectories")
+    p.add_argument("--collect_temperature",  type=float, default=0.7,
+                   help="sampling temperature for refresh trajectory generation")
+    p.add_argument("--collect_max_new_tokens", type=int, default=1024,
+                   help="max new tokens per generation step during refresh")
 
     return p.parse_args()
 
