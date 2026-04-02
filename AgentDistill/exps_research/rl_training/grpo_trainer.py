@@ -12,6 +12,13 @@ Design notes:
     KL penalty is estimated by temporarily disabling LoRA adapters.
   - DeepSpeed ZeRO-3 compatible: relies only on standard forward passes.
   - Tokenisation follows the same Qwen chat-template convention as finetune_sft.py.
+
+Memory strategy:
+  - compute_trajectory_log_probs uses F.cross_entropy on ONLY the assistant-token
+    slice of logits, avoiding materialising a full [L, vocab] fp32 tensor.
+  - GRPOTrainer.step processes ONE trajectory at a time and calls backward()
+    immediately after each, so at most one gradient graph exists at any moment.
+  - torch.cuda.empty_cache() is called between trajectories.
 """
 
 import logging
@@ -119,7 +126,7 @@ def find_assistant_token_ranges(
 
 
 # ---------------------------------------------------------------------------
-# Per-trajectory log-prob computation
+# Per-trajectory log-prob computation  (memory-efficient)
 # ---------------------------------------------------------------------------
 
 def compute_trajectory_log_probs(
@@ -132,6 +139,11 @@ def compute_trajectory_log_probs(
     """
     Compute log p_θ(assistant_token_t | all_preceding_tokens) for every
     assistant token in the trajectory.
+
+    Memory optimisation:
+      Instead of log_softmax(logits[0].float())  →  [L, vocab] fp32 (huge),
+      we use F.cross_entropy on the small assistant-token slice [n_asst, vocab],
+      which avoids materialising the full vocabulary matrix for all L positions.
 
     Returns a 1-D FloatTensor of per-token log probs (assistant tokens only).
     Returns None if tokenisation fails or no assistant tokens found.
@@ -150,84 +162,32 @@ def compute_trajectory_log_probs(
 
     input_ids = input_ids.unsqueeze(0).to(device)  # [1, L]
 
-    logits = model(input_ids=input_ids).logits  # [1, L, V]
-    log_probs = F.log_softmax(logits[0].float(), dim=-1)  # [L, V]
+    logits = model(input_ids=input_ids).logits  # [1, L, V]  bf16
 
-    # For each assistant token at position p, the prediction logit is at p-1
+    # Process only the assistant-token positions to avoid materialising [L, V] in fp32
     all_log_probs = []
     for start, end in ranges:
         if start == 0:
             continue
-        targets = input_ids[0, start:end]           # [n_tokens]
-        preds   = log_probs[start - 1 : end - 1, :] # [n_tokens, V]
-        token_lp = preds[range(len(targets)), targets.cpu()]
+        targets = input_ids[0, start:end]                   # [n]
+        pred_logits = logits[0, start - 1 : end - 1, :]    # [n, V] — view of logits
+
+        # F.cross_entropy: numerically stable, gradient preserved through logits,
+        # and only materialises softmax for [n, V] not [L, V].
+        token_lp = -F.cross_entropy(
+            pred_logits.float(), targets, reduction="none"
+        )  # [n]
         all_log_probs.append(token_lp)
 
     if not all_log_probs:
         return None
 
-    return torch.cat(all_log_probs)  # 1-D tensor
+    return torch.cat(all_log_probs)  # 1-D tensor, has grad
 
 
 # ---------------------------------------------------------------------------
-# GRPO loss
+# Reference-model log-prob (for KL penalty)
 # ---------------------------------------------------------------------------
-
-def grpo_loss_for_group(
-    model,
-    tokenizer,
-    group_trajectories: List[dict],
-    advantages: List[float],
-    device: torch.device,
-    kl_coeff: float = 0.0,
-    max_length: int = 4096,
-    clip_ratio: float = 0.2,
-) -> Optional[torch.Tensor]:
-    """
-    Compute GRPO policy-gradient loss for one question group.
-
-    L = - mean_i [ A_i * mean_t(log π_θ(a_t|s_t)) ]
-      + kl_coeff * mean_i [ KL(π_θ || π_ref) ]
-
-    With LoRA, π_ref is approximated by temporarily disabling adapters.
-
-    Returns scalar loss tensor (with grad), or None if all tokenisations fail.
-    """
-    losses = []
-
-    for entry, adv in zip(group_trajectories, advantages):
-        raw_messages = entry.get("log_data", {}).get("messages", [])
-        cleaned = clean_messages_for_training(raw_messages)
-        if cleaned is None:
-            continue
-
-        # ---- compute log probs under current policy ----
-        log_probs = compute_trajectory_log_probs(
-            model, tokenizer, cleaned, device, max_length=max_length
-        )
-        if log_probs is None:
-            continue
-
-        mean_log_p = log_probs.mean()  # scalar, has grad
-
-        # ---- optional KL term (base model as ref) ----
-        kl_term = torch.tensor(0.0, device=device)
-        if kl_coeff > 0.0:
-            ref_mean_log_p = _ref_log_prob(
-                model, tokenizer, cleaned, device, max_length
-            )
-            if ref_mean_log_p is not None:
-                # KL ≈ log p_θ - log p_ref (per token average)
-                kl_term = mean_log_p.detach() - ref_mean_log_p  # scalar
-
-        loss_i = -float(adv) * mean_log_p + kl_coeff * kl_term
-        losses.append(loss_i)
-
-    if not losses:
-        return None
-
-    return torch.stack(losses).mean()
-
 
 def _ref_log_prob(
     model,
@@ -268,11 +228,16 @@ class GRPOTrainer:
     """
     Thin wrapper around the GRPO loss for use in a custom Accelerate training loop.
 
+    Memory strategy: processes ONE trajectory at a time, calling
+    accelerator.backward() immediately after each, so at most one gradient
+    graph lives in memory simultaneously.  torch.cuda.empty_cache() is called
+    between trajectories to release any fragmented allocations.
+
     Usage:
         trainer = GRPOTrainer(model, tokenizer, optimizer, accelerator, config)
         for step, batch_groups in enumerate(loader):
             reward_fn(batch_groups) → rewards_per_group
-            loss = trainer.step(batch_groups, rewards_per_group, step)
+            info = trainer.step(batch_groups, rewards_per_group, step)
     """
 
     def __init__(
@@ -315,46 +280,75 @@ class GRPOTrainer:
         """
         Run one GRPO accumulation step.
 
-        Computes advantages, loss, backward pass.  Calls optimizer.step()
-        every `gradient_accumulation_steps` calls.
+        Processes each trajectory INDIVIDUALLY: forward → backward (frees graph)
+        → empty_cache.  This limits peak GPU memory to one trajectory's
+        gradient graph at a time, regardless of group size.
 
+        Loss scaling:
+          loss_i = (-A_i * mean_log_p_i + kl * kl_i) / (n_total * grad_accum)
+        so gradients are equivalent to mean over the full group × accum window.
+
+        Calls optimizer.step() every `gradient_accumulation_steps` calls.
         Returns dict with loss info (averaged over the accumulation window).
         """
         info = {"loss": 0.0, "optimizer_step": False}
 
-        # Compute advantages per group
+        # Compute advantages per group (pure Python, no GPU)
         adv_per_group = [compute_group_advantages(r) for r in rewards_per_group]
 
-        # Accumulate losses over groups
-        total_loss = None
-        n_valid = 0
+        # Denominator for loss scaling: total trajectories × grad_accum steps
+        n_total = sum(len(g) for g in batch_groups)
+        if n_total == 0:
+            return info
+        scale = 1.0 / (n_total * self.gradient_accumulation_steps)
+
+        step_loss_sum = 0.0
+        step_valid = 0
 
         for group, advantages in zip(batch_groups, adv_per_group):
-            group_loss = grpo_loss_for_group(
-                model=self.model,
-                tokenizer=self.tokenizer,
-                group_trajectories=group,
-                advantages=advantages,
-                device=self.device,
-                kl_coeff=self.kl_coeff,
-                max_length=self.max_length,
-                clip_ratio=self.clip_ratio,
-            )
-            if group_loss is None:
-                continue
-            if total_loss is None:
-                total_loss = group_loss
-            else:
-                total_loss = total_loss + group_loss
-            n_valid += 1
+            for entry, adv in zip(group, advantages):
+                raw_messages = entry.get("log_data", {}).get("messages", [])
+                cleaned = clean_messages_for_training(raw_messages)
+                if cleaned is None:
+                    continue
 
-        if total_loss is None or n_valid == 0:
+                # ---- forward pass for this single trajectory (with grad) ----
+                log_probs = compute_trajectory_log_probs(
+                    self.model, self.tokenizer, cleaned,
+                    self.device, self.max_length,
+                )
+                if log_probs is None:
+                    continue
+
+                mean_log_p = log_probs.mean()  # scalar, has grad
+
+                # ---- optional KL term (detached → no grad through kl_term) ----
+                kl_term = torch.tensor(0.0, device=self.device)
+                if self.kl_coeff > 0.0:
+                    ref_lp = _ref_log_prob(
+                        self.model, self.tokenizer, cleaned,
+                        self.device, self.max_length,
+                    )
+                    if ref_lp is not None:
+                        # KL ≈ log p_θ - log p_ref  (per-token average, detached)
+                        kl_term = mean_log_p.detach() - ref_lp
+
+                loss_i = (-float(adv) * mean_log_p + self.kl_coeff * kl_term) * scale
+
+                # ---- backward IMMEDIATELY — frees this trajectory's graph ----
+                self.accelerator.backward(loss_i)
+
+                step_loss_sum += loss_i.item() / scale  # unscaled for logging
+                step_valid += 1
+
+                # Release fragmented allocations before next trajectory
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
+        if step_valid == 0:
             return info
 
-        total_loss = total_loss / (n_valid * self.gradient_accumulation_steps)
-        self.accelerator.backward(total_loss)
-
-        self._accum_loss += total_loss.item() * self.gradient_accumulation_steps
+        self._accum_loss += step_loss_sum / step_valid
         self._accum_steps += 1
 
         # Optimizer step every gradient_accumulation_steps

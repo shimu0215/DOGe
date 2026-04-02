@@ -28,6 +28,8 @@ export TRITON_CACHE_DIR="${TRITON_CACHE_DIR:-/scratch/wzhao20/triton_cache}"
 export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-/scratch/wzhao20/torchinductor_cache}"
 export VLLM_NO_USAGE_STATS=1
 export DO_NOT_TRACK=1
+# Reduce GPU memory fragmentation (PyTorch recommendation for OOM scenarios)
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 
 PYTHON_BIN="$CONDA_ENV_PREFIX/bin/python"
 ACCELERATE_BIN="$CONDA_ENV_PREFIX/bin/accelerate"

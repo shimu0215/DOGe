@@ -234,6 +234,9 @@ def train(args):
                 lambda_sens=args.lambda_sens,
                 device=accelerator.device,
             )
+            # Free any R_sens intermediate tensors before GRPO forward passes
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
             # === GRPO step ===
             info = grpo.step(
