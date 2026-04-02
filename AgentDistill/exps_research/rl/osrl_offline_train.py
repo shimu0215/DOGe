@@ -534,10 +534,19 @@ def train(args) -> None:
         train_state = os.path.join(args.resume_from_checkpoint, "train_state.pt")
         if os.path.exists(train_state):
             state = torch.load(train_state, map_location="cpu")
-            optimizer.load_state_dict(state["optimizer"])
-            scheduler.load_state_dict(state["scheduler"])
-            start_iter = state["iteration"]
-            logger.info(f"Resumed at iteration {start_iter}")
+            if args.reset_optimizer:
+                # Only restore iteration counter; use fresh optimizer/scheduler
+                # with the lr specified on the command line.
+                start_iter = state["iteration"]
+                logger.info(
+                    f"Resumed at iteration {start_iter} "
+                    f"(optimizer RESET to lr={args.lr:.2e})"
+                )
+            else:
+                optimizer.load_state_dict(state["optimizer"])
+                scheduler.load_state_dict(state["scheduler"])
+                start_iter = state["iteration"]
+                logger.info(f"Resumed at iteration {start_iter}")
 
     # ---- stability monitor ----
     stability = StabilityMonitor(
@@ -725,6 +734,9 @@ def parse_args():
     p.add_argument("--seed",        type=int, default=42)
 
     # Auto-stability
+    p.add_argument("--reset_optimizer", action="store_true",
+                   help="when resuming, ignore saved optimizer/scheduler and "
+                        "start fresh with --lr (useful when changing lr)")
     p.add_argument("--max_recoveries", type=int,   default=3,
                    help="max times to auto-recover from instability before aborting")
     p.add_argument("--min_lr",         type=float, default=1e-8,
