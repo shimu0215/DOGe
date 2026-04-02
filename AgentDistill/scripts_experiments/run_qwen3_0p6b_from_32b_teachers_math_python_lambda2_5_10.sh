@@ -50,7 +50,7 @@ collect_ft_teacher() {
 
 for lambda in 2 5 10; do
   lambda_tag="${lambda/./p}"
-  teacher_dir="/scratch/wzhao20/AKDA2/AgentDistill/training_outputs/qwen3-32B/agent_baseline_2epochs_math32b_entropy_owntraj_ds_lambda${lambda_tag}"
+  teacher_dir="/scratch/wzhao20/AKDA2/AgentDistill/training_outputs/qwen3-32B/agent_baseline_2epochs_agent_baseline_2epochs_math32b_entropy_owntraj_ds_lambda${lambda_tag}"
   raw_log="$teacher_dir/qa_results/math_500_20250414_test/Qwen3-32B_temp=0.7_n=1_seed=42_type=agent_steps=5_python_only_python_only_seed42.jsonl"
 
   collect_ft_teacher "$teacher_dir"
