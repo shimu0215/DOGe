@@ -19,6 +19,7 @@ MAX_LORA_RANK="64"
 N="1"
 FORCE_RERUN="0"
 SERVER_TIMEOUT_SECONDS="1800"
+API_BASE=""
 
 usage() {
   cat <<'EOF'
@@ -79,6 +80,7 @@ TASK_TYPE="$(infer_task_type "$DATA_PATH")"
 SERVE_LOG_DIR="$(dirname "$RESULT_JSONL")"
 mkdir -p "$SERVE_LOG_DIR"
 SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_collect_seed${SEED}_serve.log"
+API_BASE="http://0.0.0.0:${PORT_BASE}/v1"
 
 RAW_BACKUP=""
 REMAINING_DATA=""
@@ -187,6 +189,7 @@ RUN_CMD=(
   --data_path "$REMAINING_DATA"
   --model_type vllm
   --model_id "$MODEL_ID"
+  --api_base "$API_BASE"
   --log_folder "$LOG_ROOT"
   --max_tokens "$MAX_TOKENS"
   --multithreading
