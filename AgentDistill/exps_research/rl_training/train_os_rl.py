@@ -68,6 +68,7 @@ def build_model(args, accelerator):
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
         use_cache=False,  # required for gradient checkpointing
+        low_cpu_mem_usage=True,  # avoid duplicating weights during loading
     )
     lora_config = LoraConfig(
         r=args.lora_r,
@@ -78,9 +79,9 @@ def build_model(args, accelerator):
         task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, lora_config)
-    # Gradient checkpointing: recompute activations on backward, saves ~50% activation memory
+    # use_reentrant=True is required for DeepSpeed ZeRO-3 compatibility
     model.gradient_checkpointing_enable(
-        gradient_checkpointing_kwargs={"use_reentrant": False}
+        gradient_checkpointing_kwargs={"use_reentrant": True}
     )
     model.print_trainable_parameters()
     return model
@@ -184,6 +185,12 @@ def train(args):
         ] = 1
 
     model, optimizer = accelerator.prepare(model, optimizer)
+
+    # Diagnostic: confirm ZeRO-3 CPU offloading is reducing GPU footprint
+    if torch.cuda.is_available() and accelerator.is_main_process:
+        allocated_gb = torch.cuda.memory_allocated() / 1e9
+        reserved_gb  = torch.cuda.memory_reserved()  / 1e9
+        logger.info(f"GPU memory after prepare: allocated={allocated_gb:.1f}GB reserved={reserved_gb:.1f}GB")
 
     # Trajectory pool (seed range as closed interval)
     seed_list = list(range(args.seed_range[0], args.seed_range[1]))
