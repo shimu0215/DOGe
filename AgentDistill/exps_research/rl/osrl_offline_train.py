@@ -729,7 +729,7 @@ def parse_args():
     p.add_argument("--warmup_ratio",    type=float, default=0.05)
 
     # Logging / saving
-    p.add_argument("--log_every",   type=int, default=5)
+    p.add_argument("--log_every",   type=int, default=1)
     p.add_argument("--save_every",  type=int, default=5)
     p.add_argument("--seed",        type=int, default=42)
 

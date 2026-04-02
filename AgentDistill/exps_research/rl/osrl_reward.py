@@ -243,11 +243,15 @@ def compute_rewards(
     r_task, r_sens, r_total = [], [], []
     for traj in trajectories:
         rt = compute_task_reward(traj)
-        rs = compute_sensitivity_reward(
-            model, tokenizer, traj, device,
-            mask_placeholder=mask_placeholder,
-            max_steps=sensitivity_max_steps,
-        )
+        # Skip expensive sensitivity computation when lambda=0 (pure task reward).
+        if lambda_sensitivity > 0.0:
+            rs = compute_sensitivity_reward(
+                model, tokenizer, traj, device,
+                mask_placeholder=mask_placeholder,
+                max_steps=sensitivity_max_steps,
+            )
+        else:
+            rs = 0.0
         r_task.append(rt)
         r_sens.append(rs)
         r_total.append(rt + lambda_sensitivity * rs)
