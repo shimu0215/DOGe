@@ -538,9 +538,16 @@ def train(args) -> None:
                 # Only restore iteration counter; use fresh optimizer/scheduler
                 # with the lr specified on the command line.
                 start_iter = state["iteration"]
+                # Fast-forward scheduler past warmup to the correct cosine position
+                # so that the lr is at args.lr immediately (not stuck at 0 from warmup).
+                target_sched_step = start_iter // args.grad_accum_steps
+                for _ in range(target_sched_step):
+                    scheduler.step()
                 logger.info(
                     f"Resumed at iteration {start_iter} "
-                    f"(optimizer RESET to lr={args.lr:.2e})"
+                    f"(optimizer RESET to lr={args.lr:.2e}, "
+                    f"scheduler fast-forwarded {target_sched_step} steps, "
+                    f"effective lr={scheduler.get_last_lr()[0]:.2e})"
                 )
             else:
                 optimizer.load_state_dict(state["optimizer"])
