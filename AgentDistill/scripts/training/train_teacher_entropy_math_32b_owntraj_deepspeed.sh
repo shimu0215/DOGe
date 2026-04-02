@@ -5,6 +5,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 export PYTHONPATH="$ROOT_DIR/src:${PYTHONPATH:-}"
+CONDA_ENV_PREFIX="${CONDA_ENV_PREFIX:-/scratch/wzhao20/conda_envs/llama-factory311-clean}"
+export PATH="$CONDA_ENV_PREFIX/bin:${PATH:-}"
+PYTHON_BIN="${PYTHON_BIN:-$CONDA_ENV_PREFIX/bin/python}"
+TORCHRUN_BIN="${TORCHRUN_BIN:-$CONDA_ENV_PREFIX/bin/torchrun}"
 export HF_HOME="${HF_HOME:-/scratch/wzhao20/hf_cache}"
 export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-$HF_HOME}"
 export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
@@ -25,6 +29,18 @@ DEEPSPEED_CONFIG="${DEEPSPEED_CONFIG:-exps_research/mp_configs/ds3_no_offload.js
 MONITOR_INTERVAL_SECONDS="${MONITOR_INTERVAL_SECONDS:-5}"
 
 mkdir -p logs
+
+"$PYTHON_BIN" - <<'PY'
+import os
+import sys
+
+print("=== PYTHON PREFLIGHT ===")
+print(sys.executable)
+print(os.environ.get("PYTHONPATH", ""))
+print(sys.path[:5])
+import PIL.Image
+print("PIL_IMAGE_OK")
+PY
 
 monitor_system_usage() {
   local monitor_log="$1"
@@ -67,7 +83,7 @@ for seed in $(seq 45 56); do
   fi
   RAW_LOGS+=("$raw_log")
 
-  python -m exps_research.unified_framework.score_answers \
+  "$PYTHON_BIN" -m exps_research.unified_framework.score_answers \
     --log_files "$raw_log" \
     --task_type math \
     --max_workers 8
@@ -78,7 +94,7 @@ for seed in $(seq 45 56); do
     exit 1
   fi
 
-  python -m exps_research.unified_framework.filter_agent_training_data \
+  "$PYTHON_BIN" -m exps_research.unified_framework.filter_agent_training_data \
     --result_path "$scored_log" \
     --do_save
 
@@ -109,7 +125,7 @@ for seed in $(seq 45 56); do
 done
 printf 'total raw=%s scored=%s filtered=%s\n' "$total_raw" "$total_scored" "$total_filtered"
 
-python - "${FILTERED_LOGS[@]}" <<'PY'
+  "$PYTHON_BIN" - "${FILTERED_LOGS[@]}" <<'PY'
 import json
 import sys
 
@@ -140,7 +156,7 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "Using all filtered trajectories as independent SFT samples." | tee -a "$run_log"
   echo "EPOCHS=$EPOCHS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
 
-  torchrun --nproc_per_node=4 exps_research/finetune_sft.py \
+  "$TORCHRUN_BIN" --nproc_per_node=4 exps_research/finetune_sft.py \
     --model_name "$TARGET_MODEL" \
     --num_epochs "$EPOCHS" \
     --batch_size 1 \
