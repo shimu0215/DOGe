@@ -82,6 +82,7 @@ SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_collect_seed${SEED}_serve.lo
 
 RAW_BACKUP=""
 REMAINING_DATA=""
+REMAINING_RESULT_JSONL=""
 VLLM_PID=""
 
 restore_backup_on_failure() {
@@ -126,6 +127,8 @@ else
   cp "$DATA_PATH" "$REMAINING_DATA"
   remaining="$EXPECTED_COUNT"
 fi
+
+REMAINING_RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT")"
 
 if (( remaining <= 0 )); then
   restore_backup_on_failure
@@ -179,6 +182,18 @@ if [[ -n "$LORA_FOLDER" ]]; then
 fi
 
 "${RUN_CMD[@]}"
+
+if [[ -f "$REMAINING_RESULT_JSONL" ]]; then
+  if [[ -f "$RESULT_JSONL" ]]; then
+    MERGED_TMP="${RESULT_JSONL}.merged.$$"
+    merge_raw_results_by_question "$RESULT_JSONL" "$REMAINING_RESULT_JSONL" "$MERGED_TMP" >/dev/null
+    mv "$MERGED_TMP" "$RESULT_JSONL"
+    rm -f "$REMAINING_RESULT_JSONL"
+  else
+    mkdir -p "$(dirname "$RESULT_JSONL")"
+    mv "$REMAINING_RESULT_JSONL" "$RESULT_JSONL"
+  fi
+fi
 
 if [[ -n "$RAW_BACKUP" && -f "$RAW_BACKUP" ]]; then
   MERGED_TMP="${RESULT_JSONL}.merged.$$"
