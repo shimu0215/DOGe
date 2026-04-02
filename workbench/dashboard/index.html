@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hopper GPU Dashboard</title>
+    <title>Hopper Reservation Dashboard</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -13,7 +13,7 @@
           <div class="brand-mark">H</div>
           <div>
             <p class="eyebrow">Workbench</p>
-            <h1>My Hopper Reservations</h1>
+            <h1>Hopper Reservations</h1>
           </div>
         </div>
 
@@ -21,24 +21,21 @@
           <a class="nav-link active" href="#overview">Overview</a>
           <a class="nav-link" href="#running">Running</a>
           <a class="nav-link" href="#pending">Pending</a>
-          <a class="nav-link" href="#tasks">Tasks</a>
         </nav>
 
         <section class="sidebar-card">
-          <p class="eyebrow">Live Source</p>
+          <p class="eyebrow">Direct Source</p>
           <h2>SSH to Hopper</h2>
-          <p>
-            This view only tracks your own Hopper jobs and reserved GPUs, not the whole cluster.
-          </p>
+          <p>This dashboard uses live Hopper status only. No task logs or local summaries are used as data sources.</p>
         </section>
       </aside>
 
       <main class="main-content">
         <header class="hero" id="overview">
           <div>
-            <p class="eyebrow">Realtime Cluster View</p>
-            <h2>Your running and queued GPU reservations</h2>
-            <p class="hero-copy">The backend polls Hopper over SSH and refreshes your reservation status automatically.</p>
+            <p class="eyebrow">Realtime Hopper View</p>
+            <h2>Your reservations and SSH health</h2>
+            <p class="hero-copy">The backend polls Hopper over SSH and displays only direct reservation and running-job information.</p>
           </div>
           <div class="hero-actions">
             <button id="refreshButton" class="refresh-button">Refresh Now</button>
@@ -58,32 +55,6 @@
         </section>
 
         <section class="content-grid">
-          <article class="panel" id="tasks">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Recent Task Records</p>
-                <h3>Submitted in the last 48 hours</h3>
-              </div>
-              <span id="taskCount" class="panel-pill">0 records</span>
-            </div>
-            <div class="task-scroll-shell">
-              <div class="table-wrap task-table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Job ID</th>
-                      <th>Task</th>
-                      <th>Submitted</th>
-                      <th>GPUs</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody id="taskRecordTableBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </article>
-
           <article class="panel" id="running">
             <div class="panel-heading">
               <div>
@@ -150,11 +121,6 @@
             <span class="metric-label">Queued Jobs</span>
             <strong id="pendingJobs" class="metric-value">--</strong>
             <span id="pendingTrend" class="metric-trend neutral">Waiting for data</span>
-          </article>
-          <article class="metric-card">
-            <span class="metric-label">Task Records</span>
-            <strong id="taskRecords" class="metric-value">--</strong>
-            <span id="taskTrend" class="metric-trend neutral">Waiting for data</span>
           </article>
           <article class="metric-card">
             <span class="metric-label">Last Refresh</span>

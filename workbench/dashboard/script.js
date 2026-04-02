@@ -1,7 +1,6 @@
 const refreshButton = document.getElementById("refreshButton");
 const jobDetailCache = new Map();
 const openDetailRows = new Set();
-const openTaskRows = new Set();
 
 function setText(id, value) {
   document.getElementById(id).textContent = value;
@@ -29,18 +28,14 @@ function renderGpuDetails(detail) {
     return '<div class="gpu-detail-empty">No GPU detail returned.</div>';
   }
 
-  const cards = detail.gpus
-    .map(
-      (gpu) => `
-        <div class="gpu-detail-card">
-          <strong>GPU ${escapeHtml(gpu.gpu_index)}</strong>
-          <span>${escapeHtml(gpu.gpu_name)}</span>
-          <span>Memory: ${escapeHtml(gpu.memory_used_mb)} / ${escapeHtml(gpu.memory_total_mb)} MB</span>
-          <span>Util: ${escapeHtml(gpu.utilization_gpu_percent)}%</span>
-        </div>
-      `
-    )
-    .join("");
+  const cards = detail.gpus.map((gpu) => `
+    <div class="gpu-detail-card">
+      <strong>GPU ${escapeHtml(gpu.gpu_index)}</strong>
+      <span>${escapeHtml(gpu.gpu_name)}</span>
+      <span>Memory: ${escapeHtml(gpu.memory_used_mb)} / ${escapeHtml(gpu.memory_total_mb)} MB</span>
+      <span>Util: ${escapeHtml(gpu.utilization_gpu_percent)}%</span>
+    </div>
+  `).join("");
 
   return `<div class="gpu-detail-grid">${cards}</div>`;
 }
@@ -145,59 +140,6 @@ function renderPendingJobs(jobs) {
   });
 }
 
-function renderTaskRecords(records) {
-  const tbody = document.getElementById("taskRecordTableBody");
-  tbody.innerHTML = "";
-
-  if (!records.length) {
-    tbody.innerHTML = '<tr><td colspan="5">No task records submitted in the last 48 hours.</td></tr>';
-    return;
-  }
-
-  records.forEach((task) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${task.job_id}</td>
-      <td>${task.task_name}</td>
-      <td>${formatTimestamp(task.submitted_at)}</td>
-      <td>${task.gpu_count}</td>
-      <td><button class="detail-button task-detail-button" data-record-id="${task.record_id}">Show</button></td>
-    `;
-    tbody.appendChild(row);
-
-    const detailRow = document.createElement("tr");
-    detailRow.id = `task-detail-${task.record_id}`;
-    detailRow.className = "job-detail-row";
-    detailRow.hidden = !openTaskRows.has(task.record_id);
-    detailRow.innerHTML = `
-      <td colspan="5">
-        <div class="gpu-detail-shell">
-          <div class="gpu-detail-empty">${escapeHtml(task.description || "--")}</div>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(detailRow);
-  });
-
-  tbody.querySelectorAll(".task-detail-button").forEach((button) => {
-    const recordId = button.dataset.recordId;
-    button.textContent = openTaskRows.has(recordId) ? "Hide" : "Show";
-    button.addEventListener("click", () => {
-      const detailRow = document.getElementById(`task-detail-${recordId}`);
-      if (!detailRow) return;
-      if (openTaskRows.has(recordId)) {
-        openTaskRows.delete(recordId);
-        detailRow.hidden = true;
-        button.textContent = "Show";
-      } else {
-        openTaskRows.add(recordId);
-        detailRow.hidden = false;
-        button.textContent = "Hide";
-      }
-    });
-  });
-}
-
 function renderStatus(payload) {
   const summary = payload.summary || {};
   const metadata = payload.metadata || {};
@@ -207,12 +149,10 @@ function renderStatus(payload) {
   setText("runningGpus", summary.running_gpu_total ?? "--");
   setText("queuedGpus", summary.pending_gpu_total ?? "--");
   setText("pendingJobs", summary.pending_jobs ?? "--");
-  setText("taskRecords", summary.task_records ?? "--");
   setText("lastRefresh", formatTimestamp(metadata.last_success_at || metadata.last_attempt_at));
   setText("pollingBadge", `Polling every ${metadata.refresh_interval_seconds ?? "--"} s`);
   setText("runningCount", `${(payload.running_jobs || []).length} jobs`);
   setText("pendingCount", `${(payload.pending_jobs || []).length} jobs`);
-  setText("taskCount", `${(payload.task_records || []).length} records`);
   setText("lastSuccessAt", formatTimestamp(metadata.last_success_at));
   setText("lastDuoResolvedAt", formatTimestamp(metadata.last_duo_resolved_at));
   setText("duoBannerTitle", duoRequired ? "Duo action needed" : "SSH status");
@@ -220,36 +160,17 @@ function renderStatus(payload) {
   banner.classList.toggle("duo-needed", duoRequired);
   banner.classList.toggle("status-ok", !duoRequired);
 
-  setText(
-    "runningTrend",
-    summary.running_gpu_total > 0 ? "Your reserved GPUs are active" : "No running reserved GPUs"
-  );
-  setText(
-    "queueTrend",
-    summary.pending_gpu_total > 0 ? "You still have GPUs waiting in queue" : "No queued GPU requests"
-  );
-  setText(
-    "pendingTrend",
-    summary.pending_jobs > 0 ? "Queued reservations detected" : "No queued jobs"
-  );
-  setText(
-    "taskTrend",
-    summary.task_records > 0 ? "Recent task log is available" : "No recent task records"
-  );
-  setText(
-    "refreshStatus",
-    metadata.status === "ok" ? "Latest refresh succeeded" : "Latest refresh needs attention"
-  );
+  setText("runningTrend", summary.running_gpu_total > 0 ? "Your reserved GPUs are active" : "No running reserved GPUs");
+  setText("queueTrend", summary.pending_gpu_total > 0 ? "You still have GPUs waiting in queue" : "No queued GPU requests");
+  setText("pendingTrend", summary.pending_jobs > 0 ? "Queued reservations detected" : "No queued jobs");
+  setText("refreshStatus", metadata.status === "ok" ? "Latest refresh succeeded" : "Latest refresh needs attention");
 
   renderRunningJobs(payload.running_jobs || []);
   renderPendingJobs(payload.pending_jobs || []);
-  renderTaskRecords(payload.task_records || []);
 }
 
 async function fetchStatus(force = false) {
-  const response = await fetch(force ? "/api/status?refresh=1" : "/api/status", {
-    cache: "no-store",
-  });
+  const response = await fetch(force ? "/api/status?refresh=1" : "/api/status", { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }

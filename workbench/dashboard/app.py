@@ -12,12 +12,10 @@ from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent
 SHARED_STATUS_MD = BASE_DIR / "ssh_status.md"
-TASK_RECORDS_MD = BASE_DIR / "task_records.md"
 HOST = "127.0.0.1"
 PORT = 8124
 REFRESH_INTERVAL_SECONDS = 30
 GPU_DETAIL_TIMEOUT_SECONDS = 20
-TASK_LOOKBACK_HOURS = 48
 SSH_COMMAND = [
     "ssh",
     "hopper",
@@ -44,11 +42,8 @@ SSH_COMMAND = [
         "    detail_text = run(f\"scontrol show job {base_job_id}\")\n"
         "    req_match = re.search(r'ReqTRES=([^\\n]+)', detail_text)\n"
         "    alloc_match = re.search(r'AllocTRES=([^\\n]+)', detail_text)\n"
-        "    node_match = re.search(r'NodeList=(\\S*)', detail_text)\n"
         "    start_match = re.search(r'StartTime=(\\S+)', detail_text)\n"
         "    end_match = re.search(r'EndTime=(\\S+)', detail_text)\n"
-        "    runtime_match = re.search(r'RunTime=(\\S+)', detail_text)\n"
-        "    command_match = re.search(r'Command=(\\S+)', detail_text)\n"
         "    jobs.append({\n"
         "        'job_id': job_id,\n"
         "        'partition': partition,\n"
@@ -59,11 +54,8 @@ SSH_COMMAND = [
         "        'time_left': time_left,\n"
         "        'req_tres': req_match.group(1).strip() if req_match else '',\n"
         "        'alloc_tres': alloc_match.group(1).strip() if alloc_match else '',\n"
-        "        'node_list': node_match.group(1) if node_match else '',\n"
         "        'start_time': start_match.group(1) if start_match else '',\n"
         "        'end_time': end_match.group(1) if end_match else '',\n"
-        "        'run_time': runtime_match.group(1) if runtime_match else '',\n"
-        "        'command': command_match.group(1) if command_match else '',\n"
         "    })\n"
         "\n"
         "print(json.dumps({'jobs': jobs}))\n"
@@ -76,13 +68,11 @@ state_lock = threading.Lock()
 dashboard_state = {
     "running_jobs": [],
     "pending_jobs": [],
-    "task_records": [],
     "summary": {
         "running_gpu_total": 0,
         "pending_gpu_total": 0,
         "running_jobs": 0,
         "pending_jobs": 0,
-        "task_records": 0,
     },
     "metadata": {
         "status": "starting",
@@ -114,18 +104,6 @@ def format_markdown_timestamp(value):
     return parsed.astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
 
 
-def parse_iso_datetime(value):
-    if not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
-
-
 def format_remaining_time(end_time):
     if not end_time or end_time in {"Unknown", "N/A", "(null)"}:
         return "--"
@@ -133,10 +111,7 @@ def format_remaining_time(end_time):
         end_dt = datetime.fromisoformat(end_time)
     except ValueError:
         return end_time
-    if end_dt.tzinfo is None:
-        now_dt = datetime.now()
-    else:
-        now_dt = datetime.now(end_dt.tzinfo)
+    now_dt = datetime.now() if end_dt.tzinfo is None else datetime.now(end_dt.tzinfo)
     delta = end_dt - now_dt
     if delta.total_seconds() <= 0:
         return "00:00:00"
@@ -167,8 +142,7 @@ def extract_specific_gpu_count(tres_value, marker):
         return 0
     total = 0
     for chunk in tres_value.split(","):
-        normalized = chunk.strip().lower()
-        if marker not in normalized:
+        if marker not in chunk.strip().lower():
             continue
         match = re.search(r"=(\d+)$", chunk.strip())
         if match:
@@ -199,17 +173,10 @@ def count_job_gpus(partition, alloc_tres, req_tres):
 
 def looks_like_duo_issue(error_text):
     normalized = (error_text or "").lower()
-    duo_signals = [
-        "duo",
-        "two-factor",
-        "2fa",
-        "verification",
-        "passcode",
-        "push",
-        "timeout",
-        "timed out",
-    ]
-    return any(signal in normalized for signal in duo_signals)
+    return any(
+        signal in normalized
+        for signal in ["duo", "two-factor", "2fa", "verification", "passcode", "push", "timeout", "timed out"]
+    )
 
 
 def detect_gpu_type(alloc_tres, req_tres, partition):
@@ -269,48 +236,7 @@ def fetch_job_gpu_details(node_name):
                 "utilization_gpu_percent": utilization,
             }
         )
-
     return {"node_name": node_name, "gpus": gpus}
-
-
-def load_task_records():
-    if not TASK_RECORDS_MD.exists():
-        return []
-
-    text = TASK_RECORDS_MD.read_text(encoding="utf-8")
-    records = []
-    blocks = re.split(r"^###\s+", text, flags=re.MULTILINE)
-    cutoff = datetime.now(timezone.utc).timestamp() - TASK_LOOKBACK_HOURS * 3600
-
-    for block in blocks[1:]:
-        lines = block.strip().splitlines()
-        if not lines:
-            continue
-        record_id = lines[0].strip()
-        content = "\n".join(lines[1:])
-
-        def get_field(name):
-            match = re.search(rf"^- {re.escape(name)}:\s*(.+)$", content, flags=re.MULTILINE)
-            return match.group(1).strip() if match else ""
-
-        submitted_at = get_field("submitted_at")
-        submitted_dt = parse_iso_datetime(submitted_at)
-        if not submitted_dt or submitted_dt.timestamp() < cutoff:
-            continue
-
-        records.append(
-            {
-                "record_id": record_id,
-                "task_name": get_field("task_name"),
-                "job_id": get_field("job_id"),
-                "gpu_count": get_field("gpu_count"),
-                "submitted_at": submitted_at,
-                "description": get_field("description"),
-            }
-        )
-
-    records.sort(key=lambda item: (item["job_id"], item["submitted_at"]), reverse=False)
-    return records
 
 
 def write_shared_status_markdown():
@@ -322,7 +248,7 @@ def write_shared_status_markdown():
     lines = [
         "# SSH Status",
         "",
-        "Shared dashboard status for other AI tools.",
+        "Dashboard state obtained directly from Hopper.",
         "",
         "## SSH Health",
         "",
@@ -357,7 +283,6 @@ def write_shared_status_markdown():
         lines.append("- None")
 
     lines.extend(["", "## Pending Jobs", ""])
-
     if pending_jobs:
         for job in pending_jobs:
             lines.extend(
@@ -369,59 +294,38 @@ def write_shared_status_markdown():
     else:
         lines.append("- None")
 
-    lines.extend(["", "## Recent Task Records", ""])
-    task_records = dashboard_state.get("task_records", [])
-    if task_records:
-        for task in task_records:
-            lines.extend(
-                [
-                    f"- `{task['record_id']}` | job `{task['job_id']}` | `{task['task_name']}` | {task['gpu_count']} GPU(s)",
-                    f"  submitted: {format_markdown_timestamp(task.get('submitted_at'))} | description: {task.get('description') or '--'}",
-                ]
-            )
-    else:
-        lines.append("- None")
-
     SHARED_STATUS_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def build_snapshot(raw):
     running_jobs = []
     pending_jobs = []
-    task_records = load_task_records()
     running_gpu_total = 0
     pending_gpu_total = 0
 
     for job in raw.get("jobs", []):
         partition = job["partition"].rstrip("*")
-        gpu_count = count_job_gpus(
-            partition,
-            job.get("alloc_tres", ""),
-            job.get("req_tres", ""),
-        )
+        gpu_count = count_job_gpus(partition, job.get("alloc_tres", ""), job.get("req_tres", ""))
+        job_payload = {
+            "job_id": job["job_id"],
+            "name": job["name"],
+            "partition": partition,
+            "gpu_type": detect_gpu_type(job.get("alloc_tres", ""), job.get("req_tres", ""), partition),
+            "start_time": job["start_time"],
+        }
         if job["state"] == "PENDING":
             pending_jobs.append(
                 {
-                    "job_id": job["job_id"],
-                    "name": job["name"],
-                    "partition": partition,
-                    "gpu_type": detect_gpu_type(job.get("alloc_tres", ""), job.get("req_tres", ""), partition),
+                    **job_payload,
                     "requested_gpus": gpu_count,
-                    "reason": job["reason"],
-                    "start_time": job["start_time"],
-                    "command": job["command"],
                 }
             )
             pending_gpu_total += gpu_count
         elif job["state"] == "RUNNING":
             running_jobs.append(
                 {
-                    "job_id": job["job_id"],
-                    "name": job["name"],
-                    "partition": partition,
-                    "gpu_type": detect_gpu_type(job.get("alloc_tres", ""), job.get("req_tres", ""), partition),
+                    **job_payload,
                     "allocated_gpus": gpu_count,
-                    "start_time": job["start_time"],
                     "remaining_time": format_remaining_time(job.get("end_time", "")),
                     "node_name": job.get("node_name", ""),
                 }
@@ -430,7 +334,6 @@ def build_snapshot(raw):
 
     running_jobs.sort(key=lambda item: (item["partition"], item["name"]))
     pending_jobs.sort(key=lambda item: (item["partition"], item["name"]))
-
     return {
         "running_jobs": running_jobs,
         "pending_jobs": pending_jobs,
@@ -439,9 +342,7 @@ def build_snapshot(raw):
             "pending_gpu_total": pending_gpu_total,
             "running_jobs": len(running_jobs),
             "pending_jobs": len(pending_jobs),
-            "task_records": len(task_records),
         },
-        "task_records": task_records,
     }
 
 
@@ -456,13 +357,11 @@ def refresh_state():
             timeout=25,
             check=True,
         )
-        raw = json.loads(result.stdout)
-        snapshot = build_snapshot(raw)
+        snapshot = build_snapshot(json.loads(result.stdout))
         with state_lock:
             previous_duo_required = dashboard_state["metadata"].get("duo_required", False)
             dashboard_state["running_jobs"] = snapshot["running_jobs"]
             dashboard_state["pending_jobs"] = snapshot["pending_jobs"]
-            dashboard_state["task_records"] = snapshot["task_records"]
             dashboard_state["summary"] = snapshot["summary"]
             dashboard_state["metadata"].update(
                 {
@@ -503,12 +402,13 @@ def refresh_state():
             )
             write_shared_status_markdown()
     except Exception as exc:
+        duo_required = looks_like_duo_issue(str(exc))
         with state_lock:
             dashboard_state["metadata"].update(
                 {
-                    "status": "error",
-                    "duo_required": looks_like_duo_issue(str(exc)),
-                    "status_message": "Please approve Duo for ssh hopper" if looks_like_duo_issue(str(exc)) else "SSH refresh failed",
+                    "status": "duo_required" if duo_required else "error",
+                    "duo_required": duo_required,
+                    "status_message": "Please approve Duo for ssh hopper" if duo_required else "SSH refresh failed",
                     "last_attempt_at": attempt_at,
                     "last_error": str(exc),
                 }
@@ -565,8 +465,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
 
 def main():
-    thread = threading.Thread(target=polling_loop, daemon=True)
-    thread.start()
+    threading.Thread(target=polling_loop, daemon=True).start()
     server = ThreadingHTTPServer((HOST, PORT), DashboardHandler)
     print(f"Serving dashboard at http://{HOST}:{PORT}")
     server.serve_forever()
