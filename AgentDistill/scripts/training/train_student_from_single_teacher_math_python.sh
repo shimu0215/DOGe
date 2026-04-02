@@ -5,6 +5,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 export PYTHONPATH="$ROOT_DIR/src:${PYTHONPATH:-}"
+CONDA_ENV_PREFIX="${CONDA_ENV_PREFIX:-/scratch/wzhao20/conda_envs/AKDA1}"
+export PATH="$CONDA_ENV_PREFIX/bin:${PATH:-}"
+PYTHON_BIN="${PYTHON_BIN:-$CONDA_ENV_PREFIX/bin/python}"
+TORCHRUN_BIN="${TORCHRUN_BIN:-$CONDA_ENV_PREFIX/bin/torchrun}"
 export HF_HOME="${HF_HOME:-/scratch/wzhao20/hf_cache}"
 export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-$HF_HOME}"
 export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
@@ -60,7 +64,7 @@ if [[ ! -f "$RAW_LOG" ]]; then
   exit 1
 fi
 
-python -m exps_research.unified_framework.score_answers \
+"$PYTHON_BIN" -m exps_research.unified_framework.score_answers \
   --log_files "$RAW_LOG" \
   --task_type math \
   --max_workers 8
@@ -71,7 +75,7 @@ if [[ ! -f "$SCORED_LOG" ]]; then
   exit 1
 fi
 
-python -m exps_research.unified_framework.filter_agent_training_data \
+"$PYTHON_BIN" -m exps_research.unified_framework.filter_agent_training_data \
   --result_path "$SCORED_LOG" \
   --do_save
 
@@ -87,7 +91,7 @@ filtered_count="$(count_lines "$FILTERED_LOG")"
 echo "=== Student distillation filtering summary ==="
 printf 'raw=%s scored=%s filtered=%s\n' "$raw_count" "$scored_count" "$filtered_count"
 
-python - "$FILTERED_LOG" <<'PY'
+"$PYTHON_BIN" - "$FILTERED_LOG" <<'PY'
 import json
 import sys
 path = sys.argv[1]
@@ -113,7 +117,7 @@ echo "Using DeepSpeed config: $DEEPSPEED_CONFIG" | tee -a "$run_log"
 echo "Using one filtered teacher trajectory per question source file; no grouped sampling or voting." | tee -a "$run_log"
 echo "EPOCHS=$EPOCHS DATASET_SIZE=$DATASET_SIZE MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
 
-torchrun --nproc_per_node=4 exps_research/finetune_sft.py \
+"$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py \
   --model_name "$STUDENT_MODEL" \
   --num_epochs "$EPOCHS" \
   --batch_size 1 \

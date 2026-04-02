@@ -22,6 +22,8 @@ RAW_MODEL_NAME="${RAW_MODEL_NAME:-Qwen3-32B}"
 TRAIN_TAG_PREFIX="${TRAIN_TAG_PREFIX:-math32b_entropy_owntraj_ds}"
 EPOCHS="${EPOCHS:-2}"
 LAMBDAS=(${LAMBDAS:-0.2 0.5 0.8})
+SEED_START="${SEED_START:-45}"
+SEED_END="${SEED_END:-56}"
 MAX_LENGTH="${MAX_LENGTH:-1024}"
 LORA_R="${LORA_R:-8}"
 LORA_ALPHA="${LORA_ALPHA:-16}"
@@ -75,7 +77,7 @@ count_lines() {
 RAW_LOGS=()
 FILTERED_LOGS=()
 
-for seed in $(seq 45 56); do
+for seed in $(seq "$SEED_START" "$SEED_END"); do
   raw_log="${RAW_ROOT}/${RAW_MODEL_NAME}_temp=0.7_seed=${seed}_type=agent_steps=5_python_only_python_only_seed${seed}.jsonl"
   if [[ ! -f "$raw_log" ]]; then
     echo "Missing raw teacher log: $raw_log" >&2
@@ -111,7 +113,7 @@ echo "=== 32B own-data filtering summary before training ==="
 total_raw=0
 total_scored=0
 total_filtered=0
-for seed in $(seq 45 56); do
+for seed in $(seq "$SEED_START" "$SEED_END"); do
   raw_log="${RAW_ROOT}/${RAW_MODEL_NAME}_temp=0.7_seed=${seed}_type=agent_steps=5_python_only_python_only_seed${seed}.jsonl"
   scored_log="$(dirname "$raw_log")/evaluations/$(basename "${raw_log%.jsonl}")_scored.jsonl"
   filtered_log="$(dirname "$raw_log")/filtered_data/$(basename "${raw_log%.jsonl}")_filtered.jsonl"
@@ -156,7 +158,7 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "Using all filtered trajectories as independent SFT samples." | tee -a "$run_log"
   echo "EPOCHS=$EPOCHS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
 
-  "$TORCHRUN_BIN" --nproc_per_node=4 exps_research/finetune_sft.py \
+  "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py \
     --model_name "$TARGET_MODEL" \
     --num_epochs "$EPOCHS" \
     --batch_size 1 \

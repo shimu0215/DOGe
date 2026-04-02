@@ -5,6 +5,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 export PYTHONPATH="$ROOT_DIR/src:${PYTHONPATH:-}"
+CONDA_ENV_PREFIX="${CONDA_ENV_PREFIX:-/scratch/wzhao20/conda_envs/AKDA1}"
+export PATH="$CONDA_ENV_PREFIX/bin:${PATH:-}"
+PYTHON_BIN="${PYTHON_BIN:-$CONDA_ENV_PREFIX/bin/python}"
+TORCHRUN_BIN="${TORCHRUN_BIN:-$CONDA_ENV_PREFIX/bin/torchrun}"
 export HF_HOME="${HF_HOME:-/scratch/wzhao20/hf_cache}"
 export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-$HF_HOME}"
 export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
@@ -18,6 +22,8 @@ RAW_MODEL_NAME="${RAW_MODEL_NAME:-Qwen3-14B}"
 TRAIN_TAG_PREFIX="${TRAIN_TAG_PREFIX:-math14b_entropy_owntraj_ds}"
 EPOCHS="${EPOCHS:-2}"
 LAMBDAS=(${LAMBDAS:-0.2 0.5 0.8})
+SEED_START="${SEED_START:-42}"
+SEED_END="${SEED_END:-56}"
 MAX_LENGTH="${MAX_LENGTH:-4096}"
 LORA_R="${LORA_R:-16}"
 LORA_ALPHA="${LORA_ALPHA:-32}"
@@ -59,7 +65,7 @@ count_lines() {
 RAW_LOGS=()
 FILTERED_LOGS=()
 
-for seed in $(seq 42 56); do
+for seed in $(seq "$SEED_START" "$SEED_END"); do
   raw_log="${RAW_ROOT}/${RAW_MODEL_NAME}_temp=0.7_seed=${seed}_type=agent_steps=5_python_only_python_only_seed${seed}.jsonl"
   if [[ ! -f "$raw_log" ]]; then
     echo "Missing raw teacher log: $raw_log" >&2
@@ -67,7 +73,7 @@ for seed in $(seq 42 56); do
   fi
   RAW_LOGS+=("$raw_log")
 
-  python -m exps_research.unified_framework.score_answers \
+  "$PYTHON_BIN" -m exps_research.unified_framework.score_answers \
     --log_files "$raw_log" \
     --task_type math \
     --max_workers 8
@@ -78,7 +84,7 @@ for seed in $(seq 42 56); do
     exit 1
   fi
 
-  python -m exps_research.unified_framework.filter_agent_training_data \
+  "$PYTHON_BIN" -m exps_research.unified_framework.filter_agent_training_data \
     --result_path "$scored_log" \
     --do_save
 
@@ -95,7 +101,7 @@ echo "=== 14B own-data filtering summary before training ==="
 total_raw=0
 total_scored=0
 total_filtered=0
-for seed in $(seq 42 56); do
+for seed in $(seq "$SEED_START" "$SEED_END"); do
   raw_log="${RAW_ROOT}/${RAW_MODEL_NAME}_temp=0.7_seed=${seed}_type=agent_steps=5_python_only_python_only_seed${seed}.jsonl"
   scored_log="$(dirname "$raw_log")/evaluations/$(basename "${raw_log%.jsonl}")_scored.jsonl"
   filtered_log="$(dirname "$raw_log")/filtered_data/$(basename "${raw_log%.jsonl}")_filtered.jsonl"
@@ -109,7 +115,7 @@ for seed in $(seq 42 56); do
 done
 printf 'total raw=%s scored=%s filtered=%s\n' "$total_raw" "$total_scored" "$total_filtered"
 
-python - "${FILTERED_LOGS[@]}" <<'PY'
+"$PYTHON_BIN" - "${FILTERED_LOGS[@]}" <<'PY'
 import json
 import sys
 
@@ -140,7 +146,7 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "Using all filtered trajectories as independent SFT samples." | tee -a "$run_log"
   echo "EPOCHS=$EPOCHS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
 
-  torchrun --nproc_per_node=4 exps_research/finetune_sft.py \
+  "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py \
     --model_name "$TARGET_MODEL" \
     --num_epochs "$EPOCHS" \
     --batch_size 1 \
