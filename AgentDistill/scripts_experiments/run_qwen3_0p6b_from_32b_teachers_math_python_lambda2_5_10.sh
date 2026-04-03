@@ -46,6 +46,66 @@ print(len(seen))
 PY
 }
 
+raw_stats() {
+  local raw_path="$1"
+  "$CONDA_ENV_PREFIX/bin/python" - "$raw_path" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+stats = {
+    "rows": 0,
+    "unique": 0,
+    "non_null_generated": 0,
+    "empty_log": 0,
+    "error_field": 0,
+}
+
+if not path.exists():
+    print("rows=0 unique=0 non_null_generated=0 empty_log=0 error_field=0")
+    raise SystemExit
+
+seen = set()
+with path.open() as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except Exception:
+            continue
+        stats["rows"] += 1
+        q = obj.get("question") or obj.get("problem") or obj.get("prompt")
+        if q:
+            seen.add(q)
+        if obj.get("generated_answer") is not None:
+            stats["non_null_generated"] += 1
+        if obj.get("log_data") in (None, [], ""):
+            stats["empty_log"] += 1
+        if obj.get("error") not in (None, ""):
+            stats["error_field"] += 1
+
+stats["unique"] = len(seen)
+print(" ".join(f"{k}={v}" for k, v in stats.items()))
+PY
+}
+
+parse_stat_field() {
+  local stats_line="$1"
+  local key="$2"
+  awk -v key="$key" '{
+    for (i = 1; i <= NF; ++i) {
+      split($i, a, "=")
+      if (a[1] == key) {
+        print a[2]
+        exit
+      }
+    }
+  }' <<< "$stats_line"
+}
+
 merge_tmp_teacher_raws() {
   local teacher_dir="$1"
   local raw_log="$2"
@@ -104,17 +164,22 @@ ensure_teacher_raw() {
   local raw_log="$2"
 
   merge_tmp_teacher_raws "$teacher_dir" "$raw_log"
-  local unique_count
-  unique_count="$(raw_unique_count "$raw_log")"
-  if [[ "$unique_count" -ge 500 ]]; then
+  local stats_line unique_count non_null_generated
+  stats_line="$(raw_stats "$raw_log")"
+  unique_count="$(parse_stat_field "$stats_line" "unique")"
+  non_null_generated="$(parse_stat_field "$stats_line" "non_null_generated")"
+  if [[ "$unique_count" -ge 500 && "$non_null_generated" -ge "${MIN_NON_NULL_GENERATED:-50}" ]]; then
     return 0
   fi
 
+  echo "Teacher raw missing or low-quality, recollecting: $raw_log ($stats_line)" >&2
   collect_ft_teacher "$teacher_dir"
   merge_tmp_teacher_raws "$teacher_dir" "$raw_log"
-  unique_count="$(raw_unique_count "$raw_log")"
-  if [[ "$unique_count" -lt 500 ]]; then
-    echo "Teacher raw still incomplete after collection: $raw_log ($unique_count/500 unique)" >&2
+  stats_line="$(raw_stats "$raw_log")"
+  unique_count="$(parse_stat_field "$stats_line" "unique")"
+  non_null_generated="$(parse_stat_field "$stats_line" "non_null_generated")"
+  if [[ "$unique_count" -lt 500 || "$non_null_generated" -lt "${MIN_NON_NULL_GENERATED:-50}" ]]; then
+    echo "Teacher raw still unusable after collection: $raw_log ($stats_line)" >&2
     return 1
   fi
 }
