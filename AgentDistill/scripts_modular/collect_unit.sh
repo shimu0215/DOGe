@@ -20,6 +20,7 @@ N="1"
 FORCE_RERUN="0"
 SERVER_TIMEOUT_SECONDS="1800"
 API_BASE=""
+PER_TASK_TIMEOUT="0"
 
 usage() {
   cat <<'EOF'
@@ -42,6 +43,7 @@ Optional:
   --max-lora-rank       vLLM max lora rank
   --n                   Number of samples per question
   --force-rerun         1 to ignore existing raw and recollect all
+  --per-task-timeout    Per-question timeout in seconds for outer process-pool guard; <=0 disables it
 EOF
 }
 
@@ -61,6 +63,7 @@ while [[ $# -gt 0 ]]; do
     --max-lora-rank) MAX_LORA_RANK="$2"; shift 2 ;;
     --n) N="$2"; shift 2 ;;
     --force-rerun) FORCE_RERUN="$2"; shift 2 ;;
+    --per-task-timeout) PER_TASK_TIMEOUT="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 1 ;;
   esac
@@ -196,6 +199,7 @@ RUN_CMD=(
   --multithreading
   --use_process_pool
   --parallel_workers "$PARALLEL_WORKERS"
+  --per_task_timeout "$PER_TASK_TIMEOUT"
   --n "$N"
   --temperature 0.7
   --top_p 0.8
