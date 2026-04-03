@@ -108,6 +108,85 @@ print(len(seen))
 PY
 }
 
+resolve_remaining_result_path() {
+  local preferred="$1"
+  local model_id="$2"
+  local remaining_data="$3"
+  local seed="$4"
+  local max_steps="$5"
+  local n="$6"
+  local log_root="$7"
+
+  if [[ -f "$preferred" ]]; then
+    echo "$preferred"
+    return 0
+  fi
+
+  local model_name stem candidate
+  model_name="$(basename "$model_id")"
+  stem="$(basename "$remaining_data" .json)"
+  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | grep "/${stem}_" | head -n 1 || true)"
+  if [[ -n "$candidate" ]]; then
+    echo "$candidate"
+  else
+    echo "$preferred"
+  fi
+}
+
+merge_result_into_main() {
+  local extra_path="$1"
+  local merged_tmp
+
+  [[ -f "$extra_path" ]] || return 0
+
+  mkdir -p "$(dirname "$RESULT_JSONL")"
+  if [[ -f "$RESULT_JSONL" ]]; then
+    merged_tmp="${RESULT_JSONL}.merged.$$"
+    python - "$RESULT_JSONL" "$extra_path" "$merged_tmp" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+primary = Path(sys.argv[1])
+extra = Path(sys.argv[2])
+output = Path(sys.argv[3])
+
+merged = {}
+order = []
+
+def load(path):
+    if not path.exists():
+        return
+    with path.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except Exception:
+                continue
+            question = entry.get("question") or entry.get("problem") or entry.get("prompt")
+            if not question:
+                continue
+            if question not in merged:
+                order.append(question)
+            merged[question] = entry
+
+load(primary)
+load(extra)
+
+with output.open("w") as f:
+    for question in order:
+        f.write(json.dumps(merged[question], ensure_ascii=False) + "\n")
+PY
+    mv "$merged_tmp" "$RESULT_JSONL"
+    rm -f "$extra_path"
+  else
+    mv "$extra_path" "$RESULT_JSONL"
+  fi
+}
+
 terminate_run_group() {
   local pgid="$1"
   kill -TERM -- "-${pgid}" 2>/dev/null || true
@@ -361,6 +440,10 @@ run_one_pass_with_retries() {
 }
 
 run_one_pass_with_retries "$EXPECTED_LINES"
+
+TMP_RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$RUN_DATA_PATH" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT")"
+TMP_RESULT_JSONL="$(resolve_remaining_result_path "$TMP_RESULT_JSONL" "$MODEL_ID" "$RUN_DATA_PATH" "$SEED" "$MAX_STEPS" "$N" "$LOG_ROOT")"
+merge_result_into_main "$TMP_RESULT_JSONL"
 
 actual_lines="$(wc -l < "$RESULT_JSONL" 2>/dev/null || echo 0)"
 actual_unique_questions="$(current_unique_question_count)"
