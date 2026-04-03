@@ -42,7 +42,7 @@ collect_ft_teacher() {
   LORA_FOLDER="$lora_folder" \
   SEED="42" \
   N="1" \
-  FORCE_RERUN="${FORCE_RERUN:-1}" \
+  FORCE_RERUN="${FORCE_RERUN:-0}" \
   bash scripts/inference/collect_teacher_math_python_singletraj.sh
 
   cleanup_compute
