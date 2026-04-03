@@ -65,15 +65,22 @@ def build_model(args):
         use_cache=False,
         low_cpu_mem_usage=True,
     )
-    lora_config = LoraConfig(
-        r=args.lora_r,
-        lora_alpha=args.lora_r * 2,
-        target_modules="all-linear",
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-    model = get_peft_model(model, lora_config)
+    if getattr(args, "resume_from_checkpoint", None):
+        from peft import PeftModel
+        logger.info(f"Resuming LoRA adapter from: {args.resume_from_checkpoint}")
+        model = PeftModel.from_pretrained(
+            model, args.resume_from_checkpoint, is_trainable=True
+        )
+    else:
+        lora_config = LoraConfig(
+            r=args.lora_r,
+            lora_alpha=args.lora_r * 2,
+            target_modules="all-linear",
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(model, lora_config)
     model.gradient_checkpointing_enable(
         gradient_checkpointing_kwargs={"use_reentrant": True}
     )
@@ -190,11 +197,11 @@ def train(args):
     )
 
     log_path = os.path.join(args.output_dir, "train_log.jsonl")
-    global_step = 0
+    global_step = getattr(args, "initial_step", 0)
     optimizer_step = 0
-    last_resample_step = 0
+    last_resample_step = global_step  # avoid immediate checkpoint on resume
 
-    logger.info("Starting Div-OBS-RL training loop...")
+    logger.info(f"Starting Div-OBS-RL training loop (initial_step={global_step})...")
 
     for epoch in range(args.num_epochs):
         logger.info(f"=== Epoch {epoch + 1}/{args.num_epochs} ===")
@@ -307,6 +314,12 @@ def parse_args():
     p.add_argument("--output_dir", type=str,
                    default="training_outputs/qwen3-32B/div_obs_rl")
     p.add_argument("--log_every", type=int, default=10)
+
+    # Checkpoint resuming
+    p.add_argument("--resume_from_checkpoint", type=str, default=None,
+                   help="Path to saved LoRA checkpoint directory to resume from")
+    p.add_argument("--initial_step", type=int, default=0,
+                   help="Starting step counter when resuming (set to checkpoint step)")
 
     return p.parse_args()
 
