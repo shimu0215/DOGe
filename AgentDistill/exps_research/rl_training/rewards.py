@@ -327,3 +327,94 @@ def compute_total_rewards_div_rl(
     r_div = compute_r_diversity(group)
     r_total = [rt + lambda_div * rd for rt, rd in zip(r_task, r_div)]
     return r_total, r_task, r_div
+
+
+# ===========================================================================
+# R_div_obs  (per-observation thought diversity)
+# ===========================================================================
+
+def compute_r_div_obs(group: List[dict]) -> List[float]:
+    """
+    Per-observation thought diversity reward.
+
+    For each turn-step t, collect the assistant thoughts that different
+    trajectories produce in response to the observation at that step position.
+    Each trajectory's reward is its mean leave-one-out diversity against other
+    trajectories' thoughts at the same step.
+
+    Difference from compute_r_diversity:
+      - compute_r_diversity: compares whole-trajectory code blocks (global style)
+      - compute_r_div_obs:   compares thoughts conditioned on the *same turn
+        position*, so the diversity signal is "given observation at step t, how
+        differently does each trajectory respond?" — directly contradictory SFT
+        signal for the student at the same input context.
+
+    Alignment: by step index (0-indexed count of obs→thought turns). Two
+    trajectories on the same question may diverge after step k, so steps beyond
+    k contribute fewer pairs — this is intentional (only reward positions where
+    comparison is meaningful).
+
+    Returns list of diversity values in [0, 1], one per trajectory.
+    """
+    if len(group) <= 1:
+        return [0.0] * len(group)
+
+    n = len(group)
+
+    # Build {step_idx: thought_text} for each trajectory
+    # step_idx counts obs->thought turns (assistant messages at index>=4
+    # preceded by a user/observation message)
+    all_step_thoughts: List[Dict[int, str]] = []
+    for entry in group:
+        raw = entry.get("log_data", {}).get("messages", [])
+        cleaned = clean_messages_for_training(raw)
+        step_thoughts: Dict[int, str] = {}
+        if cleaned:
+            step_idx = 0
+            for i, msg in enumerate(cleaned):
+                if (msg["role"] == "assistant"
+                        and i >= 4
+                        and cleaned[i - 1]["role"] == "user"):
+                    content = (msg["content"]
+                               if isinstance(msg["content"], str)
+                               else str(msg["content"]))
+                    step_thoughts[step_idx] = content
+                    step_idx += 1
+        all_step_thoughts.append(step_thoughts)
+
+    # Collect trajectories present at each step
+    from collections import defaultdict
+    step_to_trajs: Dict[int, List[Tuple[int, str]]] = defaultdict(list)
+    for traj_idx, step_thoughts in enumerate(all_step_thoughts):
+        for step_idx, thought in step_thoughts.items():
+            step_to_trajs[step_idx].append((traj_idx, thought))
+
+    # Leave-one-out diversity per trajectory per step
+    traj_step_scores: List[List[float]] = [[] for _ in range(n)]
+    for step_idx, traj_thought_list in step_to_trajs.items():
+        if len(traj_thought_list) < 2:
+            continue
+        for k, (traj_idx, my_thought) in enumerate(traj_thought_list):
+            others = [t for j, (_, t) in enumerate(traj_thought_list) if j != k]
+            dists = [_normalised_edit_distance(my_thought, other) for other in others]
+            traj_step_scores[traj_idx].append(float(np.mean(dists)))
+
+    rewards = []
+    for scores in traj_step_scores:
+        rewards.append(float(np.mean(scores)) if scores else 0.0)
+    return rewards
+
+
+def compute_total_rewards_div_obs_rl(
+    group: List[dict],
+    lambda_div_obs: float = 0.5,
+) -> Tuple[List[float], List[float], List[float]]:
+    """
+    R_total = R_task + lambda_div_obs * R_div_obs
+
+    Returns: (r_total, r_task, r_div_obs)
+    """
+    r_task = compute_r_task(group)
+    r_div_obs = compute_r_div_obs(group)
+    r_total = [rt + lambda_div_obs * rd for rt, rd in zip(r_task, r_div_obs)]
+    return r_total, r_task, r_div_obs
