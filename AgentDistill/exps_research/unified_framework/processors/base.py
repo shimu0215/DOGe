@@ -270,29 +270,30 @@ class ExperimentProcessor(ABC):
 
                         while remaining_futures:
                             # --- per-task timeout: skip futures that have run too long ---
-                            now = time.time()
-                            timed_out_futures = set()
-                            for f in remaining_futures:
-                                elapsed = now - future_submit_time[f]
-                                if elapsed > per_task_timeout:
-                                    entry = future_to_entry[f]
-                                    q_snippet = str(entry.get("question", ""))[:80]
-                                    print(f"\n[per_task_timeout] {elapsed:.0f}s elapsed "
-                                          f"(limit {per_task_timeout}s), skipping: {q_snippet!r}")
-                                    f.cancel()  # no-op if already running, that's fine
-                                    timeout_result = {
-                                        "question": entry.get("question", ""),
-                                        "error": f"per_task_timeout after {elapsed:.0f}s",
-                                        "log_data": None,
-                                        "cost": 0.0,
-                                    }
-                                    results.append(timeout_result)
-                                    if output_file:
-                                        append_result(timeout_result, output_file)
-                                    timed_out_futures.add(f)
-                                    completed_tasks += 1
-                                    pbar.update(1)
-                            remaining_futures -= timed_out_futures
+                            if per_task_timeout and per_task_timeout > 0:
+                                now = time.time()
+                                timed_out_futures = set()
+                                for f in remaining_futures:
+                                    elapsed = now - future_submit_time[f]
+                                    if elapsed > per_task_timeout:
+                                        entry = future_to_entry[f]
+                                        q_snippet = str(entry.get("question", ""))[:80]
+                                        print(f"\n[per_task_timeout] {elapsed:.0f}s elapsed "
+                                              f"(limit {per_task_timeout}s), skipping: {q_snippet!r}")
+                                        f.cancel()  # no-op if already running, that's fine
+                                        timeout_result = {
+                                            "question": entry.get("question", ""),
+                                            "error": f"per_task_timeout after {elapsed:.0f}s",
+                                            "log_data": None,
+                                            "cost": 0.0,
+                                        }
+                                        results.append(timeout_result)
+                                        if output_file:
+                                            append_result(timeout_result, output_file)
+                                        timed_out_futures.add(f)
+                                        completed_tasks += 1
+                                        pbar.update(1)
+                                remaining_futures -= timed_out_futures
 
                             if not remaining_futures:
                                 break

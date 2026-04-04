@@ -47,6 +47,7 @@ def process_qa_experiment(
     fine_tuned: bool = False,
     verbose: bool = False,
     use_process_pool: bool = False,
+    per_task_timeout: int = 300,
     use_single_endpoint: bool = False,
     **extra_kwargs
 ) -> Dict:
@@ -65,6 +66,7 @@ def process_qa_experiment(
         fine_tuned: Whether using a fine-tuned model
         verbose: Whether to print verbose output during processing
         use_process_pool: Whether to use ProcessPoolExecutor instead of ThreadPoolExecutor
+        per_task_timeout: Per-question timeout in seconds for process-pool execution; <=0 disables the outer timeout
         use_single_endpoint: Whether to use a single API endpoint for all workers
         **extra_kwargs: Additional experiment-specific parameters
         
@@ -108,6 +110,7 @@ def process_qa_experiment(
         'fine_tuned': fine_tuned,
         'verbose': verbose,
         'use_process_pool': use_process_pool,
+        'per_task_timeout': per_task_timeout,
         'use_single_endpoint': use_single_endpoint,
         **extra_kwargs
     }

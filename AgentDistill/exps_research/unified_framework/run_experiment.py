@@ -45,6 +45,7 @@ def run_experiment():
     parser.add_argument("--log_folder", type=str, help="Folder to save the results")
     parser.add_argument("--multithreading", action="store_true", help="Run in multithreading mode")
     parser.add_argument("--use_process_pool", action="store_true", help="Use ProcessPoolExecutor instead of ThreadPoolExecutor for more reliable timeouts")
+    parser.add_argument("--per_task_timeout", type=int, default=300, help="Per-question timeout in seconds for process-pool execution; <=0 disables the outer timeout")
     parser.add_argument("--use_single_endpoint", action="store_true", help="Use a single API endpoint (port 8000) for all workers instead of one per worker")
     parser.add_argument('--api_base', type=str, help='API base URL for the model')
     parser.add_argument('--api_key', type=str, help='API key for the model')
@@ -232,6 +233,7 @@ def run_experiment():
         fine_tuned=args.fine_tuned,
         verbose=args.verbose,
         use_process_pool=args.use_process_pool,
+        per_task_timeout=args.per_task_timeout,
         use_single_endpoint=args.use_single_endpoint,
         **extra_kwargs
     )
