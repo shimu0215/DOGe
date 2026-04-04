@@ -114,6 +114,35 @@ def main():
             f.write(q[:120].replace("\n", " ") + "\n")
     logger.info(f"Question list saved to: {q_list_path}")
 
+    # 6. Save pilot_questions.json in MATH-500 format for use with collect_unit.sh
+    # Extract question + answer from the first seed's trajectories
+    examples = []
+    seen = set()
+    for seed, lines in per_seed.items():
+        for q, raw_line in lines:
+            if q in sampled_qs and q not in seen:
+                try:
+                    entry = json.loads(raw_line)
+                    examples.append({
+                        "id": len(examples),
+                        "question": q,
+                        "answer": entry.get("true_answer", ""),
+                        "level": 0,
+                        "type": "MATH",
+                        "dataset_name": "MATH",
+                        "split": "test",
+                    })
+                    seen.add(q)
+                except json.JSONDecodeError:
+                    continue
+        if len(seen) == len(sampled_qs):
+            break
+
+    q_json_path = out_dir / "pilot_questions.json"
+    with open(q_json_path, "w") as f:
+        json.dump({"metadata": {"n": len(examples)}, "examples": examples}, f)
+    logger.info(f"pilot_questions.json saved ({len(examples)} questions): {q_json_path}")
+
 
 if __name__ == "__main__":
     main()
