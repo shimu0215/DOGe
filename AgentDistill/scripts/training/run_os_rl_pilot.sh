@@ -53,7 +53,7 @@ NUM_EPOCHS="${NUM_EPOCHS:-5}"
 MAX_STEPS="${MAX_STEPS:-150}"    # ~3 epochs × 50 questions
 GRAD_ACCUM="${GRAD_ACCUM:-4}"
 N_TRAJS="${N_TRAJS:-8}"
-RESAMPLE_EVERY="${RESAMPLE_EVERY:-0}"   # disabled for pilot
+RESAMPLE_EVERY="${RESAMPLE_EVERY:-50}"  # checkpoint every 50 steps (no resampling)
 
 mkdir -p "$OUTPUT_DIR" "$PILOT_TRAJ_DIR"
 
