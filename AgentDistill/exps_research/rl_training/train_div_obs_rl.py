@@ -98,12 +98,24 @@ def build_tokenizer(args):
     )
 
 
-def save_checkpoint(model, tokenizer, output_dir: str, step: int) -> str:
+def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None) -> str:
+    """Save LoRA checkpoint, gathering ZeRO-3 parameter shards from all ranks."""
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
-    os.makedirs(ckpt_dir, exist_ok=True)
-    model.save_pretrained(ckpt_dir)
-    tokenizer.save_pretrained(ckpt_dir)
-    logger.info(f"Checkpoint saved: {ckpt_dir}")
+    if accelerator is not None:
+        accelerator.wait_for_everyone()
+        unwrapped = accelerator.unwrap_model(model)
+        state_dict = accelerator.get_state_dict(model)
+        if accelerator.is_main_process:
+            os.makedirs(ckpt_dir, exist_ok=True)
+            unwrapped.save_pretrained(ckpt_dir, state_dict=state_dict)
+            tokenizer.save_pretrained(ckpt_dir)
+            logger.info(f"Checkpoint saved: {ckpt_dir}")
+        accelerator.wait_for_everyone()
+    else:
+        os.makedirs(ckpt_dir, exist_ok=True)
+        model.save_pretrained(ckpt_dir)
+        tokenizer.save_pretrained(ckpt_dir)
+        logger.info(f"Checkpoint saved: {ckpt_dir}")
     return ckpt_dir
 
 
@@ -251,7 +263,7 @@ def train(args):
                 and global_step > last_resample_step
             ):
                 last_resample_step = global_step
-                ckpt_dir = save_checkpoint(model, tokenizer, args.output_dir, global_step)
+                ckpt_dir = save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
                 if args.do_resample:
                     new_files = resample_trajectories(
                         args, ckpt_dir, args.output_dir, global_step
@@ -264,8 +276,8 @@ def train(args):
         if global_step >= args.max_steps:
             break
 
+    save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
     if is_main:
-        save_checkpoint(model, tokenizer, args.output_dir, global_step)
         logger.info("Training complete.")
 
 
