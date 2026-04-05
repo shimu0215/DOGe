@@ -68,6 +68,7 @@ def run_experiment():
     parser.add_argument("--experiment_type", type=str, choices=["agent", "reasoning"], required=True,
                       help="Type of experiment to run")
     parser.add_argument("--suffix", type=str, help="suffix for saved filename")
+    parser.add_argument("--output_name_tag", type=str, help="Stable name tag used for output folder/file naming")
 
     # Agent-specific arguments
     parser.add_argument("--search_engine_type", type=str, default="wikipedia", help="Agent tool mode: wikipedia, duckduckgo, or python_only")
@@ -212,7 +213,8 @@ def run_experiment():
         seed=args.seed,
         max_steps=args.max_steps if args.experiment_type == "agent" else None,
         experiment_type=args.experiment_type,
-        additional_postfix=additional_postfix
+        additional_postfix=additional_postfix,
+        dataset_name_override=args.output_name_tag,
     )
 
     if RICH_AVAILABLE and args.verbose:

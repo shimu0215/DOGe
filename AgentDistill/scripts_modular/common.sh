@@ -67,10 +67,15 @@ result_jsonl_path() {
   local n="$5"
   local lora_folder="${6:-}"
   local log_root="${7:-/scratch/wzhao20/AKDA2/AgentDistill/logs/qa_results_python_only_teacher}"
+  local name_tag="${8:-}"
   local model_name dataset_name base_dir
 
   model_name="$(basename "$model_id")"
-  dataset_name="$(basename "$data_path" .json)"
+  if [[ -n "$name_tag" ]]; then
+    dataset_name="$name_tag"
+  else
+    dataset_name="$(basename "$data_path" .json)"
+  fi
 
   if [[ -n "$lora_folder" ]]; then
     base_dir="${lora_folder}/qa_results"

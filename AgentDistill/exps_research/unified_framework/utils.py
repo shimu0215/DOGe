@@ -148,6 +148,7 @@ def prepare_output_path(
     max_steps: int = None,
     experiment_type: str = None,
     additional_postfix: list = [],
+    dataset_name_override: str = None,
 ) -> Dict[str, Any]:
     """
     Prepare output path for experiment results
@@ -166,9 +167,12 @@ def prepare_output_path(
         Dictionary with output paths and metadata
     """
     # Extract dataset name from path
-    dataset_name = os.path.splitext(os.path.basename(dataset_file))[0]
-    fold = dataset_file.strip("/").split("/")[-2]
-    dataset_name = f"{dataset_name}_{fold}"
+    if dataset_name_override:
+        dataset_name = dataset_name_override
+    else:
+        dataset_name = os.path.splitext(os.path.basename(dataset_file))[0]
+        fold = dataset_file.strip("/").split("/")[-2]
+        dataset_name = f"{dataset_name}_{fold}"
     model_id_base = model_id.split("/")[-1]
     
     # Handle folder hierarchy
