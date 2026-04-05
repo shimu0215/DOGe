@@ -54,6 +54,8 @@ MAX_STEPS="${MAX_STEPS:-150}"    # ~3 epochs × 50 questions
 GRAD_ACCUM="${GRAD_ACCUM:-4}"
 N_TRAJS="${N_TRAJS:-8}"
 RESAMPLE_EVERY="${RESAMPLE_EVERY:-50}"  # checkpoint every 50 steps (no resampling)
+RESUME_FROM_CHECKPOINT="${RESUME_FROM_CHECKPOINT:-}"  # optional: path to existing LoRA checkpoint
+INITIAL_STEP="${INITIAL_STEP:-0}"                      # step counter when resuming
 
 mkdir -p "$OUTPUT_DIR" "$PILOT_TRAJ_DIR"
 
@@ -98,7 +100,15 @@ echo "  lr:           $LR"           | tee -a "$RUN_LOG"
 echo "  max_steps:    $MAX_STEPS"    | tee -a "$RUN_LOG"
 echo "  traj_dir:     $PILOT_TRAJ_DIR" | tee -a "$RUN_LOG"
 echo "  output_dir:   $OUTPUT_DIR"   | tee -a "$RUN_LOG"
+echo "  resume_ckpt:  ${RESUME_FROM_CHECKPOINT:-(none)}" | tee -a "$RUN_LOG"
+echo "  initial_step: $INITIAL_STEP" | tee -a "$RUN_LOG"
 date | tee -a "$RUN_LOG"
+
+# Build optional resume args
+RESUME_ARGS=()
+if [ -n "$RESUME_FROM_CHECKPOINT" ]; then
+    RESUME_ARGS=(--resume_from_checkpoint "$RESUME_FROM_CHECKPOINT" --initial_step "$INITIAL_STEP")
+fi
 
 "$ACCELERATE_BIN" launch \
     --config_file "$ACCEL_CONFIG" \
@@ -118,6 +128,7 @@ date | tee -a "$RUN_LOG"
     --resample_every    "$RESAMPLE_EVERY" \
     --output_dir        "$OUTPUT_DIR" \
     --log_every         5 \
+    "${RESUME_ARGS[@]}" \
     2>&1 | tee -a "$RUN_LOG"
 
 echo "=== OS-RL pilot complete ===" | tee -a "$RUN_LOG"
