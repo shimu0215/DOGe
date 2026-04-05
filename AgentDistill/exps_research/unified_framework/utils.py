@@ -178,6 +178,7 @@ def prepare_output_path(
         # Create filename based on parameters
         filename_parts = [
             f"{model_id_base}",
+            f"{dataset_name}",
             f"temp={temperature}",
             f"n={n}",
             f"seed={seed}"
@@ -189,6 +190,7 @@ def prepare_output_path(
         # Create filename based on parameters
         filename_parts = [
             f"{model_id_base}",
+            f"{dataset_name}",
             f"temp={temperature}",
             f"seed={seed}"
         ]
