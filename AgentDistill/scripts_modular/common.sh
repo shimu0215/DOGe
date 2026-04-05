@@ -74,12 +74,12 @@ result_jsonl_path() {
 
   if [[ -n "$lora_folder" ]]; then
     base_dir="${lora_folder}/qa_results"
-    printf "%s/%s_test/%s_temp=0.7_n=%s_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
-      "$base_dir" "$dataset_name" "$model_name" "$n" "$seed" "$max_steps" "$seed"
+    printf "%s/%s_test/%s_%s_temp=0.7_n=%s_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
+      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$n" "$seed" "$max_steps" "$seed"
   else
     base_dir="$log_root"
-    printf "%s/%s_test/%s_temp=0.7_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
-      "$base_dir" "$dataset_name" "$model_name" "$seed" "$max_steps" "$seed"
+    printf "%s/%s_test/%s_%s_temp=0.7_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
+      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$seed" "$max_steps" "$seed"
   fi
 }
 

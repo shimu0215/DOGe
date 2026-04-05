@@ -81,8 +81,9 @@ RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$DATA_PATH" "$SEED" "$MAX_STEPS" 
 EXPECTED_COUNT="$(expected_question_count "$DATA_PATH")"
 TASK_TYPE="$(infer_task_type "$DATA_PATH")"
 SERVE_LOG_DIR="$(dirname "$RESULT_JSONL")"
+DATASET_NAME="$(basename "$DATA_PATH" .json)"
 mkdir -p "$SERVE_LOG_DIR"
-SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_collect_seed${SEED}_serve.log"
+SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_${DATASET_NAME}_collect_seed${SEED}_serve.log"
 PORT_BASE="8000"
 API_BASE="http://127.0.0.1:8000/v1"
 
@@ -108,7 +109,7 @@ resolve_remaining_result_path() {
   local model_name stem candidate
   model_name="$(basename "$model_id")"
   stem="$(basename "$remaining_data" .json)"
-  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | grep "/${stem}_" | head -n 1 || true)"
+  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_${stem}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | head -n 1 || true)"
   if [[ -n "$candidate" ]]; then
     echo "$candidate"
   else
