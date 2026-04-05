@@ -259,11 +259,11 @@ def main(args):
     if "eval_dataset" in data_module.keys():
         print("# Valid Dataset: ", len(data_module["eval_dataset"]))
         eval_strategy = "epoch"
-        save_strategy = "epoch"
+        save_strategy = args.save_strategy if args.save_strategy != "no" else "epoch"
         load_best_model_at_end = True
     else:
         eval_strategy = "no"
-        save_strategy = "no"
+        save_strategy = args.save_strategy
         load_best_model_at_end = False
 
     output_dir = setup_savedir(args)
@@ -289,6 +289,10 @@ def main(args):
         gradient_checkpointing=args.gradient_checkpointing,
         save_safetensors=False,
     )
+    if save_strategy == "steps":
+        train_kwargs["save_steps"] = args.save_steps
+    if args.save_total_limit > 0:
+        train_kwargs["save_total_limit"] = args.save_total_limit
     if args.fsdp is not None:
         train_kwargs["fsdp"] = args.fsdp
         train_kwargs["fsdp_config"] = args.fsdp
@@ -361,6 +365,9 @@ if __name__ == "__main__":
     parser.add_argument("--gradient_accumulation_steps", default=1, type=int)
     parser.add_argument("--gradient_checkpointing", action='store_true')
     parser.add_argument("--max_length", default=4096, type=int)
+    parser.add_argument("--save_strategy", default="steps", choices=["no", "steps", "epoch"])
+    parser.add_argument("--save_steps", default=100, type=int)
+    parser.add_argument("--save_total_limit", default=3, type=int)
     parser.add_argument("--postfix", default="", type=str)
     parser.add_argument("--full_finetuning", action='store_true')
     parser.add_argument("--dataset_size", default=-1, type=int)
