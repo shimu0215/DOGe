@@ -30,7 +30,7 @@ from typing import List, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model, get_peft_model_state_dict
 from accelerate import Accelerator
 from torch.optim import AdamW
 
@@ -106,18 +106,36 @@ def build_tokenizer(args):
 
 
 def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None):
-    """Save LoRA checkpoint, gathering ZeRO-3 parameter shards from all ranks."""
+    """Save LoRA adapter checkpoint, gathering only adapter shards under ZeRO-3.
+
+    accelerator.get_state_dict(model) gathers ALL 33B parameters and hangs.
+    Instead we use deepspeed.zero.GatheredParameters scoped only to the LoRA
+    adapter params (~268M), which is fast and avoids the NCCL timeout.
+    """
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
     if accelerator is not None:
-        # ZeRO-3: collect shards from all ranks before saving
         accelerator.wait_for_everyone()
         unwrapped = accelerator.unwrap_model(model)
-        state_dict = accelerator.get_state_dict(model)
-        if accelerator.is_main_process:
-            os.makedirs(ckpt_dir, exist_ok=True)
-            unwrapped.save_pretrained(ckpt_dir, state_dict=state_dict)
-            tokenizer.save_pretrained(ckpt_dir)
-            logger.info(f"Checkpoint saved: {ckpt_dir}")
+        # Gather only the LoRA adapter parameters (not the frozen base model)
+        try:
+            import deepspeed
+            lora_params = [p for n, p in unwrapped.named_parameters() if "lora_" in n]
+            with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=0):
+                if accelerator.is_main_process:
+                    adapter_state_dict = get_peft_model_state_dict(unwrapped)
+                    os.makedirs(ckpt_dir, exist_ok=True)
+                    unwrapped.save_pretrained(ckpt_dir, state_dict=adapter_state_dict)
+                    tokenizer.save_pretrained(ckpt_dir)
+                    logger.info(f"Checkpoint saved: {ckpt_dir}")
+        except Exception:
+            # Fallback: try full gather (may be slow but avoids silent failure)
+            logger.warning("GatheredParameters failed, falling back to get_state_dict")
+            state_dict = accelerator.get_state_dict(model)
+            if accelerator.is_main_process:
+                os.makedirs(ckpt_dir, exist_ok=True)
+                unwrapped.save_pretrained(ckpt_dir, state_dict=state_dict)
+                tokenizer.save_pretrained(ckpt_dir)
+                logger.info(f"Checkpoint saved: {ckpt_dir}")
         accelerator.wait_for_everyone()
     else:
         os.makedirs(ckpt_dir, exist_ok=True)
