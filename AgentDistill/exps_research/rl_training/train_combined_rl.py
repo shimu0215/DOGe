@@ -325,11 +325,12 @@ def train(args):
 
             # === Periodic checkpoint + resampling ===
             # NOTE: all ranks must call save_checkpoint (uses GatheredParameters + barriers).
-            if (
+            _ckpt_due = (
                 args.resample_every > 0
-                and global_step % args.resample_every == 0
+                and (global_step == 1 or global_step % args.resample_every == 0)
                 and global_step > last_resample_step
-            ):
+            )
+            if _ckpt_due:
                 last_resample_step = global_step
                 ckpt_dir = save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
                 if is_main and args.do_resample:
