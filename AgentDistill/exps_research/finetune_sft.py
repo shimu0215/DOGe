@@ -78,6 +78,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         self.entropy_lambda = entropy_lambda
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        entropy_mask = inputs.pop("entropy_mask", None)
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.logits
@@ -95,11 +96,17 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         )
 
         valid_mask = shifted_labels.ne(-100)
-        if torch.any(valid_mask):
+        if entropy_mask is not None:
+            shifted_entropy_mask = entropy_mask[..., 1:].contiguous().to(dtype=torch.bool, device=shifted_labels.device)
+            entropy_valid_mask = valid_mask & shifted_entropy_mask
+        else:
+            entropy_valid_mask = valid_mask
+
+        if torch.any(entropy_valid_mask):
             log_probs = torch.log_softmax(shifted_logits.float(), dim=-1)
             probs = log_probs.exp()
             token_entropy = -(probs * log_probs).sum(dim=-1)
-            entropy = token_entropy.masked_select(valid_mask).mean()
+            entropy = token_entropy.masked_select(entropy_valid_mask).mean()
         else:
             entropy = torch.zeros((), device=shifted_logits.device, dtype=shifted_logits.dtype)
 
@@ -314,7 +321,8 @@ def main(args):
         collator = DataCollatorForCompletionOnlyLMMultiTurn(
             response_template,
             instruction_template=instruction_template,
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
+            entropy_thought_only=args.entropy_on_thought_only,
         )
     else:
         try:
@@ -389,6 +397,7 @@ if __name__ == "__main__":
     parser.add_argument("--random_trajectory_per_question", action="store_true")
     parser.add_argument("--use_entropy_regularization", action="store_true")
     parser.add_argument("--entropy_lambda", type=float, default=0.0)
+    parser.add_argument("--entropy_on_thought_only", action="store_true")
     parser.add_argument("--lora_r", type=int, default=64)
     parser.add_argument("--lora_alpha", type=int, default=-1)
 

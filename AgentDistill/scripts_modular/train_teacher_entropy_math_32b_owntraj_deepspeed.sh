@@ -32,6 +32,7 @@ MONITOR_INTERVAL_SECONDS="${MONITOR_INTERVAL_SECONDS:-5}"
 SAVE_STRATEGY="${SAVE_STRATEGY:-steps}"
 SAVE_STEPS="${SAVE_STEPS:-100}"
 SAVE_TOTAL_LIMIT="${SAVE_TOTAL_LIMIT:-3}"
+ENTROPY_ON_THOUGHT_ONLY="${ENTROPY_ON_THOUGHT_ONLY:-0}"
 
 mkdir -p logs
 
@@ -161,27 +162,34 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "Using all filtered trajectories as independent SFT samples." | tee -a "$run_log"
   echo "EPOCHS=$EPOCHS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
   echo "SAVE_STRATEGY=$SAVE_STRATEGY SAVE_STEPS=$SAVE_STEPS SAVE_TOTAL_LIMIT=$SAVE_TOTAL_LIMIT" | tee -a "$run_log"
+  echo "ENTROPY_ON_THOUGHT_ONLY=$ENTROPY_ON_THOUGHT_ONLY" | tee -a "$run_log"
 
-  "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py \
-    --model_name "$TARGET_MODEL" \
-    --num_epochs "$EPOCHS" \
-    --batch_size 1 \
-    --gradient_accumulation_steps 4 \
-    --lr 2e-4 \
-    --train_filepath "${FILTERED_LOGS[@]}" \
-    --postfix "$postfix" \
-    --solution_type agent \
-    --deepspeed "$DEEPSPEED_CONFIG" \
-    --gradient_checkpointing \
-    --max_length "$MAX_LENGTH" \
-    --save_strategy "$SAVE_STRATEGY" \
-    --save_steps "$SAVE_STEPS" \
-    --save_total_limit "$SAVE_TOTAL_LIMIT" \
-    --lora_r "$LORA_R" \
-    --lora_alpha "$LORA_ALPHA" \
-    --use_entropy_regularization \
-    --entropy_lambda "$lambda" \
-    >> "$run_log" 2>&1 &
+  train_cmd=(
+    "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py
+    --model_name "$TARGET_MODEL"
+    --num_epochs "$EPOCHS"
+    --batch_size 1
+    --gradient_accumulation_steps 4
+    --lr 2e-4
+    --train_filepath "${FILTERED_LOGS[@]}"
+    --postfix "$postfix"
+    --solution_type agent
+    --deepspeed "$DEEPSPEED_CONFIG"
+    --gradient_checkpointing
+    --max_length "$MAX_LENGTH"
+    --save_strategy "$SAVE_STRATEGY"
+    --save_steps "$SAVE_STEPS"
+    --save_total_limit "$SAVE_TOTAL_LIMIT"
+    --lora_r "$LORA_R"
+    --lora_alpha "$LORA_ALPHA"
+    --use_entropy_regularization
+    --entropy_lambda "$lambda"
+  )
+  if [[ "$ENTROPY_ON_THOUGHT_ONLY" == "1" ]]; then
+    train_cmd+=(--entropy_on_thought_only)
+  fi
+
+  "${train_cmd[@]}" >> "$run_log" 2>&1 &
   train_pid=$!
 
   monitor_pid="$(monitor_system_usage "$monitor_log" "$train_pid")"
