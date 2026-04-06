@@ -129,7 +129,12 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
             torch.save(param_dict, os.path.join(ckpt_dir, "adapter_model.bin"))
             peft_cfg = list(unwrapped.peft_config.values())[0]
             with open(os.path.join(ckpt_dir, "adapter_config.json"), "w") as f:
-                _json.dump(peft_cfg.to_dict(), f, indent=2)
+                class _SetEncoder(_json.JSONEncoder):
+                    def default(self, o):
+                        if isinstance(o, set):
+                            return sorted(o)
+                        return super().default(o)
+                _json.dump(peft_cfg.to_dict(), f, indent=2, cls=_SetEncoder)
             tokenizer.save_pretrained(ckpt_dir)
             logger.info(f"Checkpoint saved: {ckpt_dir}")
         accelerator.wait_for_everyone()

@@ -106,32 +106,30 @@ def build_tokenizer(args):
 
 
 def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None):
-    """Save LoRA adapter checkpoint under ZeRO-3 without any collective mismatch."""
-    import torch.distributed as dist
-    rank = dist.get_rank() if dist.is_initialized() else 0
-    print(f"[CKPT DEBUG] rank={rank} save_checkpoint called step={step}", flush=True)
+    """Save LoRA adapter checkpoint under ZeRO-3 without any collective mismatch.
+
+    All ranks call this function. GatheredParameters all-gathers only LoRA params
+    (~268M), avoiding the 30-min timeout from gathering all 33B params.
+    modifier_rank=None means read-only gather with no post-exit broadcast.
+    lora_named_params pre-collected outside the context to avoid triggering
+    allgather_before hooks on non-LoRA params inside the context.
+    """
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
     if accelerator is not None:
-        print(f"[CKPT DEBUG] rank={rank} calling wait_for_everyone", flush=True)
         accelerator.wait_for_everyone()
-        print(f"[CKPT DEBUG] rank={rank} past wait_for_everyone", flush=True)
         unwrapped = accelerator.unwrap_model(model)
         import deepspeed, json as _json
         lora_named_params = [(n, p) for n, p in unwrapped.named_parameters()
                              if "lora_" in n]
         lora_params = [p for _, p in lora_named_params]
-        print(f"[CKPT DEBUG] rank={rank} lora_params count={len(lora_params)}", flush=True)
 
         param_dict = {}
-        print(f"[CKPT DEBUG] rank={rank} entering GatheredParameters", flush=True)
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
-            print(f"[CKPT DEBUG] rank={rank} inside GatheredParameters is_main={accelerator.is_main_process}", flush=True)
             if accelerator.is_main_process:
                 param_dict = {
                     name: param.data.detach().cpu().clone()
                     for name, param in lora_named_params
                 }
-        print(f"[CKPT DEBUG] rank={rank} exited GatheredParameters", flush=True)
 
         if accelerator.is_main_process:
             os.makedirs(ckpt_dir, exist_ok=True)
@@ -139,13 +137,16 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
             peft_cfg = list(unwrapped.peft_config.values())[0]
             cfg_dict = peft_cfg.to_dict()
             with open(os.path.join(ckpt_dir, "adapter_config.json"), "w") as f:
-                _json.dump(cfg_dict, f, indent=2)
+                # peft_cfg.to_dict() may contain sets (e.g. target_modules) — convert to list
+                class _SetEncoder(_json.JSONEncoder):
+                    def default(self, o):
+                        if isinstance(o, set):
+                            return sorted(o)
+                        return super().default(o)
+                _json.dump(cfg_dict, f, indent=2, cls=_SetEncoder)
             tokenizer.save_pretrained(ckpt_dir)
             logger.info(f"Checkpoint saved: {ckpt_dir}")
-            print(f"[CKPT DEBUG] rank={rank} files written to {ckpt_dir}", flush=True)
-        print(f"[CKPT DEBUG] rank={rank} calling final wait_for_everyone", flush=True)
         accelerator.wait_for_everyone()
-        print(f"[CKPT DEBUG] rank={rank} save_checkpoint done", flush=True)
     else:
         os.makedirs(ckpt_dir, exist_ok=True)
         model.save_pretrained(ckpt_dir)
@@ -318,9 +319,6 @@ def train(args):
                     f.write(json.dumps(log_entry) + "\n")
 
             # === Periodic checkpoint + resampling ===
-            import torch.distributed as _dist
-            _rank = _dist.get_rank() if _dist.is_initialized() else 0
-            print(f"[LOOP DEBUG] rank={_rank} global_step={global_step} resample_every={args.resample_every} last_resample_step={last_resample_step} cond={args.resample_every > 0 and global_step % args.resample_every == 0 and global_step > last_resample_step}", flush=True)
             if (
                 args.resample_every > 0
                 and global_step % args.resample_every == 0
