@@ -314,24 +314,26 @@ def train(args):
                     f.write(json.dumps(log_entry) + "\n")
 
             # Checkpoint + online resampling
+            # NOTE: all ranks must call save_checkpoint (uses GatheredParameters + barriers).
             if (
-                is_main
-                and args.resample_every > 0
+                args.resample_every > 0
                 and global_step % args.resample_every == 0
                 and global_step > last_resample_step
             ):
                 last_resample_step = global_step
                 ckpt_dir = save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
-                new_files = resample_trajectories(args, ckpt_dir, global_step)
-                if new_files:
-                    pool.refresh(new_files)
-                    logger.info(f"Pool refreshed with {len(new_files)} new files. "
-                                f"Stats: {pool.stats()}")
+                if is_main:
+                    new_files = resample_trajectories(args, ckpt_dir, global_step)
+                    if new_files:
+                        pool.refresh(new_files)
+                        logger.info(f"Pool refreshed with {len(new_files)} new files. "
+                                    f"Stats: {pool.stats()}")
 
         if global_step >= args.max_steps:
             break
 
-    save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
+    if global_step > last_resample_step:
+        save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
     if is_main:
         logger.info("Training complete.")
 

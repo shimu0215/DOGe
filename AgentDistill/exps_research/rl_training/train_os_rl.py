@@ -329,15 +329,17 @@ def train(args):
                     f.write(json.dumps(log_entry) + "\n")
 
             # === Periodic checkpoint + resampling ===
+            # NOTE: all ranks must call save_checkpoint (it uses GatheredParameters + barriers).
+            # Do NOT guard with is_main here — the is_main guards inside save_checkpoint
+            # handle rank-0-specific I/O.
             if (
-                is_main
-                and args.resample_every > 0
+                args.resample_every > 0
                 and global_step % args.resample_every == 0
                 and global_step > last_resample_step
             ):
                 last_resample_step = global_step
                 ckpt_dir = save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
-                if args.do_resample:
+                if is_main and args.do_resample:
                     new_files = resample_trajectories(
                         args, ckpt_dir, args.output_dir, global_step
                     )
@@ -349,8 +351,9 @@ def train(args):
         if global_step >= args.max_steps:
             break
 
-    # Final checkpoint
-    save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
+    # Final checkpoint (skip if already saved at this step by periodic checkpoint)
+    if global_step > last_resample_step:
+        save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
     if is_main:
         logger.info("Training complete.")
 
