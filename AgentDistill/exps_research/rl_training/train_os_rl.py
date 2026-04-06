@@ -115,27 +115,32 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
                                              → save_pretrained calls model.state_dict()
                                                → ALLREDUCE on rank0, others wait for
                                                GatheredParameters exit BROADCAST → mismatch
-      v4 (this): GatheredParameters with modifier_rank=None, ONLY copy tensor.data inside
-                 context (fast), then do ALL file I/O outside context via torch.save.
-                 PeftModel.save_pretrained is never called under ZeRO-3.
+      v4: GatheredParameters(modifier_rank=None) + tensor copy inside context
+          → still crashed: named_parameters() inside context iterates non-LoRA params,
+            triggers implicit allgather_before hooks → same collective mismatch
+      v5 (this): pre-collect (name, param) pairs BEFORE entering context, so the
+                 context body only accesses pre-collected param references.
+                 named_parameters() is NEVER called inside the GatheredParameters context.
     """
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
     if accelerator is not None:
         accelerator.wait_for_everyone()
         unwrapped = accelerator.unwrap_model(model)
         import deepspeed, json as _json
-        lora_params = [p for n, p in unwrapped.named_parameters() if "lora_" in n]
+        # Pre-collect BEFORE entering context — avoids any named_parameters() call
+        # inside the context that could trigger allgather_before hooks on non-LoRA params
+        lora_named_params = [(n, p) for n, p in unwrapped.named_parameters()
+                             if "lora_" in n]
+        lora_params = [p for _, p in lora_named_params]
 
-        # Step 1: gather LoRA shards — all ranks participate, context body is instant
+        # Step 1: gather LoRA shards — all ranks participate
         param_dict = {}
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
-            # Only copy tensor data (local op, no collective) — keep context body fast
-            # so all ranks exit together without NCCL timeout
+            # ONLY access pre-collected param references — no named_parameters() call here
             if accelerator.is_main_process:
                 param_dict = {
                     name: param.data.detach().cpu().clone()
-                    for name, param in unwrapped.named_parameters()
-                    if "lora_" in name
+                    for name, param in lora_named_params
                 }
         # Context exited — all ranks re-partitioned cleanly
 

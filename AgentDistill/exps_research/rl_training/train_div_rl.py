@@ -108,26 +108,26 @@ def build_tokenizer(args):
 def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None) -> str:
     """Save LoRA adapter checkpoint under ZeRO-3 without collective mismatch.
 
-    Root cause of previous crashes: get_peft_model_state_dict() calls model.state_dict()
-    internally, which triggers an ALLREDUCE on rank 0 while ranks 1/2/3 are waiting for
-    the GatheredParameters exit-BROADCAST — collective type mismatch → 30-min NCCL timeout.
-
-    Fix: modifier_rank=None (no post-context broadcast) + build state dict directly from
-    tensor.data (pure local read, no collective).
+    Crash history:
+      v4: named_parameters() called inside GatheredParameters context → triggers
+          allgather_before hooks on non-LoRA params → NCCL collective mismatch
+      v5 (this): pre-collect (name, param) pairs BEFORE entering context so the
+                 context body only accesses pre-collected references.
     """
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
     if accelerator is not None:
         accelerator.wait_for_everyone()
         unwrapped = accelerator.unwrap_model(model)
         import deepspeed, json as _json
-        lora_params = [p for n, p in unwrapped.named_parameters() if "lora_" in n]
+        lora_named_params = [(n, p) for n, p in unwrapped.named_parameters()
+                             if "lora_" in n]
+        lora_params = [p for _, p in lora_named_params]
         param_dict = {}
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
             if accelerator.is_main_process:
                 param_dict = {
                     name: param.data.detach().cpu().clone()
-                    for name, param in unwrapped.named_parameters()
-                    if "lora_" in name
+                    for name, param in lora_named_params
                 }
         if accelerator.is_main_process:
             os.makedirs(ckpt_dir, exist_ok=True)
