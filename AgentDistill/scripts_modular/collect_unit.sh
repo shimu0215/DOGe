@@ -21,6 +21,7 @@ FORCE_RERUN="0"
 SERVER_TIMEOUT_SECONDS="1800"
 API_BASE=""
 PER_TASK_TIMEOUT="0"
+OUTPUT_NAME_TAG=""
 
 usage() {
   cat <<'EOF'
@@ -44,6 +45,7 @@ Optional:
   --n                   Number of samples per question
   --force-rerun         1 to ignore existing raw and recollect all
   --per-task-timeout    Per-question timeout in seconds for outer process-pool guard; <=0 disables it
+  --output-name-tag     Stable name tag used for result folder/file naming
 EOF
 }
 
@@ -64,6 +66,7 @@ while [[ $# -gt 0 ]]; do
     --n) N="$2"; shift 2 ;;
     --force-rerun) FORCE_RERUN="$2"; shift 2 ;;
     --per-task-timeout) PER_TASK_TIMEOUT="$2"; shift 2 ;;
+    --output-name-tag) OUTPUT_NAME_TAG="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 1 ;;
   esac
@@ -77,12 +80,17 @@ fi
 setup_agentdistill_env
 cleanup_collection_resources
 
-RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$DATA_PATH" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT")"
+if [[ -z "$OUTPUT_NAME_TAG" ]]; then
+  OUTPUT_NAME_TAG="$(basename "$DATA_PATH" .json)"
+fi
+
+RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$DATA_PATH" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT" "$OUTPUT_NAME_TAG")"
 EXPECTED_COUNT="$(expected_question_count "$DATA_PATH")"
 TASK_TYPE="$(infer_task_type "$DATA_PATH")"
 SERVE_LOG_DIR="$(dirname "$RESULT_JSONL")"
+DATASET_NAME="$OUTPUT_NAME_TAG"
 mkdir -p "$SERVE_LOG_DIR"
-SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_collect_seed${SEED}_serve.log"
+SERVE_LOG="${SERVE_LOG_DIR}/$(basename "$MODEL_ID")_${DATASET_NAME}_collect_seed${SEED}_serve.log"
 PORT_BASE="8000"
 API_BASE="http://127.0.0.1:8000/v1"
 
@@ -107,8 +115,8 @@ resolve_remaining_result_path() {
 
   local model_name stem candidate
   model_name="$(basename "$model_id")"
-  stem="$(basename "$remaining_data" .json)"
-  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | grep "/${stem}_" | head -n 1 || true)"
+  stem="$OUTPUT_NAME_TAG"
+  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_${stem}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | head -n 1 || true)"
   if [[ -n "$candidate" ]]; then
     echo "$candidate"
   else
@@ -159,7 +167,7 @@ else
   remaining="$EXPECTED_COUNT"
 fi
 
-REMAINING_RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT")"
+REMAINING_RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT" "$OUTPUT_NAME_TAG")"
 
 if (( remaining <= 0 )); then
   restore_backup_on_failure
@@ -200,6 +208,7 @@ RUN_CMD=(
   --use_process_pool
   --parallel_workers "$PARALLEL_WORKERS"
   --per_task_timeout "$PER_TASK_TIMEOUT"
+  --output_name_tag "$OUTPUT_NAME_TAG"
   --n "$N"
   --temperature 0.7
   --top_p 0.8

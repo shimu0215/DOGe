@@ -78,6 +78,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         self.entropy_lambda = entropy_lambda
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        entropy_mask = inputs.pop("entropy_mask", None)
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.logits
@@ -95,11 +96,17 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         )
 
         valid_mask = shifted_labels.ne(-100)
-        if torch.any(valid_mask):
+        if entropy_mask is not None:
+            shifted_entropy_mask = entropy_mask[..., 1:].contiguous().to(dtype=torch.bool, device=shifted_labels.device)
+            entropy_valid_mask = valid_mask & shifted_entropy_mask
+        else:
+            entropy_valid_mask = valid_mask
+
+        if torch.any(entropy_valid_mask):
             log_probs = torch.log_softmax(shifted_logits.float(), dim=-1)
             probs = log_probs.exp()
             token_entropy = -(probs * log_probs).sum(dim=-1)
-            entropy = token_entropy.masked_select(valid_mask).mean()
+            entropy = token_entropy.masked_select(entropy_valid_mask).mean()
         else:
             entropy = torch.zeros((), device=shifted_logits.device, dtype=shifted_logits.dtype)
 
@@ -259,11 +266,11 @@ def main(args):
     if "eval_dataset" in data_module.keys():
         print("# Valid Dataset: ", len(data_module["eval_dataset"]))
         eval_strategy = "epoch"
-        save_strategy = "epoch"
+        save_strategy = args.save_strategy if args.save_strategy != "no" else "epoch"
         load_best_model_at_end = True
     else:
         eval_strategy = "no"
-        save_strategy = "no"
+        save_strategy = args.save_strategy
         load_best_model_at_end = False
 
     output_dir = setup_savedir(args)
@@ -289,6 +296,10 @@ def main(args):
         gradient_checkpointing=args.gradient_checkpointing,
         save_safetensors=False,
     )
+    if save_strategy == "steps":
+        train_kwargs["save_steps"] = args.save_steps
+    if args.save_total_limit > 0:
+        train_kwargs["save_total_limit"] = args.save_total_limit
     if args.fsdp is not None:
         train_kwargs["fsdp"] = args.fsdp
         train_kwargs["fsdp_config"] = args.fsdp
@@ -310,7 +321,8 @@ def main(args):
         collator = DataCollatorForCompletionOnlyLMMultiTurn(
             response_template,
             instruction_template=instruction_template,
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
+            entropy_thought_only=args.entropy_on_thought_only,
         )
     else:
         try:
@@ -361,6 +373,9 @@ if __name__ == "__main__":
     parser.add_argument("--gradient_accumulation_steps", default=1, type=int)
     parser.add_argument("--gradient_checkpointing", action='store_true')
     parser.add_argument("--max_length", default=4096, type=int)
+    parser.add_argument("--save_strategy", default="steps", choices=["no", "steps", "epoch"])
+    parser.add_argument("--save_steps", default=100, type=int)
+    parser.add_argument("--save_total_limit", default=3, type=int)
     parser.add_argument("--postfix", default="", type=str)
     parser.add_argument("--full_finetuning", action='store_true')
     parser.add_argument("--dataset_size", default=-1, type=int)
@@ -382,6 +397,7 @@ if __name__ == "__main__":
     parser.add_argument("--random_trajectory_per_question", action="store_true")
     parser.add_argument("--use_entropy_regularization", action="store_true")
     parser.add_argument("--entropy_lambda", type=float, default=0.0)
+    parser.add_argument("--entropy_on_thought_only", action="store_true")
     parser.add_argument("--lora_r", type=int, default=64)
     parser.add_argument("--lora_alpha", type=int, default=-1)
 

@@ -70,6 +70,9 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
         mlm: bool = False,
         ignore_index: int = -100,
         padding_free: bool = False,
+        entropy_thought_only: bool = False,
+        thought_template: str = "Thought:",
+        code_template: str = "Code:",
         **kwargs,
     ):
         super().__init__(*args, mlm=mlm, **kwargs)
@@ -116,9 +119,25 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
 
         self.ignore_index = ignore_index
         self.padding_free = padding_free
+        self.entropy_thought_only = entropy_thought_only
+        self.thought_token_ids = self.tokenizer.encode(thought_template, add_special_tokens=False)
+        self.code_token_ids = self.tokenizer.encode(code_template, add_special_tokens=False)
+
+    @staticmethod
+    def _find_subsequence_positions(sequence: list[int], subsequence: list[int]) -> list[int]:
+        if not subsequence or len(subsequence) > len(sequence):
+            return []
+
+        positions = []
+        last_start = len(sequence) - len(subsequence) + 1
+        for start in range(last_start):
+            if sequence[start : start + len(subsequence)] == subsequence:
+                positions.append(start)
+        return positions
 
     def torch_call(self, examples: list[Union[list[int], Any, dict[str, Any]]]) -> dict[str, Any]:
         batch = super().torch_call(examples)
+        entropy_mask = torch.zeros_like(batch["labels"], dtype=torch.bool) if self.entropy_thought_only else None
 
         sequence_lengths = (batch["input_ids"] != self.tokenizer.pad_token_id).sum(dim=1)
         content_starts = (
@@ -236,6 +255,23 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
                         batch["labels"][i, response_pos:next_instruction_pos] = batch["input_ids"][
                             i, response_pos:next_instruction_pos
                         ]
+                        if self.entropy_thought_only:
+                            assistant_token_ids = batch["input_ids"][i, response_pos:next_instruction_pos].tolist()
+                            thought_positions = self._find_subsequence_positions(
+                                assistant_token_ids, self.thought_token_ids
+                            )
+                            code_positions = self._find_subsequence_positions(
+                                assistant_token_ids, self.code_token_ids
+                            )
+                            for thought_pos in thought_positions:
+                                entropy_start = response_pos + thought_pos + len(self.thought_token_ids)
+                                later_code_positions = [pos for pos in code_positions if pos > thought_pos]
+                                if later_code_positions:
+                                    entropy_end = response_pos + later_code_positions[0]
+                                else:
+                                    entropy_end = next_instruction_pos
+                                if entropy_start < entropy_end:
+                                    entropy_mask[i, entropy_start:entropy_end] = True
                         last_processed_instruction_pos = next_instruction_pos
                     else:
                         # 2 reponses in a row so we unmask the special tokens for response in the middle
@@ -269,6 +305,11 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
             # Determine maximum sequence lengths to prevent graph breaks during further computations.
             batch["max_length_k"] = torch.tensor([flattened_position_ids.max().item() + 1])
             batch["max_length_q"] = batch["max_length_k"]
+
+            if entropy_mask is not None:
+                batch["entropy_mask"] = entropy_mask[attn_mask.bool()].unsqueeze(0)
+        elif entropy_mask is not None:
+            batch["entropy_mask"] = entropy_mask
 
         # # Let's analyze this
         # labels = batch["labels"][0] # List of label

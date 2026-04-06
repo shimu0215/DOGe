@@ -67,19 +67,24 @@ result_jsonl_path() {
   local n="$5"
   local lora_folder="${6:-}"
   local log_root="${7:-/scratch/wzhao20/AKDA2/AgentDistill/logs/qa_results_python_only_teacher}"
+  local name_tag="${8:-}"
   local model_name dataset_name base_dir
 
   model_name="$(basename "$model_id")"
-  dataset_name="$(basename "$data_path" .json)"
+  if [[ -n "$name_tag" ]]; then
+    dataset_name="$name_tag"
+  else
+    dataset_name="$(basename "$data_path" .json)"
+  fi
 
   if [[ -n "$lora_folder" ]]; then
     base_dir="${lora_folder}/qa_results"
-    printf "%s/%s_test/%s_temp=0.7_n=%s_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
-      "$base_dir" "$dataset_name" "$model_name" "$n" "$seed" "$max_steps" "$seed"
+    printf "%s/%s_test/%s_%s_temp=0.7_n=%s_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
+      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$n" "$seed" "$max_steps" "$seed"
   else
     base_dir="$log_root"
-    printf "%s/%s_test/%s_temp=0.7_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
-      "$base_dir" "$dataset_name" "$model_name" "$seed" "$max_steps" "$seed"
+    printf "%s/%s_test/%s_%s_temp=0.7_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
+      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$seed" "$max_steps" "$seed"
   fi
 }
 
