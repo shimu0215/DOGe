@@ -106,36 +106,51 @@ def build_tokenizer(args):
 
 
 def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None):
-    """Save LoRA adapter checkpoint under ZeRO-3 without collective mismatch.
+    """Save LoRA adapter checkpoint under ZeRO-3 without any collective mismatch.
 
-    Root cause of previous crashes: get_peft_model_state_dict() calls model.state_dict()
-    internally, which triggers an ALLREDUCE on rank 0 while ranks 1/2/3 are waiting for
-    the GatheredParameters exit-BROADCAST — collective type mismatch → 30-min NCCL timeout.
-
-    Fix: modifier_rank=None (no post-context broadcast) + build state dict directly from
-    tensor.data (pure local read, no collective).  All ranks participate only in the
-    all-gather (enter) and re-partition (exit), which are symmetric across ranks.
+    Crash history:
+      v1: model.save_pretrained()            → ZeRO-3 shard only saved (empty tensors)
+      v2: accelerator.get_state_dict()       → all-gathers 33B params, hangs 30min
+      v3: GatheredParameters + save_pretrained inside context
+                                             → save_pretrained calls model.state_dict()
+                                               → ALLREDUCE on rank0, others wait for
+                                               GatheredParameters exit BROADCAST → mismatch
+      v4 (this): GatheredParameters with modifier_rank=None, ONLY copy tensor.data inside
+                 context (fast), then do ALL file I/O outside context via torch.save.
+                 PeftModel.save_pretrained is never called under ZeRO-3.
     """
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
     if accelerator is not None:
         accelerator.wait_for_everyone()
         unwrapped = accelerator.unwrap_model(model)
-        import deepspeed
+        import deepspeed, json as _json
         lora_params = [p for n, p in unwrapped.named_parameters() if "lora_" in n]
-        # modifier_rank=None: read-only context, no post-exit broadcast
+
+        # Step 1: gather LoRA shards — all ranks participate, context body is instant
+        param_dict = {}
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
+            # Only copy tensor data (local op, no collective) — keep context body fast
+            # so all ranks exit together without NCCL timeout
             if accelerator.is_main_process:
-                # Build state dict directly from gathered tensors — never call
-                # model.state_dict() here as it triggers an asymmetric collective
                 param_dict = {
                     name: param.data.detach().cpu().clone()
                     for name, param in unwrapped.named_parameters()
                     if "lora_" in name
                 }
-                os.makedirs(ckpt_dir, exist_ok=True)
-                unwrapped.save_pretrained(ckpt_dir, state_dict=param_dict)
-                tokenizer.save_pretrained(ckpt_dir)
-                logger.info(f"Checkpoint saved: {ckpt_dir}")
+        # Context exited — all ranks re-partitioned cleanly
+
+        # Step 2: file I/O entirely outside context, only on rank 0, zero collectives
+        if accelerator.is_main_process:
+            os.makedirs(ckpt_dir, exist_ok=True)
+            # Save adapter weights directly (bypass save_pretrained which calls state_dict)
+            torch.save(param_dict, os.path.join(ckpt_dir, "adapter_model.bin"))
+            # Save adapter config JSON
+            peft_cfg = list(unwrapped.peft_config.values())[0]
+            cfg_dict = peft_cfg.to_dict()
+            with open(os.path.join(ckpt_dir, "adapter_config.json"), "w") as f:
+                _json.dump(cfg_dict, f, indent=2)
+            tokenizer.save_pretrained(ckpt_dir)
+            logger.info(f"Checkpoint saved: {ckpt_dir}")
         accelerator.wait_for_everyone()
     else:
         os.makedirs(ckpt_dir, exist_ok=True)

@@ -114,8 +114,9 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
     if accelerator is not None:
         accelerator.wait_for_everyone()
         unwrapped = accelerator.unwrap_model(model)
-        import deepspeed
+        import deepspeed, json as _json
         lora_params = [p for n, p in unwrapped.named_parameters() if "lora_" in n]
+        param_dict = {}
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
             if accelerator.is_main_process:
                 param_dict = {
@@ -123,10 +124,14 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
                     for name, param in unwrapped.named_parameters()
                     if "lora_" in name
                 }
-                os.makedirs(ckpt_dir, exist_ok=True)
-                unwrapped.save_pretrained(ckpt_dir, state_dict=param_dict)
-                tokenizer.save_pretrained(ckpt_dir)
-                logger.info(f"Checkpoint saved: {ckpt_dir}")
+        if accelerator.is_main_process:
+            os.makedirs(ckpt_dir, exist_ok=True)
+            torch.save(param_dict, os.path.join(ckpt_dir, "adapter_model.bin"))
+            peft_cfg = list(unwrapped.peft_config.values())[0]
+            with open(os.path.join(ckpt_dir, "adapter_config.json"), "w") as f:
+                _json.dump(peft_cfg.to_dict(), f, indent=2)
+            tokenizer.save_pretrained(ckpt_dir)
+            logger.info(f"Checkpoint saved: {ckpt_dir}")
         accelerator.wait_for_everyone()
     else:
         os.makedirs(ckpt_dir, exist_ok=True)
