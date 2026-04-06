@@ -106,57 +106,46 @@ def build_tokenizer(args):
 
 
 def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None):
-    """Save LoRA adapter checkpoint under ZeRO-3 without any collective mismatch.
-
-    Crash history:
-      v1: model.save_pretrained()            → ZeRO-3 shard only saved (empty tensors)
-      v2: accelerator.get_state_dict()       → all-gathers 33B params, hangs 30min
-      v3: GatheredParameters + save_pretrained inside context
-                                             → save_pretrained calls model.state_dict()
-                                               → ALLREDUCE on rank0, others wait for
-                                               GatheredParameters exit BROADCAST → mismatch
-      v4: GatheredParameters(modifier_rank=None) + tensor copy inside context
-          → still crashed: named_parameters() inside context iterates non-LoRA params,
-            triggers implicit allgather_before hooks → same collective mismatch
-      v5 (this): pre-collect (name, param) pairs BEFORE entering context, so the
-                 context body only accesses pre-collected param references.
-                 named_parameters() is NEVER called inside the GatheredParameters context.
-    """
+    """Save LoRA adapter checkpoint under ZeRO-3 without any collective mismatch."""
+    import torch.distributed as dist
+    rank = dist.get_rank() if dist.is_initialized() else 0
+    print(f"[CKPT DEBUG] rank={rank} save_checkpoint called step={step}", flush=True)
     ckpt_dir = os.path.join(output_dir, f"checkpoint-step{step}")
     if accelerator is not None:
+        print(f"[CKPT DEBUG] rank={rank} calling wait_for_everyone", flush=True)
         accelerator.wait_for_everyone()
+        print(f"[CKPT DEBUG] rank={rank} past wait_for_everyone", flush=True)
         unwrapped = accelerator.unwrap_model(model)
         import deepspeed, json as _json
-        # Pre-collect BEFORE entering context — avoids any named_parameters() call
-        # inside the context that could trigger allgather_before hooks on non-LoRA params
         lora_named_params = [(n, p) for n, p in unwrapped.named_parameters()
                              if "lora_" in n]
         lora_params = [p for _, p in lora_named_params]
+        print(f"[CKPT DEBUG] rank={rank} lora_params count={len(lora_params)}", flush=True)
 
-        # Step 1: gather LoRA shards — all ranks participate
         param_dict = {}
+        print(f"[CKPT DEBUG] rank={rank} entering GatheredParameters", flush=True)
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
-            # ONLY access pre-collected param references — no named_parameters() call here
+            print(f"[CKPT DEBUG] rank={rank} inside GatheredParameters is_main={accelerator.is_main_process}", flush=True)
             if accelerator.is_main_process:
                 param_dict = {
                     name: param.data.detach().cpu().clone()
                     for name, param in lora_named_params
                 }
-        # Context exited — all ranks re-partitioned cleanly
+        print(f"[CKPT DEBUG] rank={rank} exited GatheredParameters", flush=True)
 
-        # Step 2: file I/O entirely outside context, only on rank 0, zero collectives
         if accelerator.is_main_process:
             os.makedirs(ckpt_dir, exist_ok=True)
-            # Save adapter weights directly (bypass save_pretrained which calls state_dict)
             torch.save(param_dict, os.path.join(ckpt_dir, "adapter_model.bin"))
-            # Save adapter config JSON
             peft_cfg = list(unwrapped.peft_config.values())[0]
             cfg_dict = peft_cfg.to_dict()
             with open(os.path.join(ckpt_dir, "adapter_config.json"), "w") as f:
                 _json.dump(cfg_dict, f, indent=2)
             tokenizer.save_pretrained(ckpt_dir)
             logger.info(f"Checkpoint saved: {ckpt_dir}")
+            print(f"[CKPT DEBUG] rank={rank} files written to {ckpt_dir}", flush=True)
+        print(f"[CKPT DEBUG] rank={rank} calling final wait_for_everyone", flush=True)
         accelerator.wait_for_everyone()
+        print(f"[CKPT DEBUG] rank={rank} save_checkpoint done", flush=True)
     else:
         os.makedirs(ckpt_dir, exist_ok=True)
         model.save_pretrained(ckpt_dir)
@@ -329,9 +318,9 @@ def train(args):
                     f.write(json.dumps(log_entry) + "\n")
 
             # === Periodic checkpoint + resampling ===
-            # NOTE: all ranks must call save_checkpoint (it uses GatheredParameters + barriers).
-            # Do NOT guard with is_main here — the is_main guards inside save_checkpoint
-            # handle rank-0-specific I/O.
+            import torch.distributed as _dist
+            _rank = _dist.get_rank() if _dist.is_initialized() else 0
+            print(f"[LOOP DEBUG] rank={_rank} global_step={global_step} resample_every={args.resample_every} last_resample_step={last_resample_step} cond={args.resample_every > 0 and global_step % args.resample_every == 0 and global_step > last_resample_step}", flush=True)
             if (
                 args.resample_every > 0
                 and global_step % args.resample_every == 0
