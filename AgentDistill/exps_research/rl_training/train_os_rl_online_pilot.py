@@ -336,6 +336,11 @@ def train(args):
                         pool.refresh(new_files)
                         logger.info(f"Pool refreshed with {len(new_files)} new files. "
                                     f"Stats: {pool.stats()}")
+                # All ranks wait for rank 0 to finish resampling before continuing
+                # training; without this barrier the other ranks proceed to the next
+                # optimizer.step() while rank 0 is still inside vLLM, causing a 30-min
+                # NCCL watchdog timeout on the pending all-reduce collective.
+                accelerator.wait_for_everyone()
 
         if global_step >= args.max_steps:
             break
