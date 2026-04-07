@@ -237,9 +237,11 @@ def train(args):
 
     if (hasattr(accelerator.state, "deepspeed_plugin")
             and accelerator.state.deepspeed_plugin is not None):
-        accelerator.state.deepspeed_plugin.deepspeed_config[
-            "train_micro_batch_size_per_gpu"
-        ] = 1
+        ds_cfg = accelerator.state.deepspeed_plugin.deepspeed_config
+        ds_cfg["train_micro_batch_size_per_gpu"] = 1
+        ds_cfg["train_batch_size"] = (
+            1 * args.gradient_accumulation_steps * accelerator.num_processes
+        )
 
     model, optimizer = accelerator.prepare(model, optimizer)
 
