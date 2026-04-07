@@ -30,6 +30,8 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model, get_peft_model_state_dict
 from accelerate import Accelerator
+from accelerate.utils import InitProcessGroupKwargs
+from datetime import timedelta
 from torch.optim import AdamW
 
 from .data_pool import TrajectoryPool
@@ -214,10 +216,15 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
 # ---------------------------------------------------------------------------
 
 def train(args):
+    # Extend NCCL process-group timeout to 3 hours so that the vLLM resampling
+    # step (rank 0 only, can take ~30 min per seed × 3 seeds) does not trigger
+    # the 30-min watchdog on ranks 1-3 that are waiting at the barrier.
+    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=3))
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision="bf16",
         log_with=None,
+        kwargs_handlers=[pg_kwargs],
     )
     is_main = accelerator.is_main_process
 
