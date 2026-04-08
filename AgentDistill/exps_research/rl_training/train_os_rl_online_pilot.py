@@ -164,6 +164,14 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     model_name = Path(args.model_name).name              # e.g. "Qwen3-32B"
 
     env = {**os.environ, "CUDA_VISIBLE_DEVICES": "3"}
+    # Strip accelerate/deepspeed distributed env vars so vLLM's internal c10d
+    # TCPStore init doesn't conflict with the training process group.
+    for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
+               "MASTER_ADDR", "MASTER_PORT",
+               "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
+               "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
+               "NCCL_ASYNC_ERROR_HANDLING"]:
+        env.pop(_k, None)
 
     new_files = []
     for seed in args.resample_seeds:
