@@ -17,6 +17,7 @@ PARALLEL_WORKERS="4"
 GPU_UTIL="0.85"
 MAX_LORA_RANK="64"
 N="1"
+TEMPERATURE="0.7"
 FORCE_RERUN="0"
 SERVER_TIMEOUT_SECONDS="1800"
 API_BASE=""
@@ -43,6 +44,7 @@ Optional:
   --gpu-util            vLLM gpu-memory-utilization
   --max-lora-rank       vLLM max lora rank
   --n                   Number of samples per question
+  --temperature         Sampling temperature
   --force-rerun         1 to ignore existing raw and recollect all
   --per-task-timeout    Per-question timeout in seconds for outer process-pool guard; <=0 disables it
   --output-name-tag     Stable name tag used for result folder/file naming
@@ -64,6 +66,7 @@ while [[ $# -gt 0 ]]; do
     --gpu-util) GPU_UTIL="$2"; shift 2 ;;
     --max-lora-rank) MAX_LORA_RANK="$2"; shift 2 ;;
     --n) N="$2"; shift 2 ;;
+    --temperature) TEMPERATURE="$2"; shift 2 ;;
     --force-rerun) FORCE_RERUN="$2"; shift 2 ;;
     --per-task-timeout) PER_TASK_TIMEOUT="$2"; shift 2 ;;
     --output-name-tag) OUTPUT_NAME_TAG="$2"; shift 2 ;;
@@ -84,7 +87,7 @@ if [[ -z "$OUTPUT_NAME_TAG" ]]; then
   OUTPUT_NAME_TAG="$(basename "$DATA_PATH" .json)"
 fi
 
-RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$DATA_PATH" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT" "$OUTPUT_NAME_TAG")"
+RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$DATA_PATH" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT" "$OUTPUT_NAME_TAG" "$TEMPERATURE")"
 EXPECTED_COUNT="$(expected_question_count "$DATA_PATH")"
 TASK_TYPE="$(infer_task_type "$DATA_PATH")"
 SERVE_LOG_DIR="$(dirname "$RESULT_JSONL")"
@@ -116,7 +119,7 @@ resolve_remaining_result_path() {
   local model_name stem candidate
   model_name="$(basename "$model_id")"
   stem="$OUTPUT_NAME_TAG"
-  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_${stem}_temp=0.7*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | head -n 1 || true)"
+  candidate="$(find "$log_root" -maxdepth 3 -type f -name "${model_name}_${stem}_temp=${TEMPERATURE}*_seed=${seed}_type=agent_steps=${max_steps}_python_only_python_only_seed${seed}.jsonl" 2>/dev/null | head -n 1 || true)"
   if [[ -n "$candidate" ]]; then
     echo "$candidate"
   else
@@ -167,7 +170,7 @@ else
   remaining="$EXPECTED_COUNT"
 fi
 
-REMAINING_RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT" "$OUTPUT_NAME_TAG")"
+REMAINING_RESULT_JSONL="$(result_jsonl_path "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LORA_FOLDER" "$LOG_ROOT" "$OUTPUT_NAME_TAG" "$TEMPERATURE")"
 
 if (( remaining <= 0 )); then
   restore_backup_on_failure
@@ -210,7 +213,7 @@ RUN_CMD=(
   --per_task_timeout "$PER_TASK_TIMEOUT"
   --output_name_tag "$OUTPUT_NAME_TAG"
   --n "$N"
-  --temperature 0.7
+  --temperature "$TEMPERATURE"
   --top_p 0.8
   --seed "$SEED"
   --max_steps "$MAX_STEPS"
