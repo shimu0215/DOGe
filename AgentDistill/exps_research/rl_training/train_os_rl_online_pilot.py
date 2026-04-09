@@ -165,7 +165,9 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     # Do NOT set VLLM_USE_V1=0 — vllm.LLM (offline, tp=1) uses V1 engine by default
     # in 0.11.0 and works fine in-process for single-GPU inference.  The IPC/TCPStore
     # issue only affects `vllm serve` (APIServer + EngineCore subprocess), not vllm.LLM.
-    env = {**os.environ}
+    # HF_HUB_OFFLINE=1: prevent vLLM from querying the HuggingFace API at init time;
+    # the model is already fully cached under $HF_HOME.
+    env = {**os.environ, "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1"}
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
