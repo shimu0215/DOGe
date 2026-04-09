@@ -73,6 +73,16 @@ class TrajectoryPool:
         self.pool = defaultdict(list)
         self._load(jsonl_files)
 
+    def add_files(self, jsonl_files: List[str]) -> None:
+        """Merge new trajectory files INTO the existing pool (append, not replace).
+
+        This is preferred over refresh() when resampling produces only 1 new
+        trajectory per question (n=1), which is below min_group_size=2.
+        By merging with the original offline pool, each question accumulates
+        multiple trajectories over time and remains valid for GRPO training.
+        """
+        self._load(jsonl_files)
+
     # ------------------------------------------------------------------
     # Properties
     # ------------------------------------------------------------------

@@ -122,8 +122,21 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
         param_dict = {}
         with deepspeed.zero.GatheredParameters(lora_params, modifier_rank=None):
             if accelerator.is_main_process:
+                # vLLM's LoRA loader expects keys like:
+                #   base_model.model.layers.X.self_attn.q_proj.lora_A.weight
+                # but PEFT named_parameters() returns:
+                #   base_model.model.layers.X.self_attn.q_proj.lora_A.default.weight
+                # Strip the adapter name ("default") so vLLM can load the weights.
+                import re as _re
+                def _clean_lora_key(name: str) -> str:
+                    return _re.sub(
+                        r'\.(lora_A|lora_B|lora_embedding_A|lora_embedding_B)'
+                        r'\.([^.]+)\.',
+                        r'.\1.',
+                        name,
+                    )
                 param_dict = {
-                    name: param.data.detach().cpu().clone()
+                    _clean_lora_key(name): param.data.detach().cpu().clone()
                     for name, param in lora_named_params
                 }
         if accelerator.is_main_process:
@@ -367,8 +380,14 @@ def train(args):
                 if is_main:
                     new_files = resample_trajectories(args, ckpt_dir, global_step)
                     if new_files:
-                        pool.refresh(new_files)
-                        logger.info(f"Pool refreshed with {len(new_files)} new files. "
+                        # add_files merges new trajectories into the existing pool
+                        # instead of replacing it. This is important when n=1 per
+                        # question: with only 1 new trajectory per question the pool
+                        # would be empty (min_group_size=2). By accumulating new
+                        # trajectories on top of the initial offline set, each question
+                        # keeps enough trajectories to stay valid for GRPO.
+                        pool.add_files(new_files)
+                        logger.info(f"Pool updated with {len(new_files)} new files. "
                                     f"Stats: {pool.stats()}")
                 # All ranks wait for rank 0 to finish resampling before continuing
                 # training; without this barrier the other ranks proceed to the next
