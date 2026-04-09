@@ -150,76 +150,68 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
 
 def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     """
-    Collect fresh trajectories using the current LoRA checkpoint via vLLM.
+    Collect fresh trajectories using the current LoRA checkpoint via vLLM offline.
 
-    Uses collect_unit.sh with:
-      - tp-size=1 (single GPU, no NCCL — avoids conflict with training NCCL groups)
-      - CUDA_VISIBLE_DEVICES=3 (GPU 3; ~79 GB free alongside ZeRO-3 ~1 GB shard)
-
-    Output goes to {ckpt_dir}/qa_results/{dataset_name}_test/...jsonl
-    as determined by result_jsonl_path() in scripts_modular/common.sh.
+    Uses run_experiment --model_type vllm --use_local_model --fine_tuned with
+    local_device_id=3 (GPU 3, ~79 GB free alongside ZeRO-3 ~1 GB shards).
+    This calls VLLMModel which uses vllm.LLM (offline V0, no HTTP server, no
+    EngineCore subprocess) — avoiding the vLLM V1 IPC/TCPStore SLURM issue.
     """
-    collect_script = str(_ROOT / "scripts_modular" / "collect_unit.sh")
     dataset_name = Path(args.pilot_question_json).stem   # e.g. "pilot_questions"
     model_name = Path(args.model_name).name              # e.g. "Qwen3-32B"
+    log_root = Path(ckpt_dir) / "qa_results"
 
+    # Build env: only GPU 3, strip all distributed training vars
     env = {**os.environ, "CUDA_VISIBLE_DEVICES": "3"}
-    # Strip accelerate/deepspeed distributed env vars to avoid conflicts.
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
                "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
                "NCCL_ASYNC_ERROR_HANDLING"]:
         env.pop(_k, None)
-    # vLLM V1 spawns an EngineCore subprocess and calls get_ip() to build
-    # the distributed_init_method for torch.distributed.init_process_group.
-    # get_ip() returns the node's external IP (e.g. 172.16.x.x) which is
-    # unreachable from within the SLURM job cgroup → 10-min TCPStore timeout.
-    # VLLM_HOST_IP overrides get_ip() to return localhost instead, keeping
-    # all EngineCore↔APIServer communication on the loopback interface.
-    env["VLLM_HOST_IP"] = "127.0.0.1"
+    # Force vLLM V0 offline engine (LLM class), which does not spawn a separate
+    # EngineCore process and therefore has no IPC/TCPStore dependency.
+    env["VLLM_USE_V1"] = "0"
 
     new_files = []
     for seed in args.resample_seeds:
         logger.info(f"Resampling seed={seed} from checkpoint: {ckpt_dir}")
         cmd = [
-            "bash", collect_script,
-            "--model-id",        args.model_name,
-            "--lora-folder",     ckpt_dir,
-            "--data-path",       args.pilot_question_json,
-            "--seed",            str(seed),
-            "--tp-size",         "1",
-            "--n",               "1",
-            "--max-steps",       str(args.max_agent_steps),
-            "--parallel-workers","4",
-            "--gpu-util",        "0.85",
-            "--max-lora-rank",   str(args.lora_r),
-            "--force-rerun",     "1",    # always collect fresh
+            sys.executable, "-m", "exps_research.unified_framework.run_experiment",
+            "--experiment_type",    "agent",
+            "--task_type",          "math",
+            "--data_path",          args.pilot_question_json,
+            "--model_type",         "vllm",
+            "--model_id",           args.model_name,
+            "--fine_tuned",
+            "--lora_folder",        ckpt_dir,
+            "--use_local_model",
+            "--log_folder",         str(log_root),
+            "--n",                  "1",
+            "--temperature",        "0.7",
+            "--top_p",              "0.8",
+            "--seed",               str(seed),
+            "--max_steps",          str(args.max_agent_steps),
+            "--search_engine_type", "python_only",
+            "--suffix",             f"python_only_seed{seed}",
+            "--parallel_workers",   "1",   # offline LLM is not thread-safe
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, env=env,
-                                cwd=str(_ROOT))
+        result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
         if result.returncode != 0:
-            logger.warning(f"collect_unit.sh failed seed={seed}:\n{result.stderr[:600]}")
+            logger.warning(f"run_experiment failed seed={seed} (rc={result.returncode})")
             continue
 
-        # Locate the output file using the same naming as result_jsonl_path()
-        expected = (
-            Path(ckpt_dir) / "qa_results"
-            / f"{dataset_name}_test"
-            / f"{model_name}_temp=0.7_n=1_seed={seed}_type=agent_steps={args.max_agent_steps}"
-              f"_python_only_python_only_seed{seed}.jsonl"
-        )
-        if expected.exists():
-            new_files.append(str(expected))
-            logger.info(f"Collected: {expected}")
+        # Locate scored output file (_scored.jsonl has the 'score' field for R_task)
+        found = list(log_root.glob(
+            f"**/*seed={seed}*python_only_seed{seed}*_scored.jsonl"
+        ))
+        # Exclude backup files
+        found = [p for p in found if ".bak" not in p.name]
+        new_files.extend([str(p) for p in found])
+        if found:
+            logger.info(f"Collected: {found}")
         else:
-            # Fallback glob in case naming differs slightly
-            found = list((Path(ckpt_dir) / "qa_results").glob(
-                f"**/*seed={seed}*python_only_seed{seed}.jsonl"
-            ))
-            new_files.extend([str(p) for p in found])
-            if found:
-                logger.info(f"Found via glob: {found}")
+            logger.warning(f"No output file found for seed={seed} in {log_root}")
 
     logger.info(f"Resampling produced {len(new_files)} new files at step {step}.")
     return new_files
