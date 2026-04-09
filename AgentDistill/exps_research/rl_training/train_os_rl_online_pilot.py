@@ -173,7 +173,13 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
         **os.environ,
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
+        # VLLM_HOST_IP=127.0.0.1 alone is insufficient: SLURM's network
+        # namespace isolation blocks TCP connections even on loopback.
+        # VLLM_ENABLE_V1_MULTIPROCESSING=0 makes vLLM use SyncInProcClient
+        # instead of spawning a separate EngineCore subprocess, removing all
+        # TCPStore / network dependencies entirely.
         "VLLM_HOST_IP": "127.0.0.1",
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
     }
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
