@@ -162,12 +162,19 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     log_root = Path(ckpt_dir) / "qa_results"
 
     # Build env: strip all distributed training vars so the subprocess starts clean.
-    # Do NOT set VLLM_USE_V1=0 — vllm.LLM (offline, tp=1) uses V1 engine by default
-    # in 0.11.0 and works fine in-process for single-GPU inference.  The IPC/TCPStore
-    # issue only affects `vllm serve` (APIServer + EngineCore subprocess), not vllm.LLM.
     # HF_HUB_OFFLINE=1: prevent vLLM from querying the HuggingFace API at init time;
-    # the model is already fully cached under $HF_HOME.
-    env = {**os.environ, "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1"}
+    #   the model is already fully cached under $HF_HOME.
+    # VLLM_HOST_IP=127.0.0.1: vLLM V1 LLM spawns EngineCore as a subprocess and
+    #   the parent creates a TCPStore server at get_ip():port.  In SLURM, get_ip()
+    #   returns the node's external IP (172.16.x.x) which is unreachable from within
+    #   the cgroup.  Setting VLLM_HOST_IP overrides get_ip() to 127.0.0.1 so both
+    #   parent and child communicate over loopback.
+    env = {
+        **os.environ,
+        "HF_HUB_OFFLINE": "1",
+        "TRANSFORMERS_OFFLINE": "1",
+        "VLLM_HOST_IP": "127.0.0.1",
+    }
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
