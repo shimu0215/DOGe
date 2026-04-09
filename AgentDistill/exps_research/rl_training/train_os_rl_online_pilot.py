@@ -166,18 +166,18 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     env = {**os.environ, "CUDA_VISIBLE_DEVICES": "3"}
     # Strip accelerate/deepspeed distributed env vars to avoid conflicts.
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
-               "MASTER_PORT",
+               "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
                "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
                "NCCL_ASYNC_ERROR_HANDLING"]:
         env.pop(_k, None)
-    # Force vLLM's internal c10d TCPStore to use localhost instead of the
-    # node's external IP. vLLM V1 spawns an EngineCore subprocess that
-    # connects back to the parent's TCPStore; on SLURM nodes the external IP
-    # (`172.16.x.x`) is unreachable from within the job cgroup, causing a
-    # 10-min timeout. Setting MASTER_ADDR=127.0.0.1 makes all c10d traffic
-    # stay on the loopback interface.
-    env["MASTER_ADDR"] = "127.0.0.1"
+    # vLLM V1 spawns an EngineCore subprocess and calls get_ip() to build
+    # the distributed_init_method for torch.distributed.init_process_group.
+    # get_ip() returns the node's external IP (e.g. 172.16.x.x) which is
+    # unreachable from within the SLURM job cgroup → 10-min TCPStore timeout.
+    # VLLM_HOST_IP overrides get_ip() to return localhost instead, keeping
+    # all EngineCore↔APIServer communication on the loopback interface.
+    env["VLLM_HOST_IP"] = "127.0.0.1"
 
     new_files = []
     for seed in args.resample_seeds:
