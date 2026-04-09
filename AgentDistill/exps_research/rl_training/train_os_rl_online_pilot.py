@@ -166,16 +166,18 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     env = {**os.environ, "CUDA_VISIBLE_DEVICES": "3"}
     # Strip accelerate/deepspeed distributed env vars to avoid conflicts.
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
-               "MASTER_ADDR", "MASTER_PORT",
+               "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
                "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
                "NCCL_ASYNC_ERROR_HANDLING"]:
         env.pop(_k, None)
-    # Force vLLM V0 engine (no EngineCore subprocess split).
-    # V1 (default in vLLM 0.11.0) uses a separate EngineCore process that
-    # communicates via TCPStore; in SLURM cgroup environments the inter-process
-    # TCP connection is blocked → 10-min timeout. V0 runs single-process.
-    env["VLLM_USE_V1"] = "0"
+    # Force vLLM's internal c10d TCPStore to use localhost instead of the
+    # node's external IP. vLLM V1 spawns an EngineCore subprocess that
+    # connects back to the parent's TCPStore; on SLURM nodes the external IP
+    # (`172.16.x.x`) is unreachable from within the job cgroup, causing a
+    # 10-min timeout. Setting MASTER_ADDR=127.0.0.1 makes all c10d traffic
+    # stay on the loopback interface.
+    env["MASTER_ADDR"] = "127.0.0.1"
 
     new_files = []
     for seed in args.resample_seeds:
