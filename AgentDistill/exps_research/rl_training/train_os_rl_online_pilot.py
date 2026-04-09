@@ -161,17 +161,18 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     model_name = Path(args.model_name).name              # e.g. "Qwen3-32B"
     log_root = Path(ckpt_dir) / "qa_results"
 
-    # Build env: only GPU 3, strip all distributed training vars
-    env = {**os.environ, "CUDA_VISIBLE_DEVICES": "3"}
+    # Build env: strip all distributed training vars so the subprocess starts clean.
+    # Do NOT set VLLM_USE_V1=0 — vllm.LLM (offline, tp=1) uses V1 engine by default
+    # in 0.11.0 and works fine in-process for single-GPU inference.  The IPC/TCPStore
+    # issue only affects `vllm serve` (APIServer + EngineCore subprocess), not vllm.LLM.
+    env = {**os.environ}
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
                "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
-               "NCCL_ASYNC_ERROR_HANDLING"]:
+               "NCCL_ASYNC_ERROR_HANDLING",
+               "VLLM_USE_V1"]:
         env.pop(_k, None)
-    # Force vLLM V0 offline engine (LLM class), which does not spawn a separate
-    # EngineCore process and therefore has no IPC/TCPStore dependency.
-    env["VLLM_USE_V1"] = "0"
 
     new_files = []
     for seed in args.resample_seeds:
