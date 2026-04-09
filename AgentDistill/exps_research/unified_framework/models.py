@@ -51,6 +51,9 @@ def setup_model(
             **kwargs
         )
     elif model_type == "vllm":
+        # Map lora_folder (used by run_experiment) to lora_path (used by VLLMModel)
+        if lora_path is None:
+            lora_path = kwargs.pop("lora_folder", None)
         if fine_tuned:
             if int(local_device_id) >= 0:
                 return VLLMModel(

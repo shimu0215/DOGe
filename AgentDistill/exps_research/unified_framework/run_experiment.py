@@ -173,6 +173,10 @@ def run_experiment():
         extra_kwargs["use_planning"] = args.use_planning
         if args.use_planning:
             additional_postfix.append("planning")
+        # Propagate use_local_model so process_dataset uses VLLMModel (offline)
+        # instead of VLLMServerModel when --use_local_model is set.
+        if args.use_local_model:
+            extra_kwargs["use_local_model"] = True
 
     elif args.experiment_type == "reasoning":
         extra_kwargs["add_think_token"] = args.add_think_token
