@@ -33,6 +33,8 @@ SAVE_STRATEGY="${SAVE_STRATEGY:-steps}"
 SAVE_STEPS="${SAVE_STEPS:-100}"
 SAVE_TOTAL_LIMIT="${SAVE_TOTAL_LIMIT:-3}"
 ENTROPY_ON_THOUGHT_ONLY="${ENTROPY_ON_THOUGHT_ONLY:-0}"
+BATCH_SIZE="${BATCH_SIZE:-1}"
+GRADIENT_ACCUMULATION_STEPS="${GRADIENT_ACCUMULATION_STEPS:-4}"
 
 mkdir -p logs
 
@@ -160,7 +162,7 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "=== Training $TARGET_MODEL with entropy lambda=$lambda via DeepSpeed on 32B own trajectories ===" | tee "$run_log"
   echo "Using DeepSpeed config: $DEEPSPEED_CONFIG" | tee -a "$run_log"
   echo "Using all filtered trajectories as independent SFT samples." | tee -a "$run_log"
-  echo "EPOCHS=$EPOCHS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
+  echo "EPOCHS=$EPOCHS BATCH_SIZE=$BATCH_SIZE GRAD_ACC=$GRADIENT_ACCUMULATION_STEPS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
   echo "SAVE_STRATEGY=$SAVE_STRATEGY SAVE_STEPS=$SAVE_STEPS SAVE_TOTAL_LIMIT=$SAVE_TOTAL_LIMIT" | tee -a "$run_log"
   echo "ENTROPY_ON_THOUGHT_ONLY=$ENTROPY_ON_THOUGHT_ONLY" | tee -a "$run_log"
 
@@ -168,8 +170,8 @@ for lambda in "${LAMBDAS[@]}"; do
     "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py
     --model_name "$TARGET_MODEL"
     --num_epochs "$EPOCHS"
-    --batch_size 1
-    --gradient_accumulation_steps 4
+    --batch_size "$BATCH_SIZE"
+    --gradient_accumulation_steps "$GRADIENT_ACCUMULATION_STEPS"
     --lr 2e-4
     --train_filepath "${FILTERED_LOGS[@]}"
     --postfix "$postfix"
