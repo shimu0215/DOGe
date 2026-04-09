@@ -193,7 +193,11 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     for seed in args.resample_seeds:
         logger.info(f"Resampling seed={seed} from checkpoint: {ckpt_dir}")
         cmd = [
-            sys.executable, "-m", "exps_research.unified_framework.run_experiment",
+            # Use run_with_file_dist wrapper: patches torch.distributed.init_process_group
+            # to replace tcp:// with file:// (FileStore) before vLLM initializes.
+            # This avoids the TCPStore 600s timeout that occurs when UniProcExecutor
+            # calls init_distributed_environment inside the SLURM training job.
+            sys.executable, "-m", "exps_research.rl_training.run_with_file_dist",
             "--experiment_type",    "agent",
             "--task_type",          "math",
             "--data_path",          args.pilot_question_json,
