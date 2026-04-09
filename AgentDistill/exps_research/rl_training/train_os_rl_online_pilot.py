@@ -164,14 +164,18 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
     model_name = Path(args.model_name).name              # e.g. "Qwen3-32B"
 
     env = {**os.environ, "CUDA_VISIBLE_DEVICES": "3"}
-    # Strip accelerate/deepspeed distributed env vars so vLLM's internal c10d
-    # TCPStore init doesn't conflict with the training process group.
+    # Strip accelerate/deepspeed distributed env vars to avoid conflicts.
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
                "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
                "NCCL_ASYNC_ERROR_HANDLING"]:
         env.pop(_k, None)
+    # Force vLLM V0 engine (no EngineCore subprocess split).
+    # V1 (default in vLLM 0.11.0) uses a separate EngineCore process that
+    # communicates via TCPStore; in SLURM cgroup environments the inter-process
+    # TCP connection is blocked → 10-min timeout. V0 runs single-process.
+    env["VLLM_USE_V1"] = "0"
 
     new_files = []
     for seed in args.resample_seeds:
