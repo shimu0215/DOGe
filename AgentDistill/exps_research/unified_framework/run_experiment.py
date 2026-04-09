@@ -63,6 +63,7 @@ def run_experiment():
     parser.add_argument("--top_p", type=float)
     parser.add_argument("--top_k", type=int)
     parser.add_argument("--use_local_model", action='store_true', help="Use local model for reasoning experiments")
+    parser.add_argument("--max_model_len", type=int, default=None, help="vLLM max_model_len (tokens); reduces KV cache usage, default uses model config value")
 
     # Experiment type selection
     parser.add_argument("--experiment_type", type=str, choices=["agent", "reasoning"], required=True,
@@ -160,6 +161,8 @@ def run_experiment():
         model_kwargs['top_k'] = args.top_k
     if args.lora_folder and args.use_local_model:
         model_kwargs['lora_folder'] = args.lora_folder
+    if args.max_model_len is not None:
+        model_kwargs['max_model_len'] = args.max_model_len
 
     # Additional experiment-specific args
     extra_kwargs = {}
