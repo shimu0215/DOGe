@@ -228,7 +228,7 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
             "--search_engine_type", "python_only",
             "--suffix",             f"python_only_seed{seed}",
             "--parallel_workers",   "1",   # offline LLM is not thread-safe
-            "--max_model_len",      "16384",  # limit KV cache usage: 32B model uses ~64 GB, leaving ~7-8 GB for KV cache; 40960 (default) requires 10 GB but only 7.71 GB is available
+            "--max_model_len",      "24576",  # 32B model ~64 GB; 24576 tokens KV ~6 GB < 7.71 GB available; 16384 too small (some multi-step prompts reach 17K+ tokens)
         ]
         result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
         if result.returncode != 0:
