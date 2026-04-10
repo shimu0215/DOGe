@@ -166,6 +166,11 @@ def run_experiment():
         model_kwargs['max_model_len'] = args.max_model_len
     if args.tensor_parallel_size is not None:
         model_kwargs['tensor_parallel_size'] = args.tensor_parallel_size
+        if args.tensor_parallel_size > 1:
+            # Force multiprocessing executor instead of Ray for tp>1.
+            # Ray fails in SLURM environments where GPU resources are already
+            # claimed by the parent training process.
+            model_kwargs['distributed_executor_backend'] = 'mp'
 
     # Additional experiment-specific args
     extra_kwargs = {}
