@@ -229,9 +229,11 @@ def _build_resample_env(gpu_id: int) -> dict:
         "TRANSFORMERS_OFFLINE": "1",
         "VLLM_HOST_IP": "127.0.0.1",
         # Expose only one GPU to this worker process (tp=1, no CUDA-fork issues)
-        "CUDA_VISIBLE_DEVICES": str(gpu_id),
-        # Use v1 single-process mode so vLLM doesn't spawn additional workers
-        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+        # Pin vLLM to GPU1 (GPU0 is used by rank0 and has insufficient free memory).
+        # GPU1/2/3 each hold only a small ZeRO-3 shard (~8 GB) and have ~72 GB free.
+        # We always use GPU1 regardless of gpu_id since CUDA_VISIBLE_DEVICES
+        # remapping is applied before CUDA initializes in the subprocess.
+        "CUDA_VISIBLE_DEVICES": "1",
     }
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
@@ -549,31 +551,21 @@ def train(args):
 
                     # Run all seeds in parallel, each on its own GPU (tp=1 per process)
                     all_new_files = []
+                    # Run seeds sequentially on GPU1.
+                    # GPU0 is used by rank0 (ZeRO-3 holds ~50 GB there, only ~30 GB free).
+                    # GPU1/2/3 each hold only a small shard (~8 GB) and have ~72 GB free.
+                    # CUDA_VISIBLE_DEVICES remapping is set to "1" in _build_resample_env.
                     logger.info(
-                        f"Launching {len(seed_tasks)} parallel resample workers "
-                        f"(one GPU each: {[t[0] for t in seed_tasks]})"
+                        f"Running {len(seed_tasks)} seeds sequentially on GPU1"
                     )
-                    # GPU0 is rank0 which holds large ZeRO-3 state (~50 GB);
-                    # not enough free memory to load 32B model for vLLM.
-                    # Assign seeds to GPU1, GPU2, ... which only hold small shards.
-                    with ThreadPoolExecutor(max_workers=len(seed_tasks)) as pool_exec:
-                        futures = {
-                            pool_exec.submit(
-                                resample_trajectories,
-                                args, ckpt_dir, global_step,
-                                seed=resample_seed,
-                                gpu_id=gpu_idx + 1,   # skip GPU0, start from GPU1
-                                questions_subset=subset,
-                            ): resample_seed
-                            for gpu_idx, resample_seed, subset in seed_tasks
-                        }
-                        for future in as_completed(futures):
-                            seed_done = futures[future]
-                            try:
-                                new_files = future.result()
-                                all_new_files.extend(new_files)
-                            except Exception as exc:
-                                logger.warning(f"seed={seed_done} raised: {exc}")
+                    for gpu_idx, resample_seed, subset in seed_tasks:
+                        new_files = resample_trajectories(
+                            args, ckpt_dir, global_step,
+                            seed=resample_seed,
+                            gpu_id=1,
+                            questions_subset=subset,
+                        )
+                        all_new_files.extend(new_files)
 
                     if all_new_files:
                         # Replace strategy: for each new trajectory, remove one
