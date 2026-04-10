@@ -289,6 +289,7 @@ def resample_trajectories(
             "--suffix",             f"python_only_seed{seed}",
             "--parallel_workers",   "1",   # offline LLM is not thread-safe
             "--max_model_len",      "24576",
+            "--tensor_parallel_size", str(args.vllm_tp_size),
         ]
         result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
         if result.returncode != 0:
@@ -600,6 +601,8 @@ def parse_args():
                    default=[42, 43, 44, 45, 46, 47, 48, 49],
                    help="Seed pool rotated across resampling cycles for diversity")
     p.add_argument("--max_agent_steps",      type=int,   default=5)
+    p.add_argument("--vllm_tp_size",         type=int,   default=4,
+                   help="vLLM tensor_parallel_size for resampling inference (default 4 = all GPUs)")
 
     # Data quality gate
     p.add_argument("--quality_min_acc", type=float, default=0.30,
