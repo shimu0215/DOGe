@@ -1,18 +1,20 @@
 """
-train_os_rl_online_pilot.py — Semi-online OS-RL pilot.
+train_os_rl_online_pilot.py — Semi-online OS-RL (full-scale, 500 questions).
 
-Same as train_os_rl.py but with working periodic resampling:
-  - Every `resample_every` steps: save LoRA checkpoint, launch collect_unit.sh
-    (vLLM tp=1 on GPU 3) to collect fresh trajectories for the pilot questions,
-    then refresh the training pool.
-  - Checkpoint is also saved at the same cadence (resample_every doubles as
-    checkpoint_every).
+Changes vs. pilot version:
+  - Replace strategy: new trajectories REPLACE old ones (FIFO per question),
+    keeping pool size stable and shifting distribution toward on-policy data.
+  - Partial resampling: only `n_resample_questions` questions updated per cycle
+    (~10% of total), controlled by rotating random selection to cover all
+    questions across resamples.
+  - Pre-training data quality check: sample 50 questions, require ≥30% accuracy.
+  - Separate checkpoint_every from resample_every: checkpoints saved more
+    frequently than resampling (which involves expensive vLLM inference).
+  - First resample fires at resample_every (not at step 1) for full-scale run.
 
 GPU layout during resampling:
   Training  : 4 processes on GPUs 0-3 (ZeRO-3 CPU offload, ~1 GB each)
-  vLLM      : tp-size=1, CUDA_VISIBLE_DEVICES=3  (uses the ~79 GB free on GPU 3)
-
-This avoids NCCL group conflicts because tp=1 vLLM needs no inter-GPU comms.
+  vLLM      : tp-size=1, one GPU (uses the ~79 GB free on that GPU)
 """
 
 import os, sys
@@ -23,12 +25,13 @@ import random
 import logging
 import argparse
 import subprocess
+import tempfile
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import LoraConfig, get_peft_model, get_peft_model_state_dict
+from peft import LoraConfig, get_peft_model
 from accelerate import Accelerator
 from accelerate.utils import InitProcessGroupKwargs
 from datetime import timedelta
@@ -48,15 +51,30 @@ _ROOT = Path(__file__).resolve().parents[2]   # AgentDistill/
 # Helpers
 # ---------------------------------------------------------------------------
 
-def glob_scored_files(trajectory_dir: str, seed_list: List[int]) -> List[str]:
+def glob_scored_files(trajectory_dir: str, seed_list: Optional[List[int]] = None) -> List[str]:
+    """Glob pre-scored JSONL files from trajectory_dir.
+
+    If seed_list is given, filter by seed; otherwise return all scored files.
+    Also accepts direct .jsonl file paths (for the full-scale pool that stores
+    all seeds as separate files in arbitrary locations).
+    """
     d = Path(trajectory_dir)
+    if not d.exists():
+        logger.warning(f"trajectory_dir not found: {trajectory_dir}")
+        return []
+
     files = []
-    for seed in seed_list:
-        matches = sorted(d.glob(f"*seed={seed}_*_scored.jsonl"))
-        files.extend([str(m) for m in matches])
+    if seed_list:
+        for seed in seed_list:
+            matches = sorted(d.glob(f"*seed={seed}_*_scored.jsonl"))
+            files.extend([str(m) for m in matches])
     if not files:
-        files = [str(p) for p in sorted(d.glob("*seed=*_*.jsonl"))]
-    logger.info(f"Found {len(files)} trajectory files.")
+        # Fall back: all scored JSONL files in the directory (non-recursive)
+        files = [str(p) for p in sorted(d.glob("*_scored.jsonl"))]
+    if not files:
+        # Try recursive (files may be in subdirs)
+        files = [str(p) for p in sorted(d.rglob("*_scored.jsonl"))]
+    logger.info(f"Found {len(files)} trajectory files in {trajectory_dir}.")
     return files
 
 
@@ -100,6 +118,41 @@ def build_tokenizer(args):
         add_eos_token=True,
         trust_remote_code=True,
     )
+
+
+def check_data_quality(
+    pool: TrajectoryPool,
+    n_sample: int = 50,
+    min_accuracy: float = 0.30,
+) -> bool:
+    """Sample n_sample questions from pool and verify accuracy >= min_accuracy.
+
+    Raises RuntimeError if accuracy is below threshold.
+    Returns True on success.
+    """
+    qs = pool.valid_questions
+    if not qs:
+        raise RuntimeError("Pool is empty — no valid questions found.")
+    sampled = random.sample(qs, min(n_sample, len(qs)))
+    total = correct = 0
+    for q in sampled:
+        for entry in pool.pool[q]:
+            total += 1
+            if entry.get("score", False):
+                correct += 1
+    acc = correct / total if total > 0 else 0.0
+    logger.info(
+        f"[Quality check] Sampled {len(sampled)} questions, "
+        f"{correct}/{total} correct, accuracy={acc:.1%} "
+        f"(threshold={min_accuracy:.1%})"
+    )
+    if acc < min_accuracy:
+        raise RuntimeError(
+            f"Data quality check FAILED: accuracy {acc:.1%} < {min_accuracy:.1%}. "
+            "Check the trajectory files or lower --quality_min_acc."
+        )
+    logger.info("[Quality check] PASSED.")
+    return True
 
 
 def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=None) -> str:
@@ -161,36 +214,32 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
     return ckpt_dir
 
 
-def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
+def resample_trajectories(
+    args,
+    ckpt_dir: str,
+    step: int,
+    seed: int,
+    questions_subset: Optional[List[dict]] = None,
+) -> List[str]:
     """
     Collect fresh trajectories using the current LoRA checkpoint via vLLM offline.
 
-    Uses run_experiment --model_type vllm --use_local_model --fine_tuned with
-    local_device_id=3 (GPU 3, ~79 GB free alongside ZeRO-3 ~1 GB shards).
-    This calls VLLMModel which uses vllm.LLM (offline V0, no HTTP server, no
-    EngineCore subprocess) — avoiding the vLLM V1 IPC/TCPStore SLURM issue.
+    Args:
+        questions_subset: If given, only resample these questions (list of dicts
+                          with keys: id, question, answer, ...).
+                          If None, resample all pilot questions.
+        seed: Random seed for this resampling run.
+
+    Returns list of scored JSONL file paths.
     """
-    dataset_name = Path(args.pilot_question_json).stem   # e.g. "pilot_questions"
-    model_name = Path(args.model_name).name              # e.g. "Qwen3-32B"
     log_root = Path(ckpt_dir) / "qa_results"
+    log_root.mkdir(parents=True, exist_ok=True)
 
     # Build env: strip all distributed training vars so the subprocess starts clean.
-    # HF_HUB_OFFLINE=1: prevent vLLM from querying the HuggingFace API at init time;
-    #   the model is already fully cached under $HF_HOME.
-    # VLLM_HOST_IP=127.0.0.1: vLLM V1 LLM spawns EngineCore as a subprocess and
-    #   the parent creates a TCPStore server at get_ip():port.  In SLURM, get_ip()
-    #   returns the node's external IP (172.16.x.x) which is unreachable from within
-    #   the cgroup.  Setting VLLM_HOST_IP overrides get_ip() to 127.0.0.1 so both
-    #   parent and child communicate over loopback.
     env = {
         **os.environ,
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
-        # VLLM_HOST_IP=127.0.0.1 alone is insufficient: SLURM's network
-        # namespace isolation blocks TCP connections even on loopback.
-        # VLLM_ENABLE_V1_MULTIPROCESSING=0 makes vLLM use SyncInProcClient
-        # instead of spawning a separate EngineCore subprocess, removing all
-        # TCPStore / network dependencies entirely.
         "VLLM_HOST_IP": "127.0.0.1",
         "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
     }
@@ -202,18 +251,29 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
                "VLLM_USE_V1"]:
         env.pop(_k, None)
 
-    new_files = []
-    for seed in args.resample_seeds:
-        logger.info(f"Resampling seed={seed} from checkpoint: {ckpt_dir}")
+    # Write a temporary JSON file with the subset of questions to resample
+    if questions_subset is not None:
+        tmp_json = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", prefix=f"resample_step{step}_",
+            dir="/tmp", delete=False
+        )
+        json.dump({"metadata": {"n": len(questions_subset)},
+                   "examples": questions_subset}, tmp_json)
+        tmp_json.close()
+        data_path = tmp_json.name
+        logger.info(f"Resampling {len(questions_subset)} questions (seed={seed}) "
+                    f"from checkpoint: {ckpt_dir}")
+    else:
+        data_path = args.pilot_question_json
+        tmp_json = None
+        logger.info(f"Resampling ALL questions (seed={seed}) from checkpoint: {ckpt_dir}")
+
+    try:
         cmd = [
-            # Use run_with_file_dist wrapper: patches torch.distributed.init_process_group
-            # to replace tcp:// with file:// (FileStore) before vLLM initializes.
-            # This avoids the TCPStore 600s timeout that occurs when UniProcExecutor
-            # calls init_distributed_environment inside the SLURM training job.
             sys.executable, "-m", "exps_research.rl_training.run_with_file_dist",
             "--experiment_type",    "agent",
             "--task_type",          "math",
-            "--data_path",          args.pilot_question_json,
+            "--data_path",          data_path,
             "--model_type",         "vllm",
             "--model_id",           args.model_name,
             "--fine_tuned",
@@ -228,26 +288,28 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
             "--search_engine_type", "python_only",
             "--suffix",             f"python_only_seed{seed}",
             "--parallel_workers",   "1",   # offline LLM is not thread-safe
-            "--max_model_len",      "24576",  # 32B model ~64 GB; 24576 tokens KV ~6 GB < 7.71 GB available; 16384 too small (some multi-step prompts reach 17K+ tokens)
+            "--max_model_len",      "24576",
         ]
         result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
         if result.returncode != 0:
             logger.warning(f"run_experiment failed seed={seed} (rc={result.returncode})")
-            continue
+            return []
+    finally:
+        if tmp_json is not None:
+            try:
+                os.unlink(tmp_json.name)
+            except OSError:
+                pass
 
-        # Locate scored output file (_scored.jsonl has the 'score' field for R_task)
-        found = list(log_root.glob(
-            f"**/*seed={seed}*python_only_seed{seed}*_scored.jsonl"
-        ))
-        # Exclude backup files
-        found = [p for p in found if ".bak" not in p.name]
-        new_files.extend([str(p) for p in found])
-        if found:
-            logger.info(f"Collected: {found}")
-        else:
-            logger.warning(f"No output file found for seed={seed} in {log_root}")
+    # Locate scored output file
+    found = list(log_root.glob(f"**/*seed={seed}*python_only_seed{seed}*_scored.jsonl"))
+    found = [p for p in found if ".bak" not in p.name]
+    new_files = [str(p) for p in found]
+    if new_files:
+        logger.info(f"Step {step}: collected {len(new_files)} new file(s): {new_files}")
+    else:
+        logger.warning(f"Step {step}: no output file found for seed={seed} in {log_root}")
 
-    logger.info(f"Resampling produced {len(new_files)} new files at step {step}.")
     return new_files
 
 
@@ -256,9 +318,9 @@ def resample_trajectories(args, ckpt_dir: str, step: int) -> List[str]:
 # ---------------------------------------------------------------------------
 
 def train(args):
-    # Extend NCCL process-group timeout to 3 hours so that the vLLM resampling
-    # step (rank 0 only, can take ~30 min per seed × 3 seeds) does not trigger
-    # the 30-min watchdog on ranks 1-3 that are waiting at the barrier.
+    # Extend NCCL process-group timeout to 3 hours so that vLLM resampling
+    # (~25-50 questions × ~1.5 min/question) does not trigger the watchdog on
+    # ranks 1-3 waiting at the barrier.
     pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=3))
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
@@ -297,12 +359,25 @@ def train(args):
         resv  = torch.cuda.memory_reserved()  / 1e9
         logger.info(f"GPU memory after prepare: allocated={alloc:.1f}GB reserved={resv:.1f}GB")
 
-    # Initial pool from pre-collected offline data
-    seed_list = list(range(args.seed_range[0], args.seed_range[1]))
-    traj_files = glob_scored_files(args.trajectory_dir, seed_list)
+    # Load initial pool from pre-collected offline data
+    # trajectory_dir may contain files directly (for full-scale, files are
+    # copied from various sources into a single flat directory).
+    traj_files = glob_scored_files(args.trajectory_dir)
     pool = TrajectoryPool(traj_files, min_group_size=args.min_group_size)
     if is_main:
         logger.info(f"Initial pool: {pool.stats()}")
+
+    # --- Data quality check (main process only, but block all until done) ---
+    if is_main:
+        check_data_quality(pool, n_sample=50, min_accuracy=args.quality_min_acc)
+    accelerator.wait_for_everyone()
+
+    # Load pilot questions for resampling
+    with open(args.pilot_question_json) as f:
+        pilot_data = json.load(f)
+    all_pilot_questions = pilot_data["examples"]   # list of dicts
+    logger.info(f"Pilot question set: {len(all_pilot_questions)} questions "
+                f"(will resample {args.n_resample_questions} per cycle).")
 
     grpo = GRPOTrainer(
         model=model,
@@ -322,8 +397,13 @@ def train(args):
     global_step = getattr(args, "initial_step", 0)
     optimizer_step = 0
     last_resample_step = global_step
+    last_ckpt_step = global_step
+    resample_cycle = 0   # counts how many resamples have been done
 
-    logger.info(f"Starting semi-online OS-RL pilot (initial_step={global_step})...")
+    logger.info(f"Starting semi-online OS-RL (initial_step={global_step}, "
+                f"resample_every={args.resample_every}, "
+                f"checkpoint_every={args.checkpoint_every}, "
+                f"n_resample_questions={args.n_resample_questions})...")
 
     for epoch in range(args.num_epochs):
         logger.info(f"=== Epoch {epoch + 1}/{args.num_epochs} ===")
@@ -367,38 +447,81 @@ def train(args):
                 with open(log_path, "a") as f:
                     f.write(json.dumps(log_entry) + "\n")
 
-            # Checkpoint + online resampling
+            # ---- Checkpoint (frequent) ----
             # NOTE: all ranks must call save_checkpoint (uses GatheredParameters + barriers).
             _ckpt_due = (
-                args.resample_every > 0
-                and (global_step == 1 or global_step % args.resample_every == 0)
-                and global_step > last_resample_step
+                args.checkpoint_every > 0
+                and global_step % args.checkpoint_every == 0
+                and global_step > last_ckpt_step
             )
             if _ckpt_due:
+                last_ckpt_step = global_step
+                save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
+
+            # ---- Resample (less frequent, uses vLLM) ----
+            _resample_due = (
+                args.resample_every > 0
+                and global_step % args.resample_every == 0
+                and global_step > last_resample_step
+            )
+            if _resample_due:
                 last_resample_step = global_step
-                ckpt_dir = save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
+
+                # Save checkpoint before resampling if not already saved at this step
+                if global_step != last_ckpt_step:
+                    last_ckpt_step = global_step
+                    ckpt_dir = save_checkpoint(
+                        model, tokenizer, args.output_dir, global_step, accelerator
+                    )
+                else:
+                    ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
+
                 if is_main:
-                    new_files = resample_trajectories(args, ckpt_dir, global_step)
+                    # Select which questions to resample this cycle.
+                    # Rotate through all questions across cycles for coverage.
+                    n_q = args.n_resample_questions
+                    start = (resample_cycle * n_q) % len(all_pilot_questions)
+                    # Wrap-around selection to cover all questions over time
+                    if start + n_q <= len(all_pilot_questions):
+                        subset = all_pilot_questions[start : start + n_q]
+                    else:
+                        subset = (all_pilot_questions[start:]
+                                  + all_pilot_questions[: (start + n_q) % len(all_pilot_questions)])
+                    resample_cycle += 1
+
+                    # Use rotating seed for diversity across resamples
+                    seed_idx = (resample_cycle - 1) % len(args.resample_seeds)
+                    resample_seed = args.resample_seeds[seed_idx]
+
+                    logger.info(
+                        f"Resampling cycle {resample_cycle}: "
+                        f"{len(subset)} questions (start_idx={start}), "
+                        f"seed={resample_seed}"
+                    )
+                    new_files = resample_trajectories(
+                        args, ckpt_dir, global_step,
+                        seed=resample_seed,
+                        questions_subset=subset,
+                    )
                     if new_files:
-                        # add_files merges new trajectories into the existing pool
-                        # instead of replacing it. This is important when n=1 per
-                        # question: with only 1 new trajectory per question the pool
-                        # would be empty (min_group_size=2). By accumulating new
-                        # trajectories on top of the initial offline set, each question
-                        # keeps enough trajectories to stay valid for GRPO.
-                        pool.add_files(new_files)
-                        logger.info(f"Pool updated with {len(new_files)} new files. "
-                                    f"Stats: {pool.stats()}")
-                # All ranks wait for rank 0 to finish resampling before continuing
-                # training; without this barrier the other ranks proceed to the next
-                # optimizer.step() while rank 0 is still inside vLLM, causing a 30-min
-                # NCCL watchdog timeout on the pending all-reduce collective.
+                        # Replace strategy: for each new trajectory, remove one
+                        # old trajectory from that question's pool (FIFO).
+                        n_replaced = pool.replace_with_files(new_files)
+                        logger.info(
+                            f"Pool updated: replaced {n_replaced} trajectories. "
+                            f"Stats: {pool.stats()}"
+                        )
+                    else:
+                        logger.warning("Resampling produced no new files — pool unchanged.")
+
+                # All ranks wait for rank 0 to finish resampling
                 accelerator.wait_for_everyone()
 
         if global_step >= args.max_steps:
             break
 
-    if global_step > last_resample_step:
+    # Final checkpoint
+    if global_step > last_ckpt_step:
         save_checkpoint(model, tokenizer, args.output_dir, global_step, accelerator)
     if is_main:
         logger.info("Training complete.")
@@ -409,16 +532,17 @@ def train(args):
 # ---------------------------------------------------------------------------
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Semi-online OS-RL pilot")
+    p = argparse.ArgumentParser(description="Semi-online OS-RL (full-scale)")
 
     # Data
-    p.add_argument("--trajectory_dir",     type=str, required=True,
-                   help="Directory with offline pre-collected scored JSONL files")
-    p.add_argument("--pilot_question_json",type=str, required=True,
-                   help="JSON file with pilot questions (MATH-500 format) for resampling")
-    p.add_argument("--seed_range",         type=int, nargs=2, default=[42, 57])
-    p.add_argument("--min_group_size",     type=int, default=2)
-    p.add_argument("--n_trajs_per_question",type=int,default=8)
+    p.add_argument("--trajectory_dir",      type=str, required=True,
+                   help="Directory with offline pre-collected scored JSONL files "
+                        "(flat directory — all _scored.jsonl files will be loaded)")
+    p.add_argument("--pilot_question_json", type=str, required=True,
+                   help="JSON file with ALL pilot questions (MATH-500 format) "
+                        "used as the resampling universe")
+    p.add_argument("--min_group_size",      type=int, default=2)
+    p.add_argument("--n_trajs_per_question",type=int, default=8)
 
     # Model
     p.add_argument("--model_name",   type=str, default="Qwen/Qwen3-32B")
@@ -432,28 +556,39 @@ def parse_args():
     p.add_argument("--lr",           type=float, default=1e-5)
     p.add_argument("--weight_decay", type=float, default=0.01)
     p.add_argument("--num_epochs",   type=int,   default=5)
-    p.add_argument("--max_steps",    type=int,   default=150)
+    p.add_argument("--max_steps",    type=int,   default=500)
     p.add_argument("--gradient_accumulation_steps", type=int, default=4)
     p.add_argument("--kl_coeff",     type=float, default=0.01)
     p.add_argument("--clip_ratio",   type=float, default=0.2)
     p.add_argument("--max_grad_norm",type=float, default=1.0)
     p.add_argument("--seed",         type=int,   default=42)
 
-    # Resampling (also triggers checkpointing)
-    p.add_argument("--resample_every",    type=int,   default=50,
-                   help="Resample + checkpoint every N steps")
-    p.add_argument("--resample_seeds",    type=int, nargs="+", default=[42, 43, 44],
-                   help="Seeds to use when collecting fresh trajectories")
-    p.add_argument("--max_agent_steps",   type=int,   default=5)
+    # Checkpointing (frequent)
+    p.add_argument("--checkpoint_every", type=int, default=50,
+                   help="Save LoRA checkpoint every N training steps")
+
+    # Resampling (less frequent, involves vLLM inference)
+    p.add_argument("--resample_every",       type=int,   default=100,
+                   help="Resample pool every N steps (also saves checkpoint)")
+    p.add_argument("--n_resample_questions", type=int,   default=50,
+                   help="Number of questions to resample per cycle (~10%% of 500)")
+    p.add_argument("--resample_seeds",       type=int, nargs="+",
+                   default=[42, 43, 44, 45, 46],
+                   help="Seeds rotated across resampling cycles for diversity")
+    p.add_argument("--max_agent_steps",      type=int,   default=5)
+
+    # Data quality gate
+    p.add_argument("--quality_min_acc", type=float, default=0.30,
+                   help="Minimum accuracy (fraction correct) for initial pool quality check")
 
     # Checkpoint resume
     p.add_argument("--resume_from_checkpoint", type=str, default=None)
-    p.add_argument("--initial_step",       type=int,   default=0)
+    p.add_argument("--initial_step",           type=int, default=0)
 
     # Output
     p.add_argument("--output_dir",   type=str,
-                   default="training_outputs/qwen3-32B/os_rl_online_pilot")
-    p.add_argument("--log_every",    type=int,   default=5)
+                   default="training_outputs/qwen3-32B/os_rl_full_v3")
+    p.add_argument("--log_every",    type=int, default=5)
 
     return p.parse_args()
 

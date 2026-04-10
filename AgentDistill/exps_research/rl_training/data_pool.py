@@ -83,6 +83,41 @@ class TrajectoryPool:
         """
         self._load(jsonl_files)
 
+    def replace_with_files(self, jsonl_files: List[str]) -> int:
+        """For each new trajectory in jsonl_files, replace one old trajectory
+        for the same question using a FIFO policy (remove oldest, add newest).
+
+        This keeps pool size per question roughly constant while gradually
+        shifting the distribution toward on-policy (current model) data.
+
+        Returns the number of replacements made (new trajs added).
+        """
+        n_added = 0
+        for path in jsonl_files:
+            path = str(path)
+            if not Path(path).exists():
+                logger.warning(f"Trajectory file not found, skipping: {path}")
+                continue
+            with open(path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if not entry.get("log_data"):
+                        continue
+                    qkey = entry["question"]
+                    if self.pool[qkey]:
+                        # FIFO: remove oldest trajectory to make room
+                        self.pool[qkey].pop(0)
+                    self.pool[qkey].append(entry)
+                    n_added += 1
+        logger.info(f"replace_with_files: replaced/added {n_added} trajectories.")
+        return n_added
+
     # ------------------------------------------------------------------
     # Properties
     # ------------------------------------------------------------------
