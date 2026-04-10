@@ -553,13 +553,16 @@ def train(args):
                         f"Launching {len(seed_tasks)} parallel resample workers "
                         f"(one GPU each: {[t[0] for t in seed_tasks]})"
                     )
+                    # GPU0 is rank0 which holds large ZeRO-3 state (~50 GB);
+                    # not enough free memory to load 32B model for vLLM.
+                    # Assign seeds to GPU1, GPU2, ... which only hold small shards.
                     with ThreadPoolExecutor(max_workers=len(seed_tasks)) as pool_exec:
                         futures = {
                             pool_exec.submit(
                                 resample_trajectories,
                                 args, ckpt_dir, global_step,
                                 seed=resample_seed,
-                                gpu_id=gpu_idx,
+                                gpu_id=gpu_idx + 1,   # skip GPU0, start from GPU1
                                 questions_subset=subset,
                             ): resample_seed
                             for gpu_idx, resample_seed, subset in seed_tasks
