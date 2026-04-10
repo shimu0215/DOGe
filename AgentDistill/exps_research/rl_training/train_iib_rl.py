@@ -779,7 +779,7 @@ def parse_args():
     p.add_argument("--seeds_per_resample",   type=int,   default=5,
                    help="Seeds per resample cycle; each gets its own question slice")
     p.add_argument("--resample_seeds",       type=int, nargs="+",
-                   default=[42, 43, 44, 45, 46, 47, 48, 49],
+                   default=[42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56],
                    help="Seed pool rotated across cycles")
     p.add_argument("--max_agent_steps",      type=int, default=5)
 
