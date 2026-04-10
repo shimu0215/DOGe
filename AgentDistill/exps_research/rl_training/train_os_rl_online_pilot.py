@@ -403,7 +403,8 @@ def train(args):
     logger.info(f"Starting semi-online OS-RL (initial_step={global_step}, "
                 f"resample_every={args.resample_every}, "
                 f"checkpoint_every={args.checkpoint_every}, "
-                f"n_resample_questions={args.n_resample_questions})...")
+                f"n_resample_questions={args.n_resample_questions}, "
+                f"seeds_per_resample={args.seeds_per_resample})...")
 
     for epoch in range(args.num_epochs):
         logger.info(f"=== Epoch {epoch + 1}/{args.num_epochs} ===")
@@ -477,39 +478,58 @@ def train(args):
                     ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
 
                 if is_main:
-                    # Select which questions to resample this cycle.
-                    # Rotate through all questions across cycles for coverage.
-                    n_q = args.n_resample_questions
-                    start = (resample_cycle * n_q) % len(all_pilot_questions)
-                    # Wrap-around selection to cover all questions over time
-                    if start + n_q <= len(all_pilot_questions):
-                        subset = all_pilot_questions[start : start + n_q]
-                    else:
-                        subset = (all_pilot_questions[start:]
-                                  + all_pilot_questions[: (start + n_q) % len(all_pilot_questions)])
-                    resample_cycle += 1
+                    # Each seed in this cycle gets its OWN non-overlapping
+                    # question subset of size n_resample_questions.
+                    # Together seeds_per_resample seeds cover
+                    # seeds_per_resample * n_resample_questions questions per cycle.
+                    # The window rotates across cycles for full coverage over time.
+                    n_q   = args.n_resample_questions   # questions per seed
+                    n_spr = args.seeds_per_resample      # seeds per cycle
+                    n_total = len(all_pilot_questions)
 
-                    # Use rotating seed for diversity across resamples
-                    seed_idx = (resample_cycle - 1) % len(args.resample_seeds)
-                    resample_seed = args.resample_seeds[seed_idx]
+                    # Starting offset for this cycle (rotate across cycles)
+                    cycle_offset = (resample_cycle * n_spr * n_q) % n_total
+
+                    # Select seeds for this cycle (rotate through resample_seeds pool)
+                    seed_start = (resample_cycle * n_spr) % len(args.resample_seeds)
+                    seeds_this_cycle = [
+                        args.resample_seeds[(seed_start + i) % len(args.resample_seeds)]
+                        for i in range(n_spr)
+                    ]
+                    resample_cycle += 1
 
                     logger.info(
                         f"Resampling cycle {resample_cycle}: "
-                        f"{len(subset)} questions (start_idx={start}), "
-                        f"seed={resample_seed}"
+                        f"{n_spr} seeds × {n_q} questions = {n_spr * n_q} total, "
+                        f"seeds={seeds_this_cycle}, cycle_offset={cycle_offset}"
                     )
-                    new_files = resample_trajectories(
-                        args, ckpt_dir, global_step,
-                        seed=resample_seed,
-                        questions_subset=subset,
-                    )
-                    if new_files:
+                    all_new_files = []
+                    for i, resample_seed in enumerate(seeds_this_cycle):
+                        # Non-overlapping slice for this seed
+                        start = (cycle_offset + i * n_q) % n_total
+                        if start + n_q <= n_total:
+                            subset = all_pilot_questions[start : start + n_q]
+                        else:
+                            subset = (all_pilot_questions[start:]
+                                      + all_pilot_questions[: (start + n_q) % n_total])
+                        logger.info(
+                            f"  seed={resample_seed}: questions [{start}, {start+n_q}) "
+                            f"(wraps={start + n_q > n_total})"
+                        )
+                        new_files = resample_trajectories(
+                            args, ckpt_dir, global_step,
+                            seed=resample_seed,
+                            questions_subset=subset,
+                        )
+                        all_new_files.extend(new_files)
+
+                    if all_new_files:
                         # Replace strategy: for each new trajectory, remove one
                         # old trajectory from that question's pool (FIFO).
-                        n_replaced = pool.replace_with_files(new_files)
+                        n_replaced = pool.replace_with_files(all_new_files)
                         logger.info(
-                            f"Pool updated: replaced {n_replaced} trajectories. "
-                            f"Stats: {pool.stats()}"
+                            f"Pool updated: replaced {n_replaced} trajectories "
+                            f"({len(all_new_files)} files). Stats: {pool.stats()}"
                         )
                     else:
                         logger.warning("Resampling produced no new files — pool unchanged.")
@@ -570,11 +590,13 @@ def parse_args():
     # Resampling (less frequent, involves vLLM inference)
     p.add_argument("--resample_every",       type=int,   default=100,
                    help="Resample pool every N steps (also saves checkpoint)")
-    p.add_argument("--n_resample_questions", type=int,   default=50,
-                   help="Number of questions to resample per cycle (~10%% of 500)")
+    p.add_argument("--n_resample_questions", type=int,   default=100,
+                   help="Number of questions to resample per cycle (rotating window)")
+    p.add_argument("--seeds_per_resample",   type=int,   default=2,
+                   help="Number of seeds to use per resample cycle")
     p.add_argument("--resample_seeds",       type=int, nargs="+",
-                   default=[42, 43, 44, 45, 46],
-                   help="Seeds rotated across resampling cycles for diversity")
+                   default=[42, 43, 44, 45, 46, 47, 48, 49],
+                   help="Seed pool rotated across resampling cycles for diversity")
     p.add_argument("--max_agent_steps",      type=int,   default=5)
 
     # Data quality gate
