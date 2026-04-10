@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import json
 import random
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 import argparse
 import subprocess
@@ -34,7 +35,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
 from accelerate import Accelerator
 from accelerate.utils import InitProcessGroupKwargs
-from datetime import timedelta
+from datetime import timedelta, datetime
 from torch.optim import AdamW
 
 from .data_pool import TrajectoryPool
@@ -214,34 +215,25 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
     return ckpt_dir
 
 
-def resample_trajectories(
-    args,
-    ckpt_dir: str,
-    step: int,
-    seed: int,
-    questions_subset: Optional[List[dict]] = None,
-) -> List[str]:
+def _build_resample_env(gpu_id: int) -> dict:
     """
-    Collect fresh trajectories using the current LoRA checkpoint via vLLM offline.
+    Build a clean subprocess environment for one resample worker.
 
-    Args:
-        questions_subset: If given, only resample these questions (list of dicts
-                          with keys: id, question, answer, ...).
-                          If None, resample all pilot questions.
-        seed: Random seed for this resampling run.
-
-    Returns list of scored JSONL file paths.
+    Strips all distributed-training env vars so the subprocess starts without
+    any accelerate/DeepSpeed context.  Sets CUDA_VISIBLE_DEVICES to exactly
+    one GPU so tp=1 vLLM uses only that device (no CUDA-after-fork issues).
     """
-    log_root = Path(ckpt_dir) / "qa_results"
-    log_root.mkdir(parents=True, exist_ok=True)
-
-    # Build env: strip all distributed training vars so the subprocess starts clean.
     env = {
         **os.environ,
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
         "VLLM_HOST_IP": "127.0.0.1",
-        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+        # Expose only one GPU to this worker process (tp=1, no CUDA-fork issues)
+        # Pin vLLM to GPU1 (GPU0 is used by rank0 and has insufficient free memory).
+        # GPU1/2/3 each hold only a small ZeRO-3 shard (~8 GB) and have ~72 GB free.
+        # We always use GPU1 regardless of gpu_id since CUDA_VISIBLE_DEVICES
+        # remapping is applied before CUDA initializes in the subprocess.
+        "CUDA_VISIBLE_DEVICES": "1",
     }
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
@@ -250,6 +242,37 @@ def resample_trajectories(
                "NCCL_ASYNC_ERROR_HANDLING",
                "VLLM_USE_V1"]:
         env.pop(_k, None)
+    return env
+
+
+def resample_trajectories(
+    args,
+    ckpt_dir: str,
+    step: int,
+    seed: int,
+    gpu_id: int = 0,
+    questions_subset: Optional[List[dict]] = None,
+) -> List[str]:
+    """
+    Collect fresh trajectories using the current LoRA checkpoint via vLLM offline.
+
+    Each call runs a subprocess pinned to `gpu_id` (tp=1).  Call multiple times
+    in parallel (with different gpu_ids) to utilise all GPUs concurrently.
+
+    Args:
+        questions_subset: If given, only resample these questions (list of dicts
+                          with keys: id, question, answer, ...).
+                          If None, resample all pilot questions.
+        seed: Random seed for this resampling run.
+        gpu_id: Which physical GPU index to give this subprocess exclusively.
+
+    Returns list of scored JSONL file paths.
+    """
+    log_root = Path(ckpt_dir) / "qa_results"
+    log_root.mkdir(parents=True, exist_ok=True)
+
+    env = _build_resample_env(gpu_id)
+    logger.info(f"  seed={seed} → GPU {gpu_id} (CUDA_VISIBLE_DEVICES={env['CUDA_VISIBLE_DEVICES']})")
 
     # Write a temporary JSON file with the subset of questions to resample
     if questions_subset is not None:
@@ -289,10 +312,11 @@ def resample_trajectories(
             "--suffix",             f"python_only_seed{seed}",
             "--parallel_workers",   "1",   # offline LLM is not thread-safe
             "--max_model_len",      "24576",
+            "--tensor_parallel_size", "1",  # always 1; parallelism via separate processes
         ]
         result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
         if result.returncode != 0:
-            logger.warning(f"run_experiment failed seed={seed} (rc={result.returncode})")
+            logger.warning(f"run_experiment failed seed={seed} gpu={gpu_id} (rc={result.returncode})")
             return []
     finally:
         if tmp_json is not None:
@@ -306,9 +330,9 @@ def resample_trajectories(
     found = [p for p in found if ".bak" not in p.name]
     new_files = [str(p) for p in found]
     if new_files:
-        logger.info(f"Step {step}: collected {len(new_files)} new file(s): {new_files}")
+        logger.info(f"Step {step}: seed={seed} collected {len(new_files)} file(s): {new_files}")
     else:
-        logger.warning(f"Step {step}: no output file found for seed={seed} in {log_root}")
+        logger.warning(f"Step {step}: seed={seed} no output file found in {log_root}")
 
     return new_files
 
@@ -318,10 +342,12 @@ def resample_trajectories(
 # ---------------------------------------------------------------------------
 
 def train(args):
-    # Extend NCCL process-group timeout to 3 hours so that vLLM resampling
-    # (~25-50 questions × ~1.5 min/question) does not trigger the watchdog on
-    # ranks 1-3 waiting at the barrier.
-    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=3))
+    # Disable NCCL watchdog so that vLLM resampling on rank0 (which can take
+    # 1-3 hours loading 32B from NFS) does not kill ranks 1-3 waiting at the
+    # barrier. TORCH_NCCL_ENABLE_MONITORING=0 is set in the launch script;
+    # this large timeout is a belt-and-suspenders fallback.
+    os.environ.setdefault("TORCH_NCCL_ENABLE_MONITORING", "0")
+    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=24))
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision="bf16",
@@ -462,7 +488,7 @@ def train(args):
             # ---- Resample (less frequent, uses vLLM) ----
             _resample_due = (
                 args.resample_every > 0
-                and global_step % args.resample_every == 0
+                and (global_step == 1 or global_step % args.resample_every == 0)
                 and global_step > last_resample_step
             )
             if _resample_due:
@@ -478,6 +504,11 @@ def train(args):
                     ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
 
                 if is_main:
+                    _resample_start = datetime.now()
+                    logger.info(
+                        f"[RESAMPLE START] step={global_step} "
+                        f"time={_resample_start.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
                     # Each seed in this cycle gets its OWN non-overlapping
                     # question subset of size n_resample_questions.
                     # Together seeds_per_resample seeds cover
@@ -503,9 +534,9 @@ def train(args):
                         f"{n_spr} seeds × {n_q} questions = {n_spr * n_q} total, "
                         f"seeds={seeds_this_cycle}, cycle_offset={cycle_offset}"
                     )
-                    all_new_files = []
+                    # Build per-seed tasks (non-overlapping question subsets)
+                    seed_tasks = []
                     for i, resample_seed in enumerate(seeds_this_cycle):
-                        # Non-overlapping slice for this seed
                         start = (cycle_offset + i * n_q) % n_total
                         if start + n_q <= n_total:
                             subset = all_pilot_questions[start : start + n_q]
@@ -516,9 +547,22 @@ def train(args):
                             f"  seed={resample_seed}: questions [{start}, {start+n_q}) "
                             f"(wraps={start + n_q > n_total})"
                         )
+                        seed_tasks.append((i, resample_seed, subset))
+
+                    # Run all seeds in parallel, each on its own GPU (tp=1 per process)
+                    all_new_files = []
+                    # Run seeds sequentially on GPU1.
+                    # GPU0 is used by rank0 (ZeRO-3 holds ~50 GB there, only ~30 GB free).
+                    # GPU1/2/3 each hold only a small shard (~8 GB) and have ~72 GB free.
+                    # CUDA_VISIBLE_DEVICES remapping is set to "1" in _build_resample_env.
+                    logger.info(
+                        f"Running {len(seed_tasks)} seeds sequentially on GPU1"
+                    )
+                    for gpu_idx, resample_seed, subset in seed_tasks:
                         new_files = resample_trajectories(
                             args, ckpt_dir, global_step,
                             seed=resample_seed,
+                            gpu_id=1,
                             questions_subset=subset,
                         )
                         all_new_files.extend(new_files)
@@ -533,6 +577,15 @@ def train(args):
                         )
                     else:
                         logger.warning("Resampling produced no new files — pool unchanged.")
+
+                    _resample_end = datetime.now()
+                    _resample_elapsed = (_resample_end - _resample_start).total_seconds()
+                    logger.info(
+                        f"[RESAMPLE END] step={global_step} "
+                        f"time={_resample_end.strftime('%Y-%m-%d %H:%M:%S')} "
+                        f"elapsed={_resample_elapsed:.0f}s "
+                        f"({_resample_elapsed/60:.1f}min)"
+                    )
 
                 # All ranks wait for rank 0 to finish resampling
                 accelerator.wait_for_everyone()
@@ -598,6 +651,8 @@ def parse_args():
                    default=[42, 43, 44, 45, 46, 47, 48, 49],
                    help="Seed pool rotated across resampling cycles for diversity")
     p.add_argument("--max_agent_steps",      type=int,   default=5)
+    p.add_argument("--vllm_tp_size",         type=int,   default=4,
+                   help="vLLM tensor_parallel_size for resampling inference (default 4 = all GPUs)")
 
     # Data quality gate
     p.add_argument("--quality_min_acc", type=float, default=0.30,
