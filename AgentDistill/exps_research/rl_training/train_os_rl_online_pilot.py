@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import json
 import random
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 import argparse
@@ -503,91 +504,158 @@ def train(args):
                 else:
                     ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
 
+                # Build the seed/question plan (same logic regardless of mode)
+                n_q     = args.n_resample_questions
+                n_spr   = args.seeds_per_resample
+                n_total = len(all_pilot_questions)
+                cycle_offset = (resample_cycle * n_spr * n_q) % n_total
+                seed_start = (resample_cycle * n_spr) % len(args.resample_seeds)
+                seeds_this_cycle = [
+                    args.resample_seeds[(seed_start + i) % len(args.resample_seeds)]
+                    for i in range(n_spr)
+                ]
+                resample_cycle += 1
+
                 if is_main:
-                    _resample_start = datetime.now()
-                    logger.info(
-                        f"[RESAMPLE START] step={global_step} "
-                        f"time={_resample_start.strftime('%Y-%m-%d %H:%M:%S')}"
-                    )
-                    # Each seed in this cycle gets its OWN non-overlapping
-                    # question subset of size n_resample_questions.
-                    # Together seeds_per_resample seeds cover
-                    # seeds_per_resample * n_resample_questions questions per cycle.
-                    # The window rotates across cycles for full coverage over time.
-                    n_q   = args.n_resample_questions   # questions per seed
-                    n_spr = args.seeds_per_resample      # seeds per cycle
-                    n_total = len(all_pilot_questions)
-
-                    # Starting offset for this cycle (rotate across cycles)
-                    cycle_offset = (resample_cycle * n_spr * n_q) % n_total
-
-                    # Select seeds for this cycle (rotate through resample_seeds pool)
-                    seed_start = (resample_cycle * n_spr) % len(args.resample_seeds)
-                    seeds_this_cycle = [
-                        args.resample_seeds[(seed_start + i) % len(args.resample_seeds)]
-                        for i in range(n_spr)
-                    ]
-                    resample_cycle += 1
-
                     logger.info(
                         f"Resampling cycle {resample_cycle}: "
                         f"{n_spr} seeds × {n_q} questions = {n_spr * n_q} total, "
                         f"seeds={seeds_this_cycle}, cycle_offset={cycle_offset}"
                     )
-                    # Build per-seed tasks (non-overlapping question subsets)
-                    seed_tasks = []
-                    for i, resample_seed in enumerate(seeds_this_cycle):
-                        start = (cycle_offset + i * n_q) % n_total
-                        if start + n_q <= n_total:
-                            subset = all_pilot_questions[start : start + n_q]
-                        else:
-                            subset = (all_pilot_questions[start:]
-                                      + all_pilot_questions[: (start + n_q) % n_total])
+
+                # Build per-seed question subsets
+                seeds_and_questions = []
+                for i, resample_seed in enumerate(seeds_this_cycle):
+                    start = (cycle_offset + i * n_q) % n_total
+                    if start + n_q <= n_total:
+                        subset = all_pilot_questions[start : start + n_q]
+                    else:
+                        subset = (all_pilot_questions[start:]
+                                  + all_pilot_questions[: (start + n_q) % n_total])
+                    if is_main:
                         logger.info(
                             f"  seed={resample_seed}: questions [{start}, {start+n_q}) "
                             f"(wraps={start + n_q > n_total})"
                         )
-                        seed_tasks.append((i, resample_seed, subset))
+                    seeds_and_questions.append({"seed": resample_seed, "questions": subset})
 
-                    # Run all seeds in parallel, each on its own GPU (tp=1 per process)
+                # ── Resample via persistent server OR legacy subprocess ──────────
+                if getattr(args, "use_resample_server", False):
+                    # ── Dual-process-group mode ──────────────────────────────────
+                    # rank-0 writes a signal file and waits for the server to
+                    # finish.  All other ranks sit in wait_for_everyone().
                     all_new_files = []
-                    # Run seeds sequentially on GPU1.
-                    # GPU0 is used by rank0 (ZeRO-3 holds ~50 GB there, only ~30 GB free).
-                    # GPU1/2/3 each hold only a small shard (~8 GB) and have ~72 GB free.
-                    # CUDA_VISIBLE_DEVICES remapping is set to "1" in _build_resample_env.
-                    logger.info(
-                        f"Running {len(seed_tasks)} seeds sequentially on GPU1"
-                    )
-                    for gpu_idx, resample_seed, subset in seed_tasks:
-                        new_files = resample_trajectories(
-                            args, ckpt_dir, global_step,
-                            seed=resample_seed,
-                            gpu_id=1,
-                            questions_subset=subset,
-                        )
-                        all_new_files.extend(new_files)
-
-                    if all_new_files:
-                        # Replace strategy: for each new trajectory, remove one
-                        # old trajectory from that question's pool (FIFO).
-                        n_replaced = pool.replace_with_files(all_new_files)
+                    if is_main:
+                        _resample_start = datetime.now()
                         logger.info(
-                            f"Pool updated: replaced {n_replaced} trajectories "
-                            f"({len(all_new_files)} files). Stats: {pool.stats()}"
+                            f"[RESAMPLE START] step={global_step} "
+                            f"mode=server "
+                            f"time={_resample_start.strftime('%Y-%m-%d %H:%M:%S')}"
                         )
-                    else:
-                        logger.warning("Resampling produced no new files — pool unchanged.")
+                        request_path = Path(args.output_dir) / "resample_request.json"
+                        done_path    = Path(args.output_dir) / "resample_done.json"
 
-                    _resample_end = datetime.now()
-                    _resample_elapsed = (_resample_end - _resample_start).total_seconds()
-                    logger.info(
-                        f"[RESAMPLE END] step={global_step} "
-                        f"time={_resample_end.strftime('%Y-%m-%d %H:%M:%S')} "
-                        f"elapsed={_resample_elapsed:.0f}s "
-                        f"({_resample_elapsed/60:.1f}min)"
-                    )
+                        # Remove stale done file if present
+                        done_path.unlink(missing_ok=True)
 
-                # All ranks wait for rank 0 to finish resampling
+                        # Write the request (server will delete it on consumption)
+                        request_payload = {
+                            "checkpoint_dir"     : ckpt_dir,
+                            "step"               : global_step,
+                            "model_name"         : args.model_name,
+                            "max_agent_steps"    : args.max_agent_steps,
+                            "seeds_and_questions": seeds_and_questions,
+                            "shutdown"           : False,
+                        }
+                        request_path.write_text(json.dumps(request_payload))
+                        logger.info(
+                            f"Resample request written ({n_spr} seeds). "
+                            f"Waiting for server..."
+                        )
+
+                        # Poll for done file
+                        _poll_timeout_s = 6 * 3600   # 6-hour hard ceiling
+                        _poll_start = time.time()
+                        while not done_path.exists():
+                            if time.time() - _poll_start > _poll_timeout_s:
+                                logger.error(
+                                    "Resample server timed out after 6 h — continuing "
+                                    "without new trajectories."
+                                )
+                                break
+                            time.sleep(10)
+
+                        if done_path.exists():
+                            done_data = json.loads(done_path.read_text())
+                            done_path.unlink(missing_ok=True)
+                            all_new_files = done_data.get("output_files", [])
+                            _elapsed = done_data.get("elapsed_s", 0)
+                            _resample_end = datetime.now()
+                            logger.info(
+                                f"[RESAMPLE END] step={global_step} "
+                                f"time={_resample_end.strftime('%Y-%m-%d %H:%M:%S')} "
+                                f"server_elapsed={_elapsed:.0f}s ({_elapsed/60:.1f}min) "
+                                f"files={len(all_new_files)}"
+                            )
+
+                        if all_new_files:
+                            n_replaced = pool.replace_with_files(all_new_files)
+                            logger.info(
+                                f"Pool updated: replaced {n_replaced} trajectories "
+                                f"({len(all_new_files)} files). Stats: {pool.stats()}"
+                            )
+                        else:
+                            logger.warning(
+                                "Resample server produced no new files — pool unchanged."
+                            )
+
+                else:
+                    # ── Legacy subprocess mode (tp=1, rank-0 subprocess) ─────────
+                    if is_main:
+                        _resample_start = datetime.now()
+                        logger.info(
+                            f"[RESAMPLE START] step={global_step} "
+                            f"mode=subprocess "
+                            f"time={_resample_start.strftime('%Y-%m-%d %H:%M:%S')}"
+                        )
+
+                        all_new_files = []
+                        logger.info(
+                            f"Running {len(seeds_and_questions)} seeds sequentially "
+                            f"(GPU1, tp=1)"
+                        )
+                        for entry in seeds_and_questions:
+                            new_files = resample_trajectories(
+                                args, ckpt_dir, global_step,
+                                seed=entry["seed"],
+                                gpu_id=1,
+                                questions_subset=entry["questions"],
+                            )
+                            all_new_files.extend(new_files)
+
+                        if all_new_files:
+                            n_replaced = pool.replace_with_files(all_new_files)
+                            logger.info(
+                                f"Pool updated: replaced {n_replaced} trajectories "
+                                f"({len(all_new_files)} files). Stats: {pool.stats()}"
+                            )
+                        else:
+                            logger.warning(
+                                "Resampling produced no new files — pool unchanged."
+                            )
+
+                        _resample_end = datetime.now()
+                        _resample_elapsed = (
+                            _resample_end - _resample_start
+                        ).total_seconds()
+                        logger.info(
+                            f"[RESAMPLE END] step={global_step} "
+                            f"time={_resample_end.strftime('%Y-%m-%d %H:%M:%S')} "
+                            f"elapsed={_resample_elapsed:.0f}s "
+                            f"({_resample_elapsed/60:.1f}min)"
+                        )
+
+                # All ranks wait for rank-0 to finish (and pool update to complete)
                 accelerator.wait_for_everyone()
 
         if global_step >= args.max_steps:
@@ -653,6 +721,13 @@ def parse_args():
     p.add_argument("--max_agent_steps",      type=int,   default=5)
     p.add_argument("--vllm_tp_size",         type=int,   default=4,
                    help="vLLM tensor_parallel_size for resampling inference (default 4 = all GPUs)")
+
+    # Resample mode
+    p.add_argument("--use_resample_server", action="store_true",
+                   help="Use the persistent resample_server.py (dual-process-group, tp=4). "
+                        "When set, training rank-0 writes a file signal and waits; the "
+                        "separate resample_server process handles vLLM inference. "
+                        "When unset, falls back to the legacy subprocess approach (tp=1).")
 
     # Data quality gate
     p.add_argument("--quality_min_acc", type=float, default=0.30,
