@@ -34,7 +34,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
 from accelerate import Accelerator
 from accelerate.utils import InitProcessGroupKwargs
-from datetime import timedelta
+from datetime import timedelta, datetime
 from torch.optim import AdamW
 
 from .data_pool import TrajectoryPool
@@ -464,7 +464,7 @@ def train(args):
             # ---- Resample (less frequent, uses vLLM) ----
             _resample_due = (
                 args.resample_every > 0
-                and global_step % args.resample_every == 0
+                and (global_step == 1 or global_step % args.resample_every == 0)
                 and global_step > last_resample_step
             )
             if _resample_due:
@@ -480,6 +480,11 @@ def train(args):
                     ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
 
                 if is_main:
+                    _resample_start = datetime.now()
+                    logger.info(
+                        f"[RESAMPLE START] step={global_step} "
+                        f"time={_resample_start.strftime('%Y-%m-%d %H:%M:%S')}"
+                    )
                     # Each seed in this cycle gets its OWN non-overlapping
                     # question subset of size n_resample_questions.
                     # Together seeds_per_resample seeds cover
@@ -535,6 +540,15 @@ def train(args):
                         )
                     else:
                         logger.warning("Resampling produced no new files — pool unchanged.")
+
+                    _resample_end = datetime.now()
+                    _resample_elapsed = (_resample_end - _resample_start).total_seconds()
+                    logger.info(
+                        f"[RESAMPLE END] step={global_step} "
+                        f"time={_resample_end.strftime('%Y-%m-%d %H:%M:%S')} "
+                        f"elapsed={_resample_elapsed:.0f}s "
+                        f"({_resample_elapsed/60:.1f}min)"
+                    )
 
                 # All ranks wait for rank 0 to finish resampling
                 accelerator.wait_for_everyone()
