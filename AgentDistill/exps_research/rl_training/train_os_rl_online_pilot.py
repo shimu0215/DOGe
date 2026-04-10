@@ -318,10 +318,12 @@ def resample_trajectories(
 # ---------------------------------------------------------------------------
 
 def train(args):
-    # Extend NCCL process-group timeout to 3 hours so that vLLM resampling
-    # (~25-50 questions × ~1.5 min/question) does not trigger the watchdog on
-    # ranks 1-3 waiting at the barrier.
-    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=3))
+    # Extend NCCL process-group timeout to 2 hours so that vLLM resampling
+    # (1 seed × 100q ≈ 35 min including 32B model load) does not trigger the
+    # watchdog on ranks 1-3 waiting at the barrier.
+    # NOTE: 5 seeds × 100q took ~3h (each seed reloads vLLM from disk ~30 min).
+    # Keep seeds_per_resample=1 in launch script to stay well within this limit.
+    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=2))
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision="bf16",
