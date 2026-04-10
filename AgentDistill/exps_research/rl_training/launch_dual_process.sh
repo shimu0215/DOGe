@@ -65,10 +65,10 @@ mkdir -p "${OUTPUT_DIR}"
 
 # ── Launch resample server (background, separate process group) ──────────────
 # This process has a clean CUDA context — NOT forked from any training rank.
-echo "[launcher] Starting resample server (tp=${TP_SIZE})..."
+echo "[launcher] Starting resample server (n_gpus=${TP_SIZE}, parallel tp=1 per seed)..."
 python -m exps_research.rl_training.resample_server \
     --work_dir "${OUTPUT_DIR}" \
-    --tp_size  "${TP_SIZE}"   \
+    --n_gpus   "${TP_SIZE}"   \
     --poll_interval 5         \
     > "${OUTPUT_DIR}/resample_server.log" 2>&1 &
 RESAMPLE_SERVER_PID=$!

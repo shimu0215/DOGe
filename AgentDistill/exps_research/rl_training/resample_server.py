@@ -80,22 +80,30 @@ _POLL_INTERVAL_S = 5          # seconds between polling attempts
 # Subprocess environment
 # ---------------------------------------------------------------------------
 
-def _build_vllm_env(cuda_visible: str = "0,1,2,3") -> dict:
+def _build_vllm_env(gpu_id: int) -> dict:
     """
-    Return a clean environment dict for the vLLM inference subprocess.
+    Return a clean environment dict for one tp=1 vLLM inference subprocess.
 
-    CUDA_VISIBLE_DEVICES is set to all 4 GPUs (or whatever the caller
-    specifies).  Because this process itself has no CUDA context yet (it was
-    not forked from any training rank), the child process can initialise fresh
-    CUDA contexts on each visible device → tp=4 works correctly.
+    Each subprocess gets exactly ONE GPU (CUDA_VISIBLE_DEVICES=str(gpu_id)).
+    This avoids the tp>1 multiprocessing issue:
+      - vLLM's multiproc executor fork()s workers that inherit the parent's
+        CUDA context (device 0).  When a forked worker tries set_device(1/2/3)
+        it gets "invalid device ordinal".
+      - With tp=1 and a single visible GPU, no worker forking occurs at all;
+        vLLM runs entirely in-process.
+    Multiple seeds run in PARALLEL (one subprocess per GPU), giving the same
+    total throughput as tp=N but without any distributed CUDA setup.
     """
     env = dict(os.environ)
     env.update({
-        "HF_HUB_OFFLINE"        : "1",
-        "TRANSFORMERS_OFFLINE"  : "1",
-        "VLLM_HOST_IP"          : "127.0.0.1",
-        "CUDA_VISIBLE_DEVICES"  : cuda_visible,
+        "HF_HUB_OFFLINE"              : "1",
+        "TRANSFORMERS_OFFLINE"        : "1",
+        "VLLM_HOST_IP"               : "127.0.0.1",
+        # Pin this subprocess to exactly one GPU (no fork/spawn workers needed)
+        "CUDA_VISIBLE_DEVICES"        : str(gpu_id),
         "TORCH_NCCL_ENABLE_MONITORING": "0",
+        # Ensure tp=1 / single-process vLLM (belt-and-suspenders)
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
     })
     # Remove distributed-training vars so vLLM does not see them
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
@@ -119,10 +127,17 @@ def _run_one_seed(
     questions: list,
     model_name: str,
     max_agent_steps: int,
-    tp_size: int = 4,
+    gpu_id: int = 0,
 ) -> list:
     """
-    Run run_with_file_dist for one (seed, question-subset) pair.
+    Run run_with_file_dist for one (seed, question-subset) pair with tp=1.
+
+    Each call is pinned to a single GPU via CUDA_VISIBLE_DEVICES=gpu_id.
+    tp=1 avoids vLLM's multiprocessing worker fork/spawn which causes
+    "invalid device ordinal" errors when CUDA contexts are already active.
+
+    Multiple seeds can be run in parallel (one per GPU) by the caller.
+
     Returns list of scored JSONL file paths written by run_experiment.
     """
     log_root = Path(checkpoint_dir) / "qa_results"
@@ -139,7 +154,7 @@ def _run_one_seed(
     json.dump({"metadata": {"n": len(questions)}, "examples": questions}, tmp)
     tmp.close()
 
-    env = _build_vllm_env()
+    env = _build_vllm_env(gpu_id=gpu_id)
 
     try:
         cmd = [
@@ -163,11 +178,11 @@ def _run_one_seed(
             "--suffix",               f"python_only_seed{seed}",
             "--parallel_workers",     "1",   # vLLM offline is not thread-safe
             "--max_model_len",        "24576",
-            "--tensor_parallel_size", str(tp_size),
+            "--tensor_parallel_size", "1",   # always tp=1; parallelism via separate subprocesses
         ]
         logger.info(
-            f"  [seed={seed}] Launching inference: "
-            f"{len(questions)} questions, tp={tp_size}, "
+            f"  [seed={seed}] Launching inference on GPU{gpu_id}: "
+            f"{len(questions)} questions, tp=1, "
             f"checkpoint={checkpoint_dir}"
         )
         result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
@@ -196,14 +211,22 @@ def _run_one_seed(
 # Main server loop
 # ---------------------------------------------------------------------------
 
-def serve(work_dir: str, tp_size: int = 4, poll_interval: int = _POLL_INTERVAL_S):
+def serve(work_dir: str, n_gpus: int = 4, poll_interval: int = _POLL_INTERVAL_S):
     """
     Poll `{work_dir}/resample_request.json` in a loop.
 
     When a request arrives:
       1. Read & delete the request file (atomic consume).
-      2. Run each (seed, questions) pair sequentially via subprocess.
+      2. Run seeds in PARALLEL, each pinned to its own GPU (tp=1 per seed).
+         GPU assignment: seed_i → GPU (i % n_gpus).
+         This gives the same effective throughput as tp=n_gpus but without
+         any distributed CUDA setup or fork/spawn worker issues.
       3. Write `{work_dir}/resample_done.json` to unblock the training loop.
+
+    Why parallel tp=1 instead of single tp=4?
+      vLLM's multiproc executor fork()s workers that inherit the parent's
+      CUDA context.  Forked workers trying set_device(1/2/3) get
+      "CUDA error: invalid device ordinal".  tp=1 avoids this entirely.
     """
     work = Path(work_dir)
     work.mkdir(parents=True, exist_ok=True)
@@ -213,7 +236,7 @@ def serve(work_dir: str, tp_size: int = 4, poll_interval: int = _POLL_INTERVAL_S
 
     logger.info(
         f"Resample server ready.  Watching: {request_path} "
-        f"(poll every {poll_interval}s, tp={tp_size})"
+        f"(poll every {poll_interval}s, n_gpus={n_gpus}, parallel tp=1 per seed)"
     )
 
     while True:
@@ -248,21 +271,37 @@ def serve(work_dir: str, tp_size: int = 4, poll_interval: int = _POLL_INTERVAL_S
             f"checkpoint={checkpoint_dir}"
         )
 
-        # ── Run each seed sequentially ───────────────────────────────────
+        # ── Run seeds in PARALLEL (one subprocess per GPU) ───────────────
+        # Assign GPU round-robin: seed_i → GPU (i % n_gpus).
+        # Training is in barrier, so all n_gpus are ~80 GB free.
+        import concurrent.futures as _cf
         all_output_files = []
-        for seed_entry in seeds_and_qs:
-            seed      = seed_entry["seed"]
-            questions = seed_entry["questions"]
-            files = _run_one_seed(
+
+        def _run_entry(idx_entry):
+            idx, seed_entry = idx_entry
+            gpu_id = idx % n_gpus
+            return _run_one_seed(
                 checkpoint_dir=checkpoint_dir,
                 step=step,
-                seed=seed,
-                questions=questions,
+                seed=seed_entry["seed"],
+                questions=seed_entry["questions"],
                 model_name=model_name,
                 max_agent_steps=max_agent_steps,
-                tp_size=tp_size,
+                gpu_id=gpu_id,
             )
-            all_output_files.extend(files)
+
+        with _cf.ThreadPoolExecutor(max_workers=len(seeds_and_qs)) as pool:
+            futures = {
+                pool.submit(_run_entry, (i, e)): e["seed"]
+                for i, e in enumerate(seeds_and_qs)
+            }
+            for fut in _cf.as_completed(futures):
+                seed_val = futures[fut]
+                try:
+                    files = fut.result()
+                    all_output_files.extend(files)
+                except Exception as exc:
+                    logger.warning(f"  [seed={seed_val}] raised exception: {exc}")
 
         # ── Write done signal ────────────────────────────────────────────
         _end = datetime.now()
@@ -301,8 +340,9 @@ if __name__ == "__main__":
              "(should match --output_dir of the training script)"
     )
     p.add_argument(
-        "--tp_size", type=int, default=4,
-        help="vLLM tensor_parallel_size for inference (default 4)"
+        "--n_gpus", type=int, default=4,
+        help="Number of GPUs to spread seeds across (one tp=1 subprocess per GPU). "
+             "Default 4 = use all 4 GPUs in parallel."
     )
     p.add_argument(
         "--poll_interval", type=int, default=_POLL_INTERVAL_S,
@@ -312,6 +352,6 @@ if __name__ == "__main__":
 
     serve(
         work_dir=args.work_dir,
-        tp_size=args.tp_size,
+        n_gpus=args.n_gpus,
         poll_interval=args.poll_interval,
     )
