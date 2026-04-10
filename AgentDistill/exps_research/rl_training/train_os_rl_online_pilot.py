@@ -580,7 +580,7 @@ def parse_args():
     # Resampling (less frequent, involves vLLM inference)
     p.add_argument("--resample_every",       type=int,   default=100,
                    help="Resample pool every N steps (also saves checkpoint)")
-    p.add_argument("--n_resample_questions", type=int,   default=200,
+    p.add_argument("--n_resample_questions", type=int,   default=100,
                    help="Number of questions to resample per cycle (rotating window)")
     p.add_argument("--seeds_per_resample",   type=int,   default=2,
                    help="Number of seeds to use per resample cycle")
