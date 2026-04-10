@@ -447,7 +447,8 @@ class VLLMModel(Model):
         # the base Model class (which does not accept them).
         _VLLM_KWARGS = ("max_model_len", "gpu_memory_utilization", "dtype",
                         "quantization", "tensor_parallel_size",
-                        "enforce_eager", "max_num_seqs")
+                        "enforce_eager", "max_num_seqs",
+                        "distributed_executor_backend")
         vllm_kwargs = {k: kwargs.pop(k) for k in _VLLM_KWARGS if k in kwargs}
 
         super().__init__(**kwargs)
