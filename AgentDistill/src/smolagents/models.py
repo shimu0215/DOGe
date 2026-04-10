@@ -443,6 +443,13 @@ class VLLMModel(Model):
         for key in ("api_base", "api_key"):
             kwargs.pop(key, None)
 
+        # Extract vLLM-specific kwargs that must be passed to LLM() rather than
+        # the base Model class (which does not accept them).
+        _VLLM_KWARGS = ("max_model_len", "gpu_memory_utilization", "dtype",
+                        "quantization", "tensor_parallel_size",
+                        "enforce_eager", "max_num_seqs")
+        vllm_kwargs = {k: kwargs.pop(k) for k in _VLLM_KWARGS if k in kwargs}
+
         super().__init__(**kwargs)
 
         self.model_id = model_id
@@ -451,10 +458,11 @@ class VLLMModel(Model):
             self.model = LLM(
                 model=model_id,
                 enable_lora=True,
-                max_lora_rank=64
+                max_lora_rank=64,
+                **vllm_kwargs,
             )
         else:
-            self.model = LLM(model=model_id)
+            self.model = LLM(model=model_id, **vllm_kwargs)
 
         self.tokenizer = get_tokenizer(model_id)
         self._is_vlm = False  # VLLMModel does not support vision models yet.
