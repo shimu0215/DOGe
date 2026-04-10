@@ -478,34 +478,44 @@ def train(args):
                     ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
 
                 if is_main:
-                    # Select which questions to resample this cycle.
-                    # Rotate through all questions across cycles for coverage.
-                    n_q = args.n_resample_questions
-                    start = (resample_cycle * n_q) % len(all_pilot_questions)
-                    # Wrap-around selection to cover all questions over time
-                    if start + n_q <= len(all_pilot_questions):
-                        subset = all_pilot_questions[start : start + n_q]
-                    else:
-                        subset = (all_pilot_questions[start:]
-                                  + all_pilot_questions[: (start + n_q) % len(all_pilot_questions)])
-                    resample_cycle += 1
+                    # Each seed in this cycle gets its OWN non-overlapping
+                    # question subset of size n_resample_questions.
+                    # Together seeds_per_resample seeds cover
+                    # seeds_per_resample * n_resample_questions questions per cycle.
+                    # The window rotates across cycles for full coverage over time.
+                    n_q   = args.n_resample_questions   # questions per seed
+                    n_spr = args.seeds_per_resample      # seeds per cycle
+                    n_total = len(all_pilot_questions)
 
-                    # Use seeds_per_resample seeds per cycle, rotating through
-                    # resample_seeds list across cycles for long-run diversity.
-                    n_spr = args.seeds_per_resample
-                    seed_start = ((resample_cycle - 1) * n_spr) % len(args.resample_seeds)
+                    # Starting offset for this cycle (rotate across cycles)
+                    cycle_offset = (resample_cycle * n_spr * n_q) % n_total
+
+                    # Select seeds for this cycle (rotate through resample_seeds pool)
+                    seed_start = (resample_cycle * n_spr) % len(args.resample_seeds)
                     seeds_this_cycle = [
                         args.resample_seeds[(seed_start + i) % len(args.resample_seeds)]
                         for i in range(n_spr)
                     ]
+                    resample_cycle += 1
 
                     logger.info(
                         f"Resampling cycle {resample_cycle}: "
-                        f"{len(subset)} questions (start_idx={start}), "
-                        f"seeds={seeds_this_cycle}"
+                        f"{n_spr} seeds × {n_q} questions = {n_spr * n_q} total, "
+                        f"seeds={seeds_this_cycle}, cycle_offset={cycle_offset}"
                     )
                     all_new_files = []
-                    for resample_seed in seeds_this_cycle:
+                    for i, resample_seed in enumerate(seeds_this_cycle):
+                        # Non-overlapping slice for this seed
+                        start = (cycle_offset + i * n_q) % n_total
+                        if start + n_q <= n_total:
+                            subset = all_pilot_questions[start : start + n_q]
+                        else:
+                            subset = (all_pilot_questions[start:]
+                                      + all_pilot_questions[: (start + n_q) % n_total])
+                        logger.info(
+                            f"  seed={resample_seed}: questions [{start}, {start+n_q}) "
+                            f"(wraps={start + n_q > n_total})"
+                        )
                         new_files = resample_trajectories(
                             args, ckpt_dir, global_step,
                             seed=resample_seed,
