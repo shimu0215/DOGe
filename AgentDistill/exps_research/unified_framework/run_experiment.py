@@ -65,6 +65,7 @@ def run_experiment():
     parser.add_argument("--use_local_model", action='store_true', help="Use local model for reasoning experiments")
     parser.add_argument("--max_model_len", type=int, default=None, help="vLLM max_model_len (tokens); reduces KV cache usage, default uses model config value")
     parser.add_argument("--tensor_parallel_size", type=int, default=None, help="vLLM tensor parallel size (number of GPUs for inference)")
+    parser.add_argument("--gpu_memory_utilization", type=float, default=None, help="vLLM gpu_memory_utilization (0-1); limit GPU memory fraction to leave room for other processes")
 
     # Experiment type selection
     parser.add_argument("--experiment_type", type=str, choices=["agent", "reasoning"], required=True,
@@ -164,6 +165,8 @@ def run_experiment():
         model_kwargs['lora_folder'] = args.lora_folder
     if args.max_model_len is not None:
         model_kwargs['max_model_len'] = args.max_model_len
+    if args.gpu_memory_utilization is not None:
+        model_kwargs['gpu_memory_utilization'] = args.gpu_memory_utilization
     if args.tensor_parallel_size is not None:
         model_kwargs['tensor_parallel_size'] = args.tensor_parallel_size
         if args.tensor_parallel_size > 1:

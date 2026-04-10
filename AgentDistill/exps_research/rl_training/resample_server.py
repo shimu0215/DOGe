@@ -179,6 +179,10 @@ def _run_one_seed(
             "--parallel_workers",     "1",   # vLLM offline is not thread-safe
             "--max_model_len",        "24576",
             "--tensor_parallel_size", "1",   # always tp=1; parallelism via separate subprocesses
+            # Limit vLLM to 85% of GPU memory so training's PyTorch allocator cache
+            # (~3-5 GB on GPU1/2/3) doesn't crowd out the 32B model weights (64 GB).
+            # 0.85 × 81 GB = 69 GB ≥ 64 GB model weights; remainder is KV cache.
+            "--gpu_memory_utilization", "0.85",
         ]
         logger.info(
             f"  [seed={seed}] Launching inference on GPU{gpu_id}: "
@@ -279,7 +283,10 @@ def serve(work_dir: str, n_gpus: int = 4, poll_interval: int = _POLL_INTERVAL_S)
 
         def _run_entry(idx_entry):
             idx, seed_entry = idx_entry
-            gpu_id = idx % n_gpus
+            # Skip GPU0: training rank-0 caches ~16 GB in PyTorch's CUDA allocator
+            # after each training step (allgather residuals), leaving insufficient room
+            # for the 32B model.  GPU1/2/3 each hold only ~3 GB, so we use those.
+            gpu_id = (idx % max(n_gpus - 1, 1)) + 1
             return _run_one_seed(
                 checkpoint_dir=checkpoint_dir,
                 step=step,
