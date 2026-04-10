@@ -66,7 +66,7 @@ from .data_pool import TrajectoryPool
 from .rewards import compute_r_task, _normalised_edit_distance
 from .message_utils import clean_messages_for_training, extract_code_blocks
 from .grpo_trainer import GRPOTrainer
-from .augment_utils import build_aug_examples, N_TEMPLATES
+from .augment_utils import build_aug_examples, N_RECIPES
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -661,7 +661,7 @@ def train(args):
                     # Rotate seed and augmentation template each cycle
                     seed_idx      = resample_cycle % len(args.resample_seeds)
                     resample_seed = args.resample_seeds[seed_idx]
-                    template_idx  = 1 + (resample_cycle % N_TEMPLATES)
+                    template_idx  = 1 + (resample_cycle % N_RECIPES)
                     resample_cycle += 1
 
                     logger.info(
