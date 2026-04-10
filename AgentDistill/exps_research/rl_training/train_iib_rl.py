@@ -577,7 +577,8 @@ def train(args):
         f"(initial_step={global_step}, "
         f"resample_every={args.resample_every}, "
         f"checkpoint_every={args.checkpoint_every}, "
-        f"n_resample_questions={args.n_resample_questions}, "
+        f"n_seeds_per_cycle={args.n_seeds_per_cycle}, "
+        f"n_resample_questions={args.n_resample_questions} per seed, "
         f"lambda_inv={args.lambda_inv})"
     )
 
@@ -651,50 +652,56 @@ def train(args):
                     ckpt_dir = os.path.join(args.output_dir, f"checkpoint-step{global_step}")
 
                 if is_main:
-                    # Select question subset (rotating window for coverage)
-                    n_q = args.n_resample_questions
-                    start = (resample_cycle * n_q) % len(all_pilot_questions)
-                    if start + n_q <= len(all_pilot_questions):
-                        subset = all_pilot_questions[start: start + n_q]
-                    else:
-                        subset = (all_pilot_questions[start:]
-                                  + all_pilot_questions[: (start + n_q) % len(all_pilot_questions)])
-
-                    # Rotate seed and augmentation template each cycle
-                    seed_idx      = resample_cycle % len(args.resample_seeds)
-                    resample_seed = args.resample_seeds[seed_idx]
-                    template_idx  = 1 + (resample_cycle % N_RECIPES)
+                    # Augmentation template rotates each cycle
+                    template_idx = 1 + (resample_cycle % N_RECIPES)
                     resample_cycle += 1
 
-                    logger.info(
-                        f"Resample cycle {resample_cycle}: "
-                        f"{len(subset)} questions, seed={resample_seed}, "
-                        f"template={template_idx}"
-                    )
+                    # Run n_seeds_per_cycle seeds; each covers n_resample_questions
+                    # questions via a rotating window across all pilot questions.
+                    for k in range(args.n_seeds_per_cycle):
+                        seed_idx = ((resample_cycle - 1) * args.n_seeds_per_cycle + k) \
+                                   % len(args.resample_seeds)
+                        resample_seed = args.resample_seeds[seed_idx]
 
-                    orig_files, aug_files, aug_to_orig = resample_orig_and_aug(
-                        args, ckpt_dir, global_step,
-                        seed=resample_seed,
-                        questions_subset=subset,
-                        template_idx=template_idx,
-                    )
-
-                    # Update orig pool (FIFO replace)
-                    if orig_files:
-                        n_replaced = pool.replace_with_files(orig_files)
-                        logger.info(f"Orig pool: replaced {n_replaced} trajectories. "
-                                    f"Stats: {pool.stats()}")
-
-                    # Update aug pool
-                    if aug_files:
-                        if resample_cycle == 1:
-                            # First resample: append (pool was empty)
-                            n_aug = aug_pool.add_files(aug_files, aug_to_orig)
+                        # Rotating question window (different offset per seed)
+                        n_q = args.n_resample_questions
+                        start = (((resample_cycle - 1) * args.n_seeds_per_cycle + k)
+                                 * n_q) % len(all_pilot_questions)
+                        if start + n_q <= len(all_pilot_questions):
+                            subset = all_pilot_questions[start: start + n_q]
                         else:
-                            # Subsequent: FIFO replace to keep size stable
-                            n_aug = aug_pool.replace_with_files(aug_files, aug_to_orig)
-                        logger.info(f"Aug pool: {n_aug} trajectories updated. "
-                                    f"Stats: {aug_pool.stats()}")
+                            subset = (all_pilot_questions[start:]
+                                      + all_pilot_questions[:(start + n_q) % len(all_pilot_questions)])
+
+                        logger.info(
+                            f"Resample cycle {resample_cycle}, seed {k+1}/"
+                            f"{args.n_seeds_per_cycle}: "
+                            f"{len(subset)} questions (start={start}), "
+                            f"seed={resample_seed}, template={template_idx}"
+                        )
+
+                        orig_files, aug_files, aug_to_orig = resample_orig_and_aug(
+                            args, ckpt_dir, global_step,
+                            seed=resample_seed,
+                            questions_subset=subset,
+                            template_idx=template_idx,
+                        )
+
+                        # Update orig pool (FIFO replace)
+                        if orig_files:
+                            n_replaced = pool.replace_with_files(orig_files)
+                            logger.info(f"Orig pool: replaced {n_replaced} trajs. "
+                                        f"Stats: {pool.stats()}")
+
+                        # Update aug pool
+                        if aug_files:
+                            is_first = (resample_cycle == 1 and k == 0)
+                            if is_first:
+                                n_aug = aug_pool.add_files(aug_files, aug_to_orig)
+                            else:
+                                n_aug = aug_pool.replace_with_files(aug_files, aug_to_orig)
+                            logger.info(f"Aug pool: {n_aug} trajs updated. "
+                                        f"Stats: {aug_pool.stats()}")
 
                 accelerator.wait_for_everyone()
 
@@ -754,10 +761,12 @@ def parse_args():
     p.add_argument("--checkpoint_every", type=int, default=50)
 
     # Resampling
-    p.add_argument("--resample_every",       type=int,   default=100,
+    p.add_argument("--resample_every",       type=int,   default=50,
                    help="Resample orig+aug every N steps")
-    p.add_argument("--n_resample_questions", type=int,   default=50,
-                   help="Questions to resample per cycle (~10%% of 500)")
+    p.add_argument("--n_resample_questions", type=int,   default=100,
+                   help="Questions to resample per seed per cycle")
+    p.add_argument("--n_seeds_per_cycle",    type=int,   default=2,
+                   help="Number of seeds to run per resample cycle")
     p.add_argument("--resample_seeds",       type=int, nargs="+",
                    default=[42, 43, 44, 45, 46],
                    help="Seeds rotated across cycles")

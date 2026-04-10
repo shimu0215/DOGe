@@ -74,8 +74,9 @@ MAX_STEPS="${MAX_STEPS:-500}"
 GRAD_ACCUM="${GRAD_ACCUM:-4}"
 N_TRAJS="${N_TRAJS:-8}"
 CHECKPOINT_EVERY="${CHECKPOINT_EVERY:-50}"
-RESAMPLE_EVERY="${RESAMPLE_EVERY:-100}"    # also doubles checkpoint cadence
-N_RESAMPLE_Q="${N_RESAMPLE_Q:-50}"         # ~10% of 500
+RESAMPLE_EVERY="${RESAMPLE_EVERY:-50}"
+N_RESAMPLE_Q="${N_RESAMPLE_Q:-100}"        # questions per seed per cycle
+N_SEEDS_PER_CYCLE="${N_SEEDS_PER_CYCLE:-2}"
 RESAMPLE_SEEDS="${RESAMPLE_SEEDS:-42 43 44 45 46}"
 MAX_AGENT_STEPS="${MAX_AGENT_STEPS:-5}"
 QUALITY_MIN_ACC="${QUALITY_MIN_ACC:-0.30}"
@@ -131,9 +132,10 @@ fi
     --gradient_accumulation_steps "$GRAD_ACCUM" \
     --n_trajs_per_question "$N_TRAJS" \
     --checkpoint_every    "$CHECKPOINT_EVERY" \
-    --resample_every      "$RESAMPLE_EVERY" \
+    --resample_every       "$RESAMPLE_EVERY" \
     --n_resample_questions "$N_RESAMPLE_Q" \
-    --resample_seeds      $RESAMPLE_SEEDS \
+    --n_seeds_per_cycle    "$N_SEEDS_PER_CYCLE" \
+    --resample_seeds       $RESAMPLE_SEEDS \
     --max_agent_steps     "$MAX_AGENT_STEPS" \
     --quality_min_acc     "$QUALITY_MIN_ACC" \
     --noise_ops           "$NOISE_OPS" \
