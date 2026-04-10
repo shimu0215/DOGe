@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import json
 import random
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 import argparse
 import subprocess
@@ -214,38 +215,24 @@ def save_checkpoint(model, tokenizer, output_dir: str, step: int, accelerator=No
     return ckpt_dir
 
 
-def resample_trajectories(
-    args,
-    ckpt_dir: str,
-    step: int,
-    seed: int,
-    questions_subset: Optional[List[dict]] = None,
-) -> List[str]:
+def _build_resample_env(gpu_id: int) -> dict:
     """
-    Collect fresh trajectories using the current LoRA checkpoint via vLLM offline.
+    Build a clean subprocess environment for one resample worker.
 
-    Args:
-        questions_subset: If given, only resample these questions (list of dicts
-                          with keys: id, question, answer, ...).
-                          If None, resample all pilot questions.
-        seed: Random seed for this resampling run.
-
-    Returns list of scored JSONL file paths.
+    Strips all distributed-training env vars so the subprocess starts without
+    any accelerate/DeepSpeed context.  Sets CUDA_VISIBLE_DEVICES to exactly
+    one GPU so tp=1 vLLM uses only that device (no CUDA-after-fork issues).
     """
-    log_root = Path(ckpt_dir) / "qa_results"
-    log_root.mkdir(parents=True, exist_ok=True)
-
-    # Build env: strip all distributed training vars so the subprocess starts clean.
-    # Reset CUDA_VISIBLE_DEVICES: accelerate limits rank0 to one GPU (e.g. "0"),
-    # but vLLM tp>1 needs all GPUs visible. Use vllm_tp_size as the count.
     env = {
         **os.environ,
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
         "VLLM_HOST_IP": "127.0.0.1",
-        "CUDA_VISIBLE_DEVICES": ",".join(str(i) for i in range(args.vllm_tp_size)),
+        # Expose only one GPU to this worker process (tp=1, no CUDA-fork issues)
+        "CUDA_VISIBLE_DEVICES": str(gpu_id),
+        # Use v1 single-process mode so vLLM doesn't spawn additional workers
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
     }
-    logger.info(f"  [resample env] CUDA_VISIBLE_DEVICES={env['CUDA_VISIBLE_DEVICES']}")
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
@@ -253,6 +240,37 @@ def resample_trajectories(
                "NCCL_ASYNC_ERROR_HANDLING",
                "VLLM_USE_V1"]:
         env.pop(_k, None)
+    return env
+
+
+def resample_trajectories(
+    args,
+    ckpt_dir: str,
+    step: int,
+    seed: int,
+    gpu_id: int = 0,
+    questions_subset: Optional[List[dict]] = None,
+) -> List[str]:
+    """
+    Collect fresh trajectories using the current LoRA checkpoint via vLLM offline.
+
+    Each call runs a subprocess pinned to `gpu_id` (tp=1).  Call multiple times
+    in parallel (with different gpu_ids) to utilise all GPUs concurrently.
+
+    Args:
+        questions_subset: If given, only resample these questions (list of dicts
+                          with keys: id, question, answer, ...).
+                          If None, resample all pilot questions.
+        seed: Random seed for this resampling run.
+        gpu_id: Which physical GPU index to give this subprocess exclusively.
+
+    Returns list of scored JSONL file paths.
+    """
+    log_root = Path(ckpt_dir) / "qa_results"
+    log_root.mkdir(parents=True, exist_ok=True)
+
+    env = _build_resample_env(gpu_id)
+    logger.info(f"  seed={seed} → GPU {gpu_id} (CUDA_VISIBLE_DEVICES={env['CUDA_VISIBLE_DEVICES']})")
 
     # Write a temporary JSON file with the subset of questions to resample
     if questions_subset is not None:
@@ -292,11 +310,11 @@ def resample_trajectories(
             "--suffix",             f"python_only_seed{seed}",
             "--parallel_workers",   "1",   # offline LLM is not thread-safe
             "--max_model_len",      "24576",
-            "--tensor_parallel_size", str(args.vllm_tp_size),
+            "--tensor_parallel_size", "1",  # always 1; parallelism via separate processes
         ]
         result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
         if result.returncode != 0:
-            logger.warning(f"run_experiment failed seed={seed} (rc={result.returncode})")
+            logger.warning(f"run_experiment failed seed={seed} gpu={gpu_id} (rc={result.returncode})")
             return []
     finally:
         if tmp_json is not None:
@@ -310,9 +328,9 @@ def resample_trajectories(
     found = [p for p in found if ".bak" not in p.name]
     new_files = [str(p) for p in found]
     if new_files:
-        logger.info(f"Step {step}: collected {len(new_files)} new file(s): {new_files}")
+        logger.info(f"Step {step}: seed={seed} collected {len(new_files)} file(s): {new_files}")
     else:
-        logger.warning(f"Step {step}: no output file found for seed={seed} in {log_root}")
+        logger.warning(f"Step {step}: seed={seed} no output file found in {log_root}")
 
     return new_files
 
@@ -514,9 +532,9 @@ def train(args):
                         f"{n_spr} seeds × {n_q} questions = {n_spr * n_q} total, "
                         f"seeds={seeds_this_cycle}, cycle_offset={cycle_offset}"
                     )
-                    all_new_files = []
+                    # Build per-seed tasks (non-overlapping question subsets)
+                    seed_tasks = []
                     for i, resample_seed in enumerate(seeds_this_cycle):
-                        # Non-overlapping slice for this seed
                         start = (cycle_offset + i * n_q) % n_total
                         if start + n_q <= n_total:
                             subset = all_pilot_questions[start : start + n_q]
@@ -527,12 +545,32 @@ def train(args):
                             f"  seed={resample_seed}: questions [{start}, {start+n_q}) "
                             f"(wraps={start + n_q > n_total})"
                         )
-                        new_files = resample_trajectories(
-                            args, ckpt_dir, global_step,
-                            seed=resample_seed,
-                            questions_subset=subset,
-                        )
-                        all_new_files.extend(new_files)
+                        seed_tasks.append((i, resample_seed, subset))
+
+                    # Run all seeds in parallel, each on its own GPU (tp=1 per process)
+                    all_new_files = []
+                    logger.info(
+                        f"Launching {len(seed_tasks)} parallel resample workers "
+                        f"(one GPU each: {[t[0] for t in seed_tasks]})"
+                    )
+                    with ThreadPoolExecutor(max_workers=len(seed_tasks)) as pool_exec:
+                        futures = {
+                            pool_exec.submit(
+                                resample_trajectories,
+                                args, ckpt_dir, global_step,
+                                seed=resample_seed,
+                                gpu_id=gpu_idx,
+                                questions_subset=subset,
+                            ): resample_seed
+                            for gpu_idx, resample_seed, subset in seed_tasks
+                        }
+                        for future in as_completed(futures):
+                            seed_done = futures[future]
+                            try:
+                                new_files = future.result()
+                                all_new_files.extend(new_files)
+                            except Exception as exc:
+                                logger.warning(f"seed={seed_done} raised: {exc}")
 
                     if all_new_files:
                         # Replace strategy: for each new trajectory, remove one
