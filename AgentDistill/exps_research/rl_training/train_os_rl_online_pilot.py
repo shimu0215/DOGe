@@ -318,12 +318,12 @@ def resample_trajectories(
 # ---------------------------------------------------------------------------
 
 def train(args):
-    # Extend NCCL process-group timeout to 2 hours so that vLLM resampling
-    # (1 seed × 100q ≈ 35 min including 32B model load) does not trigger the
-    # watchdog on ranks 1-3 waiting at the barrier.
-    # NOTE: 5 seeds × 100q took ~3h (each seed reloads vLLM from disk ~30 min).
-    # Keep seeds_per_resample=1 in launch script to stay well within this limit.
-    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=2))
+    # Disable NCCL watchdog so that vLLM resampling on rank0 (which can take
+    # 1-3 hours loading 32B from NFS) does not kill ranks 1-3 waiting at the
+    # barrier. TORCH_NCCL_ENABLE_MONITORING=0 is set in the launch script;
+    # this large timeout is a belt-and-suspenders fallback.
+    os.environ.setdefault("TORCH_NCCL_ENABLE_MONITORING", "0")
+    pg_kwargs = InitProcessGroupKwargs(timeout=timedelta(hours=24))
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision="bf16",
