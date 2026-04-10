@@ -577,7 +577,7 @@ def train(args):
         f"(initial_step={global_step}, "
         f"resample_every={args.resample_every}, "
         f"checkpoint_every={args.checkpoint_every}, "
-        f"n_seeds_per_cycle={args.n_seeds_per_cycle}, "
+        f"seeds_per_resample={args.seeds_per_resample}, "
         f"n_resample_questions={args.n_resample_questions} per seed, "
         f"lambda_inv={args.lambda_inv})"
     )
@@ -654,30 +654,41 @@ def train(args):
                 if is_main:
                     # Augmentation template rotates each cycle
                     template_idx = 1 + (resample_cycle % N_RECIPES)
+
+                    n_q    = args.n_resample_questions   # questions per seed
+                    n_spr  = args.seeds_per_resample     # seeds per cycle
+                    n_total = len(all_pilot_questions)
+
+                    # Cycle offset rotates so all questions get covered over time
+                    cycle_offset = (resample_cycle * n_spr * n_q) % n_total
+
+                    # Select seeds for this cycle from the rotating pool
+                    seed_start = (resample_cycle * n_spr) % len(args.resample_seeds)
+                    seeds_this_cycle = [
+                        args.resample_seeds[(seed_start + i) % len(args.resample_seeds)]
+                        for i in range(n_spr)
+                    ]
                     resample_cycle += 1
 
-                    # Run n_seeds_per_cycle seeds; each covers n_resample_questions
-                    # questions via a rotating window across all pilot questions.
-                    for k in range(args.n_seeds_per_cycle):
-                        seed_idx = ((resample_cycle - 1) * args.n_seeds_per_cycle + k) \
-                                   % len(args.resample_seeds)
-                        resample_seed = args.resample_seeds[seed_idx]
+                    logger.info(
+                        f"Resample cycle {resample_cycle}: "
+                        f"{n_spr} seeds × {n_q} questions = {n_spr * n_q} total, "
+                        f"seeds={seeds_this_cycle}, template={template_idx}, "
+                        f"cycle_offset={cycle_offset}"
+                    )
 
-                        # Rotating question window (different offset per seed)
-                        n_q = args.n_resample_questions
-                        start = (((resample_cycle - 1) * args.n_seeds_per_cycle + k)
-                                 * n_q) % len(all_pilot_questions)
-                        if start + n_q <= len(all_pilot_questions):
+                    for k, resample_seed in enumerate(seeds_this_cycle):
+                        # Each seed gets its own non-overlapping question slice
+                        start = (cycle_offset + k * n_q) % n_total
+                        if start + n_q <= n_total:
                             subset = all_pilot_questions[start: start + n_q]
                         else:
                             subset = (all_pilot_questions[start:]
-                                      + all_pilot_questions[:(start + n_q) % len(all_pilot_questions)])
+                                      + all_pilot_questions[:(start + n_q) % n_total])
 
                         logger.info(
-                            f"Resample cycle {resample_cycle}, seed {k+1}/"
-                            f"{args.n_seeds_per_cycle}: "
-                            f"{len(subset)} questions (start={start}), "
-                            f"seed={resample_seed}, template={template_idx}"
+                            f"  seed={resample_seed}: questions [{start}, {start+n_q}) "
+                            f"(wraps={start + n_q > n_total})"
                         )
 
                         orig_files, aug_files, aug_to_orig = resample_orig_and_aug(
@@ -690,7 +701,7 @@ def train(args):
                         # Update orig pool (FIFO replace)
                         if orig_files:
                             n_replaced = pool.replace_with_files(orig_files)
-                            logger.info(f"Orig pool: replaced {n_replaced} trajs. "
+                            logger.info(f"  Orig pool: replaced {n_replaced} trajs. "
                                         f"Stats: {pool.stats()}")
 
                         # Update aug pool
@@ -700,7 +711,7 @@ def train(args):
                                 n_aug = aug_pool.add_files(aug_files, aug_to_orig)
                             else:
                                 n_aug = aug_pool.replace_with_files(aug_files, aug_to_orig)
-                            logger.info(f"Aug pool: {n_aug} trajs updated. "
+                            logger.info(f"  Aug pool: {n_aug} trajs updated. "
                                         f"Stats: {aug_pool.stats()}")
 
                 accelerator.wait_for_everyone()
@@ -764,12 +775,12 @@ def parse_args():
     p.add_argument("--resample_every",       type=int,   default=50,
                    help="Resample orig+aug every N steps")
     p.add_argument("--n_resample_questions", type=int,   default=100,
-                   help="Questions to resample per seed per cycle")
-    p.add_argument("--n_seeds_per_cycle",    type=int,   default=2,
-                   help="Number of seeds to run per resample cycle")
+                   help="Questions per seed per cycle (non-overlapping across seeds)")
+    p.add_argument("--seeds_per_resample",   type=int,   default=5,
+                   help="Seeds per resample cycle; each gets its own question slice")
     p.add_argument("--resample_seeds",       type=int, nargs="+",
-                   default=[42, 43, 44, 45, 46],
-                   help="Seeds rotated across cycles")
+                   default=[42, 43, 44, 45, 46, 47, 48, 49],
+                   help="Seed pool rotated across cycles")
     p.add_argument("--max_agent_steps",      type=int, default=5)
 
     # Quality gate
