@@ -236,17 +236,16 @@ def resample_trajectories(
     log_root.mkdir(parents=True, exist_ok=True)
 
     # Build env: strip all distributed training vars so the subprocess starts clean.
-    # Also reset CUDA_VISIBLE_DEVICES: accelerate sets it to the single GPU for
-    # this rank (e.g. "0"), but vLLM tp>1 needs to see ALL GPUs.
-    # Use WORLD_SIZE (= number of GPUs) read BEFORE popping distributed vars.
-    _world_size = int(os.environ.get("WORLD_SIZE", 1))
+    # Reset CUDA_VISIBLE_DEVICES: accelerate limits rank0 to one GPU (e.g. "0"),
+    # but vLLM tp>1 needs all GPUs visible. Use vllm_tp_size as the count.
     env = {
         **os.environ,
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
         "VLLM_HOST_IP": "127.0.0.1",
-        "CUDA_VISIBLE_DEVICES": ",".join(str(i) for i in range(_world_size)),
+        "CUDA_VISIBLE_DEVICES": ",".join(str(i) for i in range(args.vllm_tp_size)),
     }
+    logger.info(f"  [resample env] CUDA_VISIBLE_DEVICES={env['CUDA_VISIBLE_DEVICES']}")
     for _k in ["RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
                "MASTER_ADDR", "MASTER_PORT",
                "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
