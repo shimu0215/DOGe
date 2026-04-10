@@ -64,6 +64,7 @@ ACCEL_CONFIG="$ROOT_DIR/exps_research/mp_configs/accel_ds3_4gpu.yaml"
 # ---- Hyperparameters ----
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-32B}"
 LAMBDA_INV="${LAMBDA_INV:-1.0}"        # divergence reward weight
+NOISE_OPS="${NOISE_OPS:-2}"            # random noise ops per question (0=off)
 LR="${LR:-1e-5}"
 KL_COEFF="${KL_COEFF:-0.01}"
 LORA_R="${LORA_R:-32}"
@@ -135,6 +136,7 @@ fi
     --resample_seeds      $RESAMPLE_SEEDS \
     --max_agent_steps     "$MAX_AGENT_STEPS" \
     --quality_min_acc     "$QUALITY_MIN_ACC" \
+    --noise_ops           "$NOISE_OPS" \
     --output_dir          "$OUTPUT_DIR" \
     --log_every           5 \
     "${RESUME_ARGS[@]}" \

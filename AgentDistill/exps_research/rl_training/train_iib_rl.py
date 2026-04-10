@@ -412,7 +412,9 @@ def resample_orig_and_aug(
             pass
 
     # ---- Build augmented questions ----
-    aug_examples, aug_to_orig = build_aug_examples(questions_subset, template_idx)
+    aug_examples, aug_to_orig = build_aug_examples(
+        questions_subset, template_idx, noise_ops=args.noise_ops
+    )
 
     # Save mapping alongside results for reproducibility / debugging
     mapping_path = log_root / f"aug_to_orig_step{step}_seed{seed}.json"
@@ -725,6 +727,12 @@ def parse_args():
     p.add_argument("--model_name", type=str, default="Qwen/Qwen3-32B")
     p.add_argument("--lora_r",     type=int, default=32)
     p.add_argument("--max_length", type=int, default=2048)
+
+    # IIB augmentation
+    p.add_argument("--noise_ops",  type=int, default=2,
+                   help="Number of random noise ops per question (0 = noise off). "
+                        "Ops are sampled from: trailing_zero, random_synonym, "
+                        "filler_phrase, number_elaboration, punctuation, pct_of.")
 
     # IIB reward
     p.add_argument("--lambda_inv", type=float, default=1.0,
