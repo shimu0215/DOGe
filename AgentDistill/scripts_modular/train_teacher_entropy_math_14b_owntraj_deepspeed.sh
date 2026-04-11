@@ -33,6 +33,8 @@ SAVE_STRATEGY="${SAVE_STRATEGY:-steps}"
 SAVE_STEPS="${SAVE_STEPS:-100}"
 SAVE_TOTAL_LIMIT="${SAVE_TOTAL_LIMIT:-3}"
 ENTROPY_ON_THOUGHT_ONLY="${ENTROPY_ON_THOUGHT_ONLY:-0}"
+EARLY_STOP_PATIENCE_EPOCHS="${EARLY_STOP_PATIENCE_EPOCHS:-0}"
+EARLY_STOP_MIN_DELTA="${EARLY_STOP_MIN_DELTA:-0}"
 
 mkdir -p logs
 
@@ -151,6 +153,7 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "EPOCHS=$EPOCHS MAX_LENGTH=$MAX_LENGTH LORA_R=$LORA_R LORA_ALPHA=$LORA_ALPHA" | tee -a "$run_log"
   echo "SAVE_STRATEGY=$SAVE_STRATEGY SAVE_STEPS=$SAVE_STEPS SAVE_TOTAL_LIMIT=$SAVE_TOTAL_LIMIT" | tee -a "$run_log"
   echo "ENTROPY_ON_THOUGHT_ONLY=$ENTROPY_ON_THOUGHT_ONLY" | tee -a "$run_log"
+  echo "EARLY_STOP_PATIENCE_EPOCHS=$EARLY_STOP_PATIENCE_EPOCHS EARLY_STOP_MIN_DELTA=$EARLY_STOP_MIN_DELTA" | tee -a "$run_log"
 
   train_cmd=(
     "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py
@@ -168,6 +171,8 @@ for lambda in "${LAMBDAS[@]}"; do
     --save_strategy "$SAVE_STRATEGY"
     --save_steps "$SAVE_STEPS"
     --save_total_limit "$SAVE_TOTAL_LIMIT"
+    --early_stop_patience_epochs "$EARLY_STOP_PATIENCE_EPOCHS"
+    --early_stop_min_delta "$EARLY_STOP_MIN_DELTA"
     --lora_r "$LORA_R"
     --lora_alpha "$LORA_ALPHA"
     --use_entropy_regularization

@@ -16,7 +16,7 @@ from peft import (
 
 import argparse
 import transformers
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig, TrainerCallback
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
 from datasets import Dataset, load_dataset, concatenate_datasets
@@ -114,6 +114,38 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         outputs.loss = loss
 
         return (loss, outputs) if return_outputs else loss
+
+
+class TrainLossEarlyStoppingCallback(TrainerCallback):
+    def __init__(self, patience_epochs: float, min_delta: float = 0.0):
+        self.patience_epochs = patience_epochs
+        self.min_delta = min_delta
+        self.best_loss = None
+        self.best_epoch = None
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if not logs or "loss" not in logs:
+            return control
+        if state.epoch is None:
+            return control
+
+        current_loss = float(logs["loss"])
+        current_epoch = float(state.epoch)
+
+        if self.best_loss is None or current_loss < self.best_loss - self.min_delta:
+            self.best_loss = current_loss
+            self.best_epoch = current_epoch
+            return control
+
+        if self.best_epoch is not None and (current_epoch - self.best_epoch) >= self.patience_epochs:
+            print(
+                f"Early stopping triggered: loss has not improved for {self.patience_epochs} epoch(s). "
+                f"best_loss={self.best_loss:.4f} at epoch={self.best_epoch:.4f}, "
+                f"current_loss={current_loss:.4f} at epoch={current_epoch:.4f}"
+            )
+            control.should_training_stop = True
+
+        return control
 
 def setup_savedir(args):
     # Step 3-1: Setup save dir
@@ -355,6 +387,13 @@ def main(args):
             args.model_name if not model else model,
             **trainer_kwargs,
         )
+    if args.early_stop_patience_epochs > 0:
+        trainer.add_callback(
+            TrainLossEarlyStoppingCallback(
+                patience_epochs=args.early_stop_patience_epochs,
+                min_delta=args.early_stop_min_delta,
+            )
+        )
     trainer.train()
     ########## Train done ###############
 
@@ -398,6 +437,8 @@ if __name__ == "__main__":
     parser.add_argument("--use_entropy_regularization", action="store_true")
     parser.add_argument("--entropy_lambda", type=float, default=0.0)
     parser.add_argument("--entropy_on_thought_only", action="store_true")
+    parser.add_argument("--early_stop_patience_epochs", type=float, default=0.0)
+    parser.add_argument("--early_stop_min_delta", type=float, default=0.0)
     parser.add_argument("--lora_r", type=int, default=64)
     parser.add_argument("--lora_alpha", type=int, default=-1)
 
