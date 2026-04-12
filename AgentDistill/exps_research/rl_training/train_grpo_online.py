@@ -307,9 +307,13 @@ def rollout_batch(
 
     logger.info(
         f"[Rollout step={step}] {len(batch_questions)} questions × K={args.K} "
-        f"= {len(entries)} trajectories via vLLM tp=2 (GPU 0,1)"
+        f"= {len(entries)} trajectories via vLLM (GPU 0)"
     )
     t0 = datetime.now()
+    # run_experiment.py saves outputs relative to lora_folder (ckpt_dir),
+    # not to log_folder.  The temp JSON base name is used as a subdirectory:
+    #   <ckpt_dir>/qa_results/<tmp_basename>*/evaluations/*_scored.jsonl
+    tmp_basename = Path(tmp.name).stem   # e.g. "grpo_rollout_step7_abcd1234"
     result = subprocess.run(cmd, env=env, cwd=str(_ROOT))
     elapsed = (datetime.now() - t0).total_seconds()
     logger.info(f"[Rollout step={step}] done in {elapsed:.0f}s (rc={result.returncode})")
@@ -323,9 +327,17 @@ def rollout_batch(
         logger.warning(f"[Rollout step={step}] subprocess failed — skipping update")
         return {}
 
+    # run_experiment.py writes to: <ckpt_dir>/qa_results/<tmp_basename>*/evaluations/*_scored.jsonl
+    search_root = Path(ckpt_dir) / "qa_results"
+    scored_files = list(search_root.glob(f"{tmp_basename}*/**/*_scored.jsonl"))
+    if not scored_files:
+        # Fallback: also check log_dir (in case run_experiment respected log_folder)
+        scored_files = list(log_dir.glob("**/*_scored.jsonl"))
+    logger.info(f"[Rollout step={step}] found {len(scored_files)} scored file(s)")
+
     # Group results by question text
     groups: Dict[str, List[dict]] = {}
-    for scored_file in log_dir.glob("**/*_scored.jsonl"):
+    for scored_file in scored_files:
         if ".bak" in scored_file.name:
             continue
         with open(scored_file) as f:
