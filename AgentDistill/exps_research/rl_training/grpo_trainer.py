@@ -307,7 +307,7 @@ class GRPOTrainer:
 
         for group, advantages in zip(batch_groups, adv_per_group):
             for entry, adv in zip(group, advantages):
-                raw_messages = entry.get("log_data", {}).get("messages", [])
+                raw_messages = (entry.get("log_data") or {}).get("messages", [])
                 cleaned = clean_messages_for_training(raw_messages)
                 if cleaned is None:
                     continue

@@ -162,6 +162,10 @@ def run_experiment():
         model_kwargs['top_k'] = args.top_k
     if args.lora_folder and args.use_local_model:
         model_kwargs['lora_folder'] = args.lora_folder
+    if args.use_local_model:
+        # Force VLLMModel (in-process) even if create_model() on older code
+        # paths doesn't propagate use_local_model to local_device_id.
+        model_kwargs['local_device_id'] = 0
     if args.max_model_len is not None:
         model_kwargs['max_model_len'] = args.max_model_len
     if args.tensor_parallel_size is not None:
