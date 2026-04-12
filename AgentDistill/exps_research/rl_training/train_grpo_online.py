@@ -232,7 +232,7 @@ def _build_rollout_env() -> dict:
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
         "VLLM_HOST_IP": "127.0.0.1",
-        "CUDA_VISIBLE_DEVICES": "0,1",   # physical GPU 0 and 1 for vLLM tp=2
+        "CUDA_VISIBLE_DEVICES": "0",      # GPU 0 dedicated for vLLM (tp=1, 14B fits in 80G)
     }
     for k in [
         "RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
@@ -302,9 +302,7 @@ def rollout_batch(
         "--max_steps",          str(args.max_agent_steps),
         "--search_engine_type", "python_only",
         "--suffix",             f"online_step{step}",
-        "--parallel_workers",   "1",     # tp=2 vLLM is not thread-safe for multi-turn
-        "--max_model_len",      "24576",
-        "--tensor_parallel_size", "2",   # use both GPU 0 and 1
+        "--parallel_workers",   "1",     # offline vLLM is not thread-safe for multi-turn
     ]
 
     logger.info(

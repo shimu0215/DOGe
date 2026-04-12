@@ -2,7 +2,7 @@
 # run_grpo_online.sh — Launch online GRPO training on Qwen3-14B.
 #
 # GPU layout:
-#   GPU 0,1  CUDA_VISIBLE_DEVICES=0,1 — vLLM rollout (tp=2)
+#   GPU 0    CUDA_VISIBLE_DEVICES=0   — vLLM rollout (tp=1, 14B fits in 80G)
 #   GPU 2,3  CUDA_VISIBLE_DEVICES=2,3 — accelerate training (ZeRO-3, LoRA)
 #
 # All configurable params can be overridden via environment variables.
@@ -75,7 +75,7 @@ echo "  rollout_every:   $ROLLOUT_EVERY  steps"
 echo "  lambda_kl:       $LAMBDA_KL"
 echo "  max_steps:       $MAX_STEPS"
 echo "  checkpoint_every:$CHECKPOINT_EVERY"
-echo "  training GPUs:   2,3  |  rollout GPUs: 0,1 (tp=2)"
+echo "  training GPUs:   2,3  |  rollout GPU: 0 (tp=1)"
 echo "========================================================"
 date
 
