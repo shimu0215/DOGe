@@ -188,7 +188,11 @@ def compute_kl_rewards(
     """
     kl_rewards = []
     for entry in group:
-        raw = entry.get("log_data", {}).get("messages", [])
+        if entry is None or not isinstance(entry, dict):
+            kl_rewards.append(0.0)
+            continue
+        log_data = entry.get("log_data") or {}
+        raw = log_data.get("messages", []) if isinstance(log_data, dict) else []
         cleaned = clean_messages_for_training(raw)
         if cleaned is None:
             kl_rewards.append(0.0)
@@ -234,13 +238,15 @@ def _build_rollout_env() -> dict:
         "TRANSFORMERS_OFFLINE": "1",
         "VLLM_HOST_IP": "127.0.0.1",
         "CUDA_VISIBLE_DEVICES": "0",      # GPU 0 dedicated for vLLM (tp=1, 14B fits in 80G)
+        # Force vLLM V0 engine: V1 uses internal IPC that fails in SLURM subprocess
+        "VLLM_USE_V1": "0",
     }
     for k in [
         "RANK", "LOCAL_RANK", "WORLD_SIZE", "LOCAL_WORLD_SIZE",
         "MASTER_ADDR", "MASTER_PORT",
         "TORCHELASTIC_RESTART_COUNT", "TORCHELASTIC_RUN_ID",
         "TORCHELASTIC_MAX_RESTARTS", "TORCHELASTIC_TIMEOUT_KEEP_ALIVE",
-        "NCCL_ASYNC_ERROR_HANDLING", "VLLM_USE_V1",
+        "NCCL_ASYNC_ERROR_HANDLING",
     ]:
         env.pop(k, None)
     return env
