@@ -48,6 +48,7 @@ from typing import List, Dict, Optional
 from datetime import timedelta, datetime
 
 import torch
+import torch.distributed as dist
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model, PeftModel
 from accelerate import Accelerator
@@ -460,33 +461,45 @@ def train(args):
         if _rollout_due:
             last_rollout_step = global_step
 
-            # Sample next batch of B questions (rotating window over all questions)
-            batch_q = []
-            for i in range(args.batch_questions):
-                batch_q.append(all_questions[(q_offset + i) % len(all_questions)])
+            # Sample next batch of B questions (same on all ranks — deterministic)
+            batch_q = [
+                all_questions[(q_offset + i) % len(all_questions)]
+                for i in range(args.batch_questions)
+            ]
             q_offset = (q_offset + args.batch_questions) % len(all_questions)
 
+            # Rank 0 runs rollout subprocess (vLLM on GPU 0); other ranks wait
+            new_pool: Dict[str, List[dict]] = {}
             if is_main:
                 new_pool = rollout_batch(args, batch_q, current_ckpt, global_step)
-                # Merge into online_pool (or fully replace for freshest on-policy data)
-                online_pool = new_pool
 
-            # Broadcast pool availability (pool itself stays on main; other ranks skip)
-            accelerator.wait_for_everyone()
+            # Broadcast pool to ALL ranks via pickle (NFS shared but deserialization
+            # is simpler than re-reading files on each rank)
+            pool_container = [new_pool]
+            dist.broadcast_object_list(pool_container, src=0)
+            online_pool = pool_container[0]
 
             if not online_pool:
-                logger.warning(f"[Step {global_step}] Rollout returned empty pool — skipping training step")
+                if is_main:
+                    logger.warning(f"[Step {global_step}] Rollout returned empty pool — skipping")
                 global_step += 1
+                accelerator.wait_for_everyone()
                 continue
 
         if not online_pool:
-            logger.warning(f"[Step {global_step}] No trajectories in pool yet — forcing rollout")
-            last_rollout_step = global_step - args.rollout_every  # retrigger next iteration
+            if is_main:
+                logger.warning(f"[Step {global_step}] Pool empty — forcing rollout next iter")
+            last_rollout_step = global_step - args.rollout_every
+            global_step += 1
+            accelerator.wait_for_everyone()
             continue
 
         # ---- Training: sample one question-group from online_pool ----
-        q_texts = list(online_pool.keys())
+        # All ranks make the same random choice (same seed ensures consistency)
+        q_texts = sorted(online_pool.keys())   # sorted for determinism
         if not q_texts:
+            global_step += 1
+            accelerator.wait_for_everyone()
             continue
         q_key = random.choice(q_texts)
         group = online_pool[q_key]
