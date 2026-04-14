@@ -37,7 +37,7 @@ KL_LAMBDA="${KL_LAMBDA:-0.05}"
 SAVE_EVERY_SYNCS="${SAVE_EVERY_SYNCS:-2}"
 ROLLOUT_WORKERS="${ROLLOUT_WORKERS:-8}"
 MAX_STEPS="${MAX_STEPS:-5}"
-MAX_TOKENS="${MAX_TOKENS:-1024}"
+MAX_TOKENS="${MAX_TOKENS:-}"
 MAX_LENGTH="${MAX_LENGTH:-4096}"
 LORA_R="${LORA_R:-32}"
 LORA_ALPHA="${LORA_ALPHA:-64}"
@@ -124,12 +124,15 @@ CMD=(
   --save_every_syncs "$SAVE_EVERY_SYNCS"
   --rollout_workers "$ROLLOUT_WORKERS"
   --max_steps "$MAX_STEPS"
-  --max_tokens "$MAX_TOKENS"
   --max_length "$MAX_LENGTH"
   --lora_r "$LORA_R"
   --lora_alpha "$LORA_ALPHA"
   --python_bin "$PYTHON_BIN"
 )
+
+if [[ -n "$MAX_TOKENS" ]]; then
+  CMD+=(--max_tokens "$MAX_TOKENS")
+fi
 
 if [[ -n "$RESUME_FROM_ADAPTER" ]]; then
   CMD+=(--resume_from_adapter "$RESUME_FROM_ADAPTER")

@@ -349,10 +349,13 @@ def rollout_one_trajectory(
 ) -> Dict:
     enriched_entry = {"question": entry["question"], "answer": entry.get("answer")}
     retry_max_tokens = []
-    current_max_tokens = int(args.max_tokens)
-    while current_max_tokens >= 32:
-        retry_max_tokens.append(current_max_tokens)
-        current_max_tokens //= 2
+    if args.max_tokens is None:
+        retry_max_tokens = [None]
+    else:
+        current_max_tokens = int(args.max_tokens)
+        while current_max_tokens >= 32:
+            retry_max_tokens.append(current_max_tokens)
+            current_max_tokens //= 2
 
     last_result = None
     for max_tokens in retry_max_tokens:
@@ -363,10 +366,11 @@ def rollout_one_trajectory(
             "api_key": "token-abc",
             "temperature": args.temperature,
             "seed": rollout_seed,
-            "max_tokens": max_tokens,
             "n": 1,
             "top_p": args.top_p,
         }
+        if max_tokens is not None:
+            model_kwargs["max_tokens"] = max_tokens
         processor = AgentExperimentProcessor(model_kwargs, verbose=False)
         model = setup_model(**model_kwargs)
         result = processor.process_entry(
@@ -689,7 +693,7 @@ def main():
     parser.add_argument("--max_grad_norm", type=float, default=1.0)
     parser.add_argument("--save_every_syncs", type=int, default=2)
     parser.add_argument("--max_steps", type=int, default=5)
-    parser.add_argument("--max_tokens", type=int, default=1024)
+    parser.add_argument("--max_tokens", type=int, default=None)
     parser.add_argument("--max_length", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top_p", type=float, default=0.8)
