@@ -7,7 +7,7 @@ import random
 import subprocess
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -344,34 +344,45 @@ def rollout_one_trajectory(
     args,
     api_base: str,
 ) -> Dict:
-    model_kwargs = {
-        "model_type": "vllm",
-        "model_id": args.model_name,
-        "api_base": api_base,
-        "api_key": "token-abc",
-        "temperature": args.temperature,
-        "seed": rollout_seed,
-        "max_tokens": args.max_tokens,
-        "n": 1,
-        "top_p": args.top_p,
-    }
-    processor = AgentExperimentProcessor(model_kwargs, verbose=False)
-    model = setup_model(**model_kwargs)
-    enriched_entry = {
-        "question": entry["question"],
-        "answer": entry.get("answer"),
-    }
-    result = processor.process_entry(
-        enriched_entry,
-        model,
-        search_engine_type="python_only",
-        max_steps=args.max_steps,
-        fine_tuned=False,
-        verbose_worker=False,
-    )
-    result["sample_idx"] = sample_idx
-    result["rollout_seed"] = rollout_seed
-    return result
+    enriched_entry = {"question": entry["question"], "answer": entry.get("answer")}
+    retry_max_tokens = []
+    current_max_tokens = int(args.max_tokens)
+    while current_max_tokens >= 32:
+        retry_max_tokens.append(current_max_tokens)
+        current_max_tokens //= 2
+
+    last_result = None
+    for max_tokens in retry_max_tokens:
+        model_kwargs = {
+            "model_type": "vllm",
+            "model_id": args.model_name,
+            "api_base": api_base,
+            "api_key": "token-abc",
+            "temperature": args.temperature,
+            "seed": rollout_seed,
+            "max_tokens": max_tokens,
+            "n": 1,
+            "top_p": args.top_p,
+        }
+        processor = AgentExperimentProcessor(model_kwargs, verbose=False)
+        model = setup_model(**model_kwargs)
+        result = processor.process_entry(
+            enriched_entry,
+            model,
+            search_engine_type="python_only",
+            max_steps=args.max_steps,
+            fine_tuned=False,
+            verbose_worker=False,
+        )
+        result["sample_idx"] = sample_idx
+        result["rollout_seed"] = rollout_seed
+        result["used_max_tokens"] = max_tokens
+        last_result = result
+        error_text = str(result.get("error", ""))
+        if "max_tokens" in error_text or "max_completion_tokens" in error_text:
+            continue
+        return result
+    return last_result
 
 
 def collect_rollouts_for_batch(
@@ -387,7 +398,7 @@ def collect_rollouts_for_batch(
     trajectory_id = 0
     trajectories: List[TrajectoryRecord] = []
     system_prompt = build_codeact_system_prompt("python_only")
-    with ThreadPoolExecutor(max_workers=args.rollout_workers) as executor:
+    with ProcessPoolExecutor(max_workers=args.rollout_workers) as executor:
         for group_idx, entry in enumerate(entries):
             for sample_idx in range(args.num_rollouts_per_question):
                 rollout_seed = args.seed + global_sync_idx * 100000 + group_idx * 100 + sample_idx
