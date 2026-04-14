@@ -713,6 +713,12 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
+    server_manager = RolloutServerManager(args) if accelerator.is_main_process else None
+    latest_adapter_path = args.resume_from_adapter
+    if accelerator.is_main_process:
+        server_manager.start(latest_adapter_path, run_dir)
+    accelerator.wait_for_everyone()
+
     model = build_trainable_model(args)
     ref_model = build_reference_model(args)
 
@@ -729,12 +735,6 @@ def main():
     dataset = load_math_entries(args.data_path)
     rng = random.Random(args.seed)
     rng.shuffle(dataset)
-
-    server_manager = RolloutServerManager(args) if accelerator.is_main_process else None
-    latest_adapter_path = args.resume_from_adapter
-    if accelerator.is_main_process:
-        server_manager.start(latest_adapter_path, run_dir)
-    accelerator.wait_for_everyone()
 
     global_question_offset = 0
     for sync_idx in range(args.max_syncs):
