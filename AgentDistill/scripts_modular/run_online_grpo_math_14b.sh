@@ -39,6 +39,7 @@ ROLLOUT_WORKERS="${ROLLOUT_WORKERS:-8}"
 MAX_STEPS="${MAX_STEPS:-5}"
 MAX_TOKENS="${MAX_TOKENS:-}"
 MAX_LENGTH="${MAX_LENGTH:-4096}"
+ROLLOUT_MAX_LENGTH="${ROLLOUT_MAX_LENGTH:-$MAX_LENGTH}"
 LORA_R="${LORA_R:-32}"
 LORA_ALPHA="${LORA_ALPHA:-64}"
 RESUME_FROM_ADAPTER="${RESUME_FROM_ADAPTER:-}"
@@ -68,14 +69,14 @@ if [[ "$ROLLOUT_ONLY" == "1" ]]; then
   export CUDA_VISIBLE_DEVICES="$ROLLOUT_CUDA_VISIBLE_DEVICES"
   printf 'ROLLOUT_CMD: %q %q %q %q %q %q %q %q %q %q %q %q %q %q %q\n' \
     "$PYTHON_BIN" serve_vllm.py --model "$MODEL_NAME" --port "$ROLLOUT_PORT" \
-    --tensor-parallel-size 2 --gpu-memory-utilization 0.9 --max-model-len "$MAX_LENGTH" \
+    --tensor-parallel-size 2 --gpu-memory-utilization 0.9 --max-model-len "$ROLLOUT_MAX_LENGTH" \
     --disable-log-requests --disable-log-stats
   exec "$PYTHON_BIN" serve_vllm.py \
     --model "$MODEL_NAME" \
     --port "$ROLLOUT_PORT" \
     --tensor-parallel-size 2 \
     --gpu-memory-utilization 0.9 \
-    --max-model-len "$MAX_LENGTH" \
+    --max-model-len "$ROLLOUT_MAX_LENGTH" \
     --disable-log-requests \
     --disable-log-stats
 fi
@@ -87,7 +88,7 @@ export CUDA_VISIBLE_DEVICES="$ROLLOUT_CUDA_VISIBLE_DEVICES"
   --port "$ROLLOUT_PORT" \
   --tensor-parallel-size 2 \
   --gpu-memory-utilization 0.9 \
-  --max-model-len "$MAX_LENGTH" \
+  --max-model-len "$ROLLOUT_MAX_LENGTH" \
   --disable-log-requests \
   --disable-log-stats > "$ROLLOUT_LOG" 2>&1 &
 ROLLOUT_PID=$!
