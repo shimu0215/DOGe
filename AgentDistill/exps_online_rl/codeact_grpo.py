@@ -684,6 +684,7 @@ def main():
     parser.add_argument("--rollout_tp", type=int, default=2)
     parser.add_argument("--rollout_gpu_util", type=float, default=0.9)
     parser.add_argument("--rollout_cuda_visible_devices", type=str, default="0,1")
+    parser.add_argument("--external_rollout_api_base", type=str, default=None)
     parser.add_argument("--python_bin", type=str, default=sys.executable)
     parser.add_argument("--lora_r", type=int, default=32)
     parser.add_argument("--lora_alpha", type=int, default=64)
@@ -713,11 +714,16 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    server_manager = RolloutServerManager(args) if accelerator.is_main_process else None
+    server_manager = None
     latest_adapter_path = args.resume_from_adapter
-    if accelerator.is_main_process:
-        server_manager.start(latest_adapter_path, run_dir)
-    accelerator.wait_for_everyone()
+    rollout_api_base = args.external_rollout_api_base
+    if rollout_api_base is None:
+        server_manager = RolloutServerManager(args) if accelerator.is_main_process else None
+        if accelerator.is_main_process:
+            server_manager.start(latest_adapter_path, run_dir)
+            rollout_api_base = server_manager.api_base
+        rollout_api_base = broadcast_object(accelerator, rollout_api_base)
+        accelerator.wait_for_everyone()
 
     model = build_trainable_model(args)
     ref_model = build_reference_model(args)
@@ -748,7 +754,7 @@ def main():
                 entries=batch_entries,
                 group_offset=sync_idx * args.num_questions_per_sync,
                 args=args,
-                api_base=server_manager.api_base,
+                api_base=rollout_api_base,
                 run_dir=run_dir,
                 global_sync_idx=sync_idx,
             )
@@ -813,7 +819,7 @@ def main():
         if should_save:
             latest_adapter_path = str(run_dir / f"checkpoint_sync_{sync_idx + 1:04d}")
             save_lora_checkpoint(accelerator, model, tokenizer, Path(latest_adapter_path))
-            if accelerator.is_main_process:
+            if accelerator.is_main_process and server_manager is not None:
                 server_manager.restart(latest_adapter_path, run_dir)
         accelerator.wait_for_everyone()
         if accelerator.is_main_process:
@@ -826,8 +832,9 @@ def main():
 
     final_dir = run_dir / "final_adapter"
     save_lora_checkpoint(accelerator, model, tokenizer, final_dir)
-    if accelerator.is_main_process:
+    if accelerator.is_main_process and server_manager is not None:
         server_manager.stop()
+    if accelerator.is_main_process:
         print(f"Training finished. Final adapter saved to {final_dir}")
 
 

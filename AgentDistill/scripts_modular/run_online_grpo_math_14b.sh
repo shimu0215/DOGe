@@ -24,6 +24,7 @@ SEED="${SEED:-42}"
 ROLLOUT_CUDA_VISIBLE_DEVICES="${ROLLOUT_CUDA_VISIBLE_DEVICES:-0,1}"
 TRAIN_GPU_IDS="${TRAIN_GPU_IDS:-2,3}"
 ROLLOUT_PORT="${ROLLOUT_PORT:-8000}"
+ROLLOUT_API_BASE="${ROLLOUT_API_BASE:-http://127.0.0.1:${ROLLOUT_PORT}/v1}"
 NUM_QUESTIONS_PER_SYNC="${NUM_QUESTIONS_PER_SYNC:-16}"
 NUM_ROLLOUTS_PER_QUESTION="${NUM_ROLLOUTS_PER_QUESTION:-4}"
 MAX_SYNCS="${MAX_SYNCS:-32}"
@@ -43,6 +44,63 @@ LORA_ALPHA="${LORA_ALPHA:-64}"
 RESUME_FROM_ADAPTER="${RESUME_FROM_ADAPTER:-}"
 ACCELERATE_BIN="${ACCELERATE_BIN:-$CONDA_ENV_PREFIX/bin/accelerate}"
 PYTHON_BIN="${PYTHON_BIN:-$CONDA_ENV_PREFIX/bin/python}"
+ROLLOUT_ONLY="${ROLLOUT_ONLY:-0}"
+ROLLOUT_LOG="${ROLLOUT_LOG:-$OUTPUT_ROOT/rollout_server.log}"
+ROLLOUT_TIMEOUT_SECONDS="${ROLLOUT_TIMEOUT_SECONDS:-1800}"
+
+wait_for_rollout_server() {
+  local log_file="$1"
+  local timeout_s="$2"
+  local waited=0
+  until grep -q "Application startup complete" "$log_file" 2>/dev/null; do
+    if (( waited >= timeout_s )); then
+      echo "Timed out waiting for rollout server startup: $log_file" >&2
+      return 1
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+}
+
+mkdir -p "$OUTPUT_ROOT"
+
+if [[ "$ROLLOUT_ONLY" == "1" ]]; then
+  export CUDA_VISIBLE_DEVICES="$ROLLOUT_CUDA_VISIBLE_DEVICES"
+  printf 'ROLLOUT_CMD: %q %q %q %q %q %q %q %q %q %q %q %q %q %q %q\n' \
+    "$PYTHON_BIN" serve_vllm.py --model "$MODEL_NAME" --port "$ROLLOUT_PORT" \
+    --tensor-parallel-size 2 --gpu-memory-utilization 0.9 --max-model-len "$MAX_LENGTH" \
+    --disable-log-requests --disable-log-stats
+  exec "$PYTHON_BIN" serve_vllm.py \
+    --model "$MODEL_NAME" \
+    --port "$ROLLOUT_PORT" \
+    --tensor-parallel-size 2 \
+    --gpu-memory-utilization 0.9 \
+    --max-model-len "$MAX_LENGTH" \
+    --disable-log-requests \
+    --disable-log-stats
+fi
+
+: > "$ROLLOUT_LOG"
+export CUDA_VISIBLE_DEVICES="$ROLLOUT_CUDA_VISIBLE_DEVICES"
+"$PYTHON_BIN" serve_vllm.py \
+  --model "$MODEL_NAME" \
+  --port "$ROLLOUT_PORT" \
+  --tensor-parallel-size 2 \
+  --gpu-memory-utilization 0.9 \
+  --max-model-len "$MAX_LENGTH" \
+  --disable-log-requests \
+  --disable-log-stats > "$ROLLOUT_LOG" 2>&1 &
+ROLLOUT_PID=$!
+
+cleanup() {
+  if [[ -n "${ROLLOUT_PID:-}" ]] && kill -0 "$ROLLOUT_PID" 2>/dev/null; then
+    kill "$ROLLOUT_PID" 2>/dev/null || true
+    wait "$ROLLOUT_PID" 2>/dev/null || true
+  fi
+}
+
+trap cleanup EXIT INT TERM
+wait_for_rollout_server "$ROLLOUT_LOG" "$ROLLOUT_TIMEOUT_SECONDS"
 
 CMD=(
   "$ACCELERATE_BIN" launch
@@ -53,8 +111,7 @@ CMD=(
   --data_path "$DATA_PATH"
   --output_root "$OUTPUT_ROOT"
   --seed "$SEED"
-  --rollout_cuda_visible_devices "$ROLLOUT_CUDA_VISIBLE_DEVICES"
-  --rollout_port "$ROLLOUT_PORT"
+  --external_rollout_api_base "$ROLLOUT_API_BASE"
   --num_questions_per_sync "$NUM_QUESTIONS_PER_SYNC"
   --num_rollouts_per_question "$NUM_ROLLOUTS_PER_QUESTION"
   --max_syncs "$MAX_SYNCS"
