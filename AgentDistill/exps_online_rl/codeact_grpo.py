@@ -272,10 +272,9 @@ def gather_step_samples(
             for i, msg in enumerate(traj.cleaned_messages)
             if msg.get("role") == "assistant" and "Code:" in str(msg.get("content", ""))
         ]
-        usable_steps = min(len(assistant_positions), len(traj.action_traces))
-        if usable_steps <= 0:
+        if not assistant_positions:
             continue
-        for local_idx, msg_idx in enumerate(assistant_positions[:usable_steps]):
+        for local_idx, msg_idx in enumerate(assistant_positions):
             context_messages = copy.deepcopy(traj.cleaned_messages[:msg_idx])
             action_text = traj.cleaned_messages[msg_idx]["content"]
             try:
@@ -287,7 +286,7 @@ def gather_step_samples(
                 )
             except ValueError:
                 continue
-            trace = traj.action_traces[local_idx]
+            trace = traj.action_traces[local_idx] if local_idx < len(traj.action_traces) else {}
             rollout_logprobs = trace.get("generation_logprobs") or []
             old_token_logprobs = [float(item["logprob"]) for item in rollout_logprobs if item.get("logprob") is not None]
             samples.append(
