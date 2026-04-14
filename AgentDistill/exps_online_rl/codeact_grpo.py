@@ -534,7 +534,11 @@ def assign_rewards_and_advantages(
             traj.kl_reward = sum(step_kls)
         else:
             traj.kl_reward = sum(step_kls) / max(len(step_kls), 1)
-        traj.total_reward = traj.task_reward + args.kl_lambda * traj.kl_reward
+        if traj.task_reward > 0:
+            traj.total_reward = traj.task_reward + args.kl_lambda * traj.kl_reward
+        else:
+            traj.kl_reward = 0.0
+            traj.total_reward = 0.0
     grouped: Dict[int, List[TrajectoryRecord]] = {}
     for traj in trajectories:
         grouped.setdefault(traj.group_idx, []).append(traj)
