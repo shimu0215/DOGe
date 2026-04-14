@@ -10,7 +10,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -101,6 +101,27 @@ def collate_step_samples(samples: Sequence[StepSample], pad_token_id: int) -> Di
         "sample_ids": torch.tensor(sample_ids, dtype=torch.long),
         "trajectory_ids": torch.tensor(trajectory_ids, dtype=torch.long),
     }
+
+
+def sanitize_for_json(obj: Any) -> Any:
+    if obj is None or isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {str(k): sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [sanitize_for_json(v) for v in obj]
+    if isinstance(obj, set):
+        return [sanitize_for_json(v) for v in sorted(obj, key=lambda item: str(item))]
+    if isinstance(obj, Path):
+        return str(obj)
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", errors="replace")
+    if hasattr(obj, "item") and callable(getattr(obj, "item")):
+        try:
+            return sanitize_for_json(obj.item())
+        except Exception:
+            pass
+    return str(obj)
 
 
 class RolloutServerManager:
@@ -401,7 +422,7 @@ def collect_rollouts_for_batch(
     global_sync_idx: int,
 ) -> List[TrajectoryRecord]:
     raw_path = run_dir / f"rollouts_sync_{global_sync_idx:04d}.jsonl"
-    futures = []
+    futures = {}
     trajectory_id = 0
     trajectories: List[TrajectoryRecord] = []
     system_prompt = build_codeact_system_prompt("python_only")
@@ -409,20 +430,35 @@ def collect_rollouts_for_batch(
         for group_idx, entry in enumerate(entries):
             for sample_idx in range(args.num_rollouts_per_question):
                 rollout_seed = args.seed + global_sync_idx * 100000 + group_idx * 100 + sample_idx
-                futures.append(
-                    executor.submit(
-                        rollout_one_trajectory,
-                        entry,
-                        sample_idx,
-                        rollout_seed,
-                        args,
-                        api_base,
-                    )
+                future = executor.submit(
+                    rollout_one_trajectory,
+                    entry,
+                    sample_idx,
+                    rollout_seed,
+                    args,
+                    api_base,
                 )
+                futures[future] = {
+                    "entry": entry,
+                    "sample_idx": sample_idx,
+                    "rollout_seed": rollout_seed,
+                }
         with raw_path.open("w") as f:
             for future in as_completed(futures):
-                result = future.result()
-                f.write(json.dumps(result, ensure_ascii=False) + "\n")
+                meta = futures[future]
+                try:
+                    result = future.result()
+                except Exception as exc:
+                    result = {
+                        "question": meta["entry"]["question"],
+                        "true_answer": meta["entry"].get("answer", ""),
+                        "generated_answer": "",
+                        "log_data": None,
+                        "error": f"rollout worker exception: {exc}",
+                        "sample_idx": meta["sample_idx"],
+                        "rollout_seed": meta["rollout_seed"],
+                    }
+                f.write(json.dumps(sanitize_for_json(result), ensure_ascii=False) + "\n")
                 question = result.get("question", "")
                 group_idx = next(
                     idx for idx, item in enumerate(entries) if item["question"] == question
