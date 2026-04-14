@@ -9,12 +9,13 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import torch
 import torch.nn.functional as F
-from accelerate import Accelerator
+from accelerate import Accelerator, InitProcessGroupKwargs
 from peft import LoraConfig, PeftModel, get_peft_model
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
@@ -747,9 +748,14 @@ def main():
     parser.add_argument("--lora_r", type=int, default=32)
     parser.add_argument("--lora_alpha", type=int, default=64)
     parser.add_argument("--attn_implementation", type=str, default="sdpa")
+    parser.add_argument("--distributed_timeout_minutes", type=int, default=240)
     args = parser.parse_args()
 
-    accelerator = Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps)
+    process_group_kwargs = InitProcessGroupKwargs(timeout=timedelta(minutes=args.distributed_timeout_minutes))
+    accelerator = Accelerator(
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        kwargs_handlers=[process_group_kwargs],
+    )
     set_seed(args.seed + accelerator.process_index)
 
     if accelerator.is_main_process:

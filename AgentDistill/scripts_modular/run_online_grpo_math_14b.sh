@@ -16,6 +16,9 @@ export TRITON_CACHE_DIR="${TRITON_CACHE_DIR:-/scratch/wzhao20/triton_cache}"
 export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-/scratch/wzhao20/torchinductor_cache}"
 export VLLM_NO_USAGE_STATS=1
 export DO_NOT_TRACK=1
+export TORCH_NCCL_ASYNC_ERROR_HANDLING="${TORCH_NCCL_ASYNC_ERROR_HANDLING:-1}"
+export TORCH_NCCL_BLOCKING_WAIT="${TORCH_NCCL_BLOCKING_WAIT:-1}"
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC="${TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC:-1200}"
 
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-14B}"
 DATA_PATH="${DATA_PATH:-/scratch/wzhao20/AKDA2/AgentDistill/data_processor/math_dataset/test/math_500_20250414.json}"
@@ -48,6 +51,7 @@ PYTHON_BIN="${PYTHON_BIN:-$CONDA_ENV_PREFIX/bin/python}"
 ROLLOUT_ONLY="${ROLLOUT_ONLY:-0}"
 ROLLOUT_LOG="${ROLLOUT_LOG:-$OUTPUT_ROOT/rollout_server.log}"
 ROLLOUT_TIMEOUT_SECONDS="${ROLLOUT_TIMEOUT_SECONDS:-1800}"
+DISTRIBUTED_TIMEOUT_MINUTES="${DISTRIBUTED_TIMEOUT_MINUTES:-240}"
 
 wait_for_rollout_server() {
   local log_file="$1"
@@ -129,6 +133,7 @@ CMD=(
   --lora_r "$LORA_R"
   --lora_alpha "$LORA_ALPHA"
   --python_bin "$PYTHON_BIN"
+  --distributed_timeout_minutes "$DISTRIBUTED_TIMEOUT_MINUTES"
 )
 
 if [[ -n "$MAX_TOKENS" ]]; then
