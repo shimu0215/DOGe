@@ -267,11 +267,15 @@ def gather_step_samples(
     samples: List[StepSample] = []
     sample_id = 0
     for traj in trajectories:
-        assistant_positions = [i for i, msg in enumerate(traj.cleaned_messages) if msg.get("role") == "assistant"]
-        if len(assistant_positions) != len(traj.action_traces):
-            # Keep the rollout but drop malformed alignment to avoid poisoning training.
+        assistant_positions = [
+            i
+            for i, msg in enumerate(traj.cleaned_messages)
+            if msg.get("role") == "assistant" and "Code:" in str(msg.get("content", ""))
+        ]
+        usable_steps = min(len(assistant_positions), len(traj.action_traces))
+        if usable_steps <= 0:
             continue
-        for local_idx, msg_idx in enumerate(assistant_positions):
+        for local_idx, msg_idx in enumerate(assistant_positions[:usable_steps]):
             context_messages = copy.deepcopy(traj.cleaned_messages[:msg_idx])
             action_text = traj.cleaned_messages[msg_idx]["content"]
             try:
