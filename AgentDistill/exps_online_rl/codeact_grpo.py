@@ -42,6 +42,7 @@ class TrajectoryRecord:
     cleaned_messages: List[Dict[str, str]]
     action_traces: List[Dict]
     task_reward: float = 0.0
+    step_reward: float = 0.0
     kl_reward: float = 0.0
     total_reward: float = 0.0
     advantage: float = 0.0
@@ -563,19 +564,34 @@ def assign_rewards_and_advantages(
     args,
 ) -> None:
     kl_by_trajectory: Dict[int, List[float]] = {}
+    step_count_by_trajectory: Dict[int, int] = {}
     for sample in step_samples:
         kl_by_trajectory.setdefault(sample.trajectory_id, []).append(sample.rollout_kl)
+        step_count_by_trajectory[sample.trajectory_id] = step_count_by_trajectory.get(sample.trajectory_id, 0) + 1
     for traj in trajectories:
         step_kls = kl_by_trajectory.get(traj.trajectory_id, [])
-        if args.kl_aggregation == "sum":
-            traj.kl_reward = sum(step_kls)
-        else:
-            traj.kl_reward = sum(step_kls) / max(len(step_kls), 1)
-        if traj.task_reward > 0:
-            traj.total_reward = traj.task_reward + args.kl_lambda * traj.kl_reward
-        else:
+        if args.reward_mode == "task_multistep":
+            step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
+            if step_count > 1 and args.max_steps > 1:
+                traj.step_reward = (step_count - 1) / (args.max_steps - 1)
+            else:
+                traj.step_reward = 0.0
             traj.kl_reward = 0.0
-            traj.total_reward = 0.0
+            if traj.task_reward > 0:
+                traj.total_reward = traj.task_reward + traj.step_reward
+            else:
+                traj.total_reward = 0.0
+        else:
+            if args.kl_aggregation == "sum":
+                traj.kl_reward = sum(step_kls)
+            else:
+                traj.kl_reward = sum(step_kls) / max(len(step_kls), 1)
+            traj.step_reward = 0.0
+            if traj.task_reward > 0:
+                traj.total_reward = traj.task_reward + args.kl_lambda * traj.kl_reward
+            else:
+                traj.kl_reward = 0.0
+                traj.total_reward = 0.0
     grouped: Dict[int, List[TrajectoryRecord]] = {}
     for traj in trajectories:
         grouped.setdefault(traj.group_idx, []).append(traj)
@@ -729,6 +745,7 @@ def main():
     parser.add_argument("--weight_decay", type=float, default=0.0)
     parser.add_argument("--warmup_steps", type=int, default=20)
     parser.add_argument("--clip_range", type=float, default=0.2)
+    parser.add_argument("--reward_mode", type=str, choices=["task_kl", "task_multistep"], default="task_kl")
     parser.add_argument("--kl_lambda", type=float, default=0.05)
     parser.add_argument("--kl_aggregation", type=str, choices=["mean", "sum"], default="mean")
     parser.add_argument("--max_grad_norm", type=float, default=1.0)
@@ -853,6 +870,7 @@ def main():
                                 "question": traj.question,
                                 "correct": traj.correct,
                                 "task_reward": traj.task_reward,
+                                "step_reward": traj.step_reward,
                                 "kl_reward": traj.kl_reward,
                                 "total_reward": traj.total_reward,
                                 "advantage": traj.advantage,
