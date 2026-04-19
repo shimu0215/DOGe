@@ -651,15 +651,12 @@ def assign_rewards_and_advantages(
         step_kls = kl_by_trajectory.get(traj.trajectory_id, [])
         if args.reward_mode == "task_multistep":
             step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
-            if step_count > 1 and args.max_steps > 1:
-                traj.step_reward = (step_count - 1) / (args.max_steps - 1)
+            if step_count > 1:
+                traj.step_reward = 1.0 + 0.3 * max(step_count - 2, 0)
             else:
                 traj.step_reward = 0.0
             traj.kl_reward = 0.0
-            if traj.task_reward > 0:
-                traj.total_reward = traj.task_reward + traj.step_reward
-            else:
-                traj.total_reward = 0.0
+            traj.total_reward = traj.task_reward + traj.step_reward
         else:
             if args.kl_aggregation == "sum":
                 traj.kl_reward = sum(step_kls)
