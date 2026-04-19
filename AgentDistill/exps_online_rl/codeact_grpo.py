@@ -4,10 +4,11 @@ import json
 import math
 import os
 import random
+import signal
 import subprocess
 import sys
 import time
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -124,6 +125,14 @@ def sanitize_for_json(obj: Any) -> Any:
         except Exception:
             pass
     return str(obj)
+
+
+class RolloutTimeoutError(RuntimeError):
+    pass
+
+
+def _rollout_timeout_handler(signum, frame):
+    raise RolloutTimeoutError("rollout timed out")
 
 
 class RolloutServerManager:
@@ -396,14 +405,32 @@ def rollout_one_trajectory(
             model_kwargs["max_tokens"] = max_tokens
         processor = AgentExperimentProcessor(model_kwargs, verbose=False)
         model = setup_model(**model_kwargs)
-        result = processor.process_entry(
-            enriched_entry,
-            model,
-            search_engine_type="python_only",
-            max_steps=args.max_steps,
-            fine_tuned=False,
-            verbose_worker=False,
-        )
+        timeout_s = max(int(args.rollout_timeout_seconds), 0)
+        previous_handler = None
+        if timeout_s > 0:
+            previous_handler = signal.signal(signal.SIGALRM, _rollout_timeout_handler)
+            signal.alarm(timeout_s)
+        try:
+            result = processor.process_entry(
+                enriched_entry,
+                model,
+                search_engine_type="python_only",
+                max_steps=args.max_steps,
+                fine_tuned=False,
+                verbose_worker=False,
+            )
+        except RolloutTimeoutError:
+            result = {
+                "question": entry["question"],
+                "true_answer": entry.get("answer", ""),
+                "generated_answer": "",
+                "log_data": None,
+                "error": f"rollout timeout after {timeout_s}s",
+            }
+        finally:
+            if timeout_s > 0:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, previous_handler)
         result["sample_idx"] = sample_idx
         result["rollout_seed"] = rollout_seed
         result["used_max_tokens"] = max_tokens
@@ -428,7 +455,66 @@ def collect_rollouts_for_batch(
     trajectory_id = 0
     trajectories: List[TrajectoryRecord] = []
     system_prompt = build_codeact_system_prompt("python_only")
-    with ProcessPoolExecutor(max_workers=args.rollout_workers) as executor:
+    total_expected = len(entries) * args.num_rollouts_per_question
+
+    def build_error_result(meta: Dict, error_text: str) -> Dict:
+        return {
+            "question": meta["entry"]["question"],
+            "true_answer": meta["entry"].get("answer", ""),
+            "generated_answer": "",
+            "log_data": None,
+            "error": error_text,
+            "sample_idx": meta["sample_idx"],
+            "rollout_seed": meta["rollout_seed"],
+        }
+
+    def append_trajectory(result: Dict) -> None:
+        nonlocal trajectory_id
+        question = result.get("question", "")
+        group_idx = next(
+            idx for idx, item in enumerate(entries) if item["question"] == question
+        )
+        correct = 0.0
+        if not result.get("error"):
+            eval_result = evaluate_math_answer(
+                model=None,
+                predicted=result.get("generated_answer"),
+                gold=result.get("true_answer"),
+                question=question,
+                do_extract_answer=False,
+            )
+            correct = float(eval_result["score"])
+        log_data = result.get("log_data")
+        cleaned_messages = normalize_messages_for_training(log_data, system_prompt) if log_data else []
+        action_traces = extract_action_traces(log_data) if log_data else []
+        trajectories.append(
+            TrajectoryRecord(
+                trajectory_id=trajectory_id,
+                question=question,
+                true_answer=str(result.get("true_answer")),
+                rollout_seed=int(result["rollout_seed"]),
+                sample_idx=int(result["sample_idx"]),
+                group_idx=group_offset + group_idx,
+                generated_answer=result.get("generated_answer", ""),
+                correct=correct,
+                cleaned_messages=cleaned_messages,
+                action_traces=action_traces,
+                task_reward=correct,
+                total_reward=correct,
+                error=result.get("error"),
+            )
+        )
+        trajectory_id += 1
+
+    def terminate_executor(executor: ProcessPoolExecutor) -> None:
+        for proc in getattr(executor, "_processes", {}).values():
+            if proc.is_alive():
+                proc.terminate()
+        executor.shutdown(wait=False, cancel_futures=True)
+
+    executor = ProcessPoolExecutor(max_workers=args.rollout_workers)
+    timed_out_batch = False
+    try:
         for group_idx, entry in enumerate(entries):
             for sample_idx in range(args.num_rollouts_per_question):
                 rollout_seed = args.seed + global_sync_idx * 100000 + group_idx * 100 + sample_idx
@@ -444,58 +530,51 @@ def collect_rollouts_for_batch(
                     "entry": entry,
                     "sample_idx": sample_idx,
                     "rollout_seed": rollout_seed,
+                    "submitted_at": time.time(),
                 }
+        pending = set(futures)
         with raw_path.open("w") as f:
-            for future in as_completed(futures):
-                meta = futures[future]
-                try:
-                    result = future.result()
-                except Exception as exc:
-                    result = {
-                        "question": meta["entry"]["question"],
-                        "true_answer": meta["entry"].get("answer", ""),
-                        "generated_answer": "",
-                        "log_data": None,
-                        "error": f"rollout worker exception: {exc}",
-                        "sample_idx": meta["sample_idx"],
-                        "rollout_seed": meta["rollout_seed"],
-                    }
-                f.write(json.dumps(sanitize_for_json(result), ensure_ascii=False) + "\n")
-                question = result.get("question", "")
-                group_idx = next(
-                    idx for idx, item in enumerate(entries) if item["question"] == question
-                )
-                correct = 0.0
-                if not result.get("error"):
-                    eval_result = evaluate_math_answer(
-                        model=None,
-                        predicted=result.get("generated_answer"),
-                        gold=result.get("true_answer"),
-                        question=question,
-                        do_extract_answer=False,
+            while pending:
+                done, not_done = wait(pending, timeout=5, return_when=FIRST_COMPLETED)
+                now = time.time()
+                expired = []
+                for future in list(not_done):
+                    meta = futures[future]
+                    if now - meta["submitted_at"] > args.rollout_timeout_seconds:
+                        expired.append(future)
+                for future in done:
+                    pending.remove(future)
+                    meta = futures[future]
+                    try:
+                        result = future.result()
+                    except Exception as exc:
+                        result = build_error_result(meta, f"rollout worker exception: {exc}")
+                    f.write(json.dumps(sanitize_for_json(result), ensure_ascii=False) + "\n")
+                    append_trajectory(result)
+                if expired:
+                    timed_out_batch = True
+                    timeout_error = (
+                        f"rollout batch aborted after worker timeout > {args.rollout_timeout_seconds}s"
                     )
-                    correct = float(eval_result["score"])
-                log_data = result.get("log_data")
-                cleaned_messages = normalize_messages_for_training(log_data, system_prompt) if log_data else []
-                action_traces = extract_action_traces(log_data) if log_data else []
-                trajectories.append(
-                    TrajectoryRecord(
-                        trajectory_id=trajectory_id,
-                        question=question,
-                        true_answer=str(result.get("true_answer")),
-                        rollout_seed=int(result["rollout_seed"]),
-                        sample_idx=int(result["sample_idx"]),
-                        group_idx=group_offset + group_idx,
-                        generated_answer=result.get("generated_answer", ""),
-                        correct=correct,
-                        cleaned_messages=cleaned_messages,
-                        action_traces=action_traces,
-                        task_reward=correct,
-                        total_reward=correct,
-                        error=result.get("error"),
-                    )
-                )
-                trajectory_id += 1
+                    for future in list(pending):
+                        meta = futures[future]
+                        result = build_error_result(meta, timeout_error)
+                        f.write(json.dumps(sanitize_for_json(result), ensure_ascii=False) + "\n")
+                        append_trajectory(result)
+                    pending.clear()
+                    f.flush()
+                    terminate_executor(executor)
+                    break
+    finally:
+        if not timed_out_batch:
+            executor.shutdown(wait=True, cancel_futures=True)
+
+    no_error_count = sum(1 for traj in trajectories if not traj.error)
+    correct_count = sum(1 for traj in trajectories if traj.correct > 0)
+    print(
+        f"[sync {global_sync_idx}] rollout collected {len(trajectories)}/{total_expected} "
+        f"trajectories, no_error={no_error_count}, correct={correct_count}"
+    )
     trajectories.sort(key=lambda item: (item.group_idx, item.sample_idx, item.rollout_seed))
     return trajectories
 
@@ -756,6 +835,7 @@ def main():
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top_p", type=float, default=0.8)
     parser.add_argument("--rollout_workers", type=int, default=8)
+    parser.add_argument("--rollout_timeout_seconds", type=int, default=600)
     parser.add_argument("--rollout_port", type=int, default=8000)
     parser.add_argument("--rollout_tp", type=int, default=2)
     parser.add_argument("--rollout_gpu_util", type=float, default=0.9)
