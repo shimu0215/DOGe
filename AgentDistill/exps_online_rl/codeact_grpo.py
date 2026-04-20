@@ -596,16 +596,13 @@ def compute_step_statistics(
     loader = accelerator.prepare(loader)
     gathered_old: Dict[int, float] = {}
     gathered_kl: Dict[int, float] = {}
+    compute_kl = args.reward_mode == "task_kl"
     model.eval()
-    ref_model.eval()
+    if compute_kl and ref_model is not None:
+        ref_model.eval()
     for batch in loader:
         with torch.no_grad():
             outputs = model(
-                input_ids=batch["input_ids"],
-                attention_mask=batch["attention_mask"],
-                use_cache=False,
-            )
-            ref_outputs = ref_model(
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
                 use_cache=False,
@@ -615,12 +612,20 @@ def compute_step_statistics(
                 input_ids=batch["input_ids"],
                 action_mask=batch["action_mask"],
             )
-            rollout_kl = compute_masked_forward_kl(
-                current_logits=outputs.logits,
-                ref_logits=ref_outputs.logits,
-                action_mask=batch["action_mask"],
-            )
             sample_ids = batch["sample_ids"]
+            if compute_kl:
+                ref_outputs = ref_model(
+                    input_ids=batch["input_ids"],
+                    attention_mask=batch["attention_mask"],
+                    use_cache=False,
+                )
+                rollout_kl = compute_masked_forward_kl(
+                    current_logits=outputs.logits,
+                    ref_logits=ref_outputs.logits,
+                    action_mask=batch["action_mask"],
+                )
+            else:
+                rollout_kl = torch.zeros_like(old_logprob_mean)
             packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean, rollout_kl], dim=-1)
             gathered = accelerator.gather_for_metrics(packed)
             if accelerator.is_main_process:
@@ -642,13 +647,13 @@ def assign_rewards_and_advantages(
     step_samples: Sequence[StepSample],
     args,
 ) -> None:
-    kl_by_trajectory: Dict[int, List[float]] = {}
     step_count_by_trajectory: Dict[int, int] = {}
+    kl_by_trajectory: Dict[int, List[float]] = {}
     for sample in step_samples:
-        kl_by_trajectory.setdefault(sample.trajectory_id, []).append(sample.rollout_kl)
         step_count_by_trajectory[sample.trajectory_id] = step_count_by_trajectory.get(sample.trajectory_id, 0) + 1
+        if args.reward_mode == "task_kl":
+            kl_by_trajectory.setdefault(sample.trajectory_id, []).append(sample.rollout_kl)
     for traj in trajectories:
-        step_kls = kl_by_trajectory.get(traj.trajectory_id, [])
         if args.reward_mode == "task_multistep":
             step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
             if step_count > 1:
@@ -658,6 +663,7 @@ def assign_rewards_and_advantages(
             traj.kl_reward = 0.0
             traj.total_reward = traj.task_reward + traj.step_reward
         else:
+            step_kls = kl_by_trajectory.get(traj.trajectory_id, [])
             if args.kl_aggregation == "sum":
                 traj.kl_reward = sum(step_kls)
             else:
@@ -884,7 +890,7 @@ def main():
         accelerator.wait_for_everyone()
 
     model = build_trainable_model(args)
-    ref_model = build_reference_model(args)
+    ref_model = build_reference_model(args) if args.reward_mode == "task_kl" else None
 
     optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     total_update_steps = max(1, args.max_syncs * args.grpo_epochs * max(1, args.num_questions_per_sync))
@@ -894,7 +900,8 @@ def main():
         num_training_steps=total_update_steps,
     )
     model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
-    ref_model = ref_model.to(accelerator.device)
+    if ref_model is not None:
+        ref_model = ref_model.to(accelerator.device)
 
     dataset = load_math_entries(args.data_path)
     rng = random.Random(args.seed)
