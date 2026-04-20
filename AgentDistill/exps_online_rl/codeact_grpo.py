@@ -158,7 +158,7 @@ class RolloutServerManager:
             "--gpu-memory-utilization",
             str(self.args.rollout_gpu_util),
             "--max-model-len",
-            str(self.args.max_length),
+            str(self.args.rollout_max_length),
             "--disable-log-requests",
             "--disable-log-stats",
         ]
@@ -843,6 +843,7 @@ def main():
     parser.add_argument("--rollout_tp", type=int, default=2)
     parser.add_argument("--rollout_gpu_util", type=float, default=0.9)
     parser.add_argument("--rollout_cuda_visible_devices", type=str, default="0,1")
+    parser.add_argument("--rollout_max_length", type=int, default=8192)
     parser.add_argument("--external_rollout_api_base", type=str, default=None)
     parser.add_argument("--python_bin", type=str, default=sys.executable)
     parser.add_argument("--lora_r", type=int, default=32)

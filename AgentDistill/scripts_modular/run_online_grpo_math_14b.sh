@@ -28,6 +28,7 @@ ROLLOUT_CUDA_VISIBLE_DEVICES="${ROLLOUT_CUDA_VISIBLE_DEVICES:-0,1}"
 TRAIN_GPU_IDS="${TRAIN_GPU_IDS:-2,3}"
 ROLLOUT_PORT="${ROLLOUT_PORT:-8000}"
 ROLLOUT_API_BASE="${ROLLOUT_API_BASE:-http://127.0.0.1:${ROLLOUT_PORT}/v1}"
+USE_EXTERNAL_ROLLOUT_SERVER="${USE_EXTERNAL_ROLLOUT_SERVER:-0}"
 NUM_QUESTIONS_PER_SYNC="${NUM_QUESTIONS_PER_SYNC:-16}"
 NUM_ROLLOUTS_PER_QUESTION="${NUM_ROLLOUTS_PER_QUESTION:-4}"
 MAX_SYNCS="${MAX_SYNCS:-32}"
@@ -87,27 +88,29 @@ if [[ "$ROLLOUT_ONLY" == "1" ]]; then
     --disable-log-stats
 fi
 
-: > "$ROLLOUT_LOG"
-export CUDA_VISIBLE_DEVICES="$ROLLOUT_CUDA_VISIBLE_DEVICES"
-"$PYTHON_BIN" serve_vllm.py \
-  --model "$MODEL_NAME" \
-  --port "$ROLLOUT_PORT" \
-  --tensor-parallel-size 2 \
-  --gpu-memory-utilization 0.9 \
-  --max-model-len "$ROLLOUT_MAX_LENGTH" \
-  --disable-log-requests \
-  --disable-log-stats > "$ROLLOUT_LOG" 2>&1 &
-ROLLOUT_PID=$!
+if [[ "$USE_EXTERNAL_ROLLOUT_SERVER" == "1" ]]; then
+  : > "$ROLLOUT_LOG"
+  export CUDA_VISIBLE_DEVICES="$ROLLOUT_CUDA_VISIBLE_DEVICES"
+  "$PYTHON_BIN" serve_vllm.py \
+    --model "$MODEL_NAME" \
+    --port "$ROLLOUT_PORT" \
+    --tensor-parallel-size 2 \
+    --gpu-memory-utilization 0.9 \
+    --max-model-len "$ROLLOUT_MAX_LENGTH" \
+    --disable-log-requests \
+    --disable-log-stats > "$ROLLOUT_LOG" 2>&1 &
+  ROLLOUT_PID=$!
 
-cleanup() {
-  if [[ -n "${ROLLOUT_PID:-}" ]] && kill -0 "$ROLLOUT_PID" 2>/dev/null; then
-    kill "$ROLLOUT_PID" 2>/dev/null || true
-    wait "$ROLLOUT_PID" 2>/dev/null || true
-  fi
-}
+  cleanup() {
+    if [[ -n "${ROLLOUT_PID:-}" ]] && kill -0 "$ROLLOUT_PID" 2>/dev/null; then
+      kill "$ROLLOUT_PID" 2>/dev/null || true
+      wait "$ROLLOUT_PID" 2>/dev/null || true
+    fi
+  }
 
-trap cleanup EXIT INT TERM
-wait_for_rollout_server "$ROLLOUT_LOG" "$ROLLOUT_TIMEOUT_SECONDS"
+  trap cleanup EXIT INT TERM
+  wait_for_rollout_server "$ROLLOUT_LOG" "$ROLLOUT_TIMEOUT_SECONDS"
+fi
 
 CMD=(
   "$ACCELERATE_BIN" launch
@@ -118,7 +121,6 @@ CMD=(
   --data_path "$DATA_PATH"
   --output_root "$OUTPUT_ROOT"
   --seed "$SEED"
-  --external_rollout_api_base "$ROLLOUT_API_BASE"
   --num_questions_per_sync "$NUM_QUESTIONS_PER_SYNC"
   --num_rollouts_per_question "$NUM_ROLLOUTS_PER_QUESTION"
   --max_syncs "$MAX_SYNCS"
@@ -132,6 +134,11 @@ CMD=(
   --save_every_syncs "$SAVE_EVERY_SYNCS"
   --rollout_workers "$ROLLOUT_WORKERS"
   --rollout_timeout_seconds "$ROLLOUT_TRAJECTORY_TIMEOUT_SECONDS"
+  --rollout_port "$ROLLOUT_PORT"
+  --rollout_tp 2
+  --rollout_gpu_util 0.9
+  --rollout_cuda_visible_devices "$ROLLOUT_CUDA_VISIBLE_DEVICES"
+  --rollout_max_length "$ROLLOUT_MAX_LENGTH"
   --max_steps "$MAX_STEPS"
   --max_length "$MAX_LENGTH"
   --lora_r "$LORA_R"
@@ -139,6 +146,10 @@ CMD=(
   --python_bin "$PYTHON_BIN"
   --distributed_timeout_minutes "$DISTRIBUTED_TIMEOUT_MINUTES"
 )
+
+if [[ "$USE_EXTERNAL_ROLLOUT_SERVER" == "1" ]]; then
+  CMD+=(--external_rollout_api_base "$ROLLOUT_API_BASE")
+fi
 
 if [[ -n "$MAX_TOKENS" ]]; then
   CMD+=(--max_tokens "$MAX_TOKENS")
