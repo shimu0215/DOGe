@@ -166,6 +166,35 @@ class RolloutServerManager:
             cmd.extend(["--lora-modules", f"finetune={adapter_path}", "--max-lora-rank", str(self.args.lora_r)])
         return cmd
 
+    def _build_env(self) -> Dict[str, str]:
+        env = os.environ.copy()
+        env["CUDA_VISIBLE_DEVICES"] = self.args.rollout_cuda_visible_devices
+        env["PYTHONPATH"] = f"{Path.cwd() / 'src'}:{env.get('PYTHONPATH', '')}"
+        # Keep the rollout server isolated from accelerate/torchrun state.
+        # External rollout servers launched from the shell do not inherit these,
+        # but the internal truly-online server is launched from a training rank.
+        polluted_prefixes = (
+            "ACCELERATE_",
+            "PET_",
+            "TORCHELASTIC_",
+        )
+        polluted_keys = {
+            "MASTER_ADDR",
+            "MASTER_PORT",
+            "WORLD_SIZE",
+            "RANK",
+            "LOCAL_RANK",
+            "LOCAL_WORLD_SIZE",
+            "GROUP_RANK",
+            "ROLE_RANK",
+            "ROLE_WORLD_SIZE",
+            "OMP_NUM_THREADS",
+        }
+        for key in list(env.keys()):
+            if key in polluted_keys or key.startswith(polluted_prefixes):
+                env.pop(key, None)
+        return env
+
     def _wait_until_ready(self, log_path: Path, timeout_s: int = 1800) -> None:
         deadline = time.time() + timeout_s
         while time.time() < deadline:
@@ -181,9 +210,7 @@ class RolloutServerManager:
     def start(self, adapter_path: Optional[str], run_dir: Path) -> None:
         self.stop()
         serve_log = run_dir / "rollout_server.log"
-        env = os.environ.copy()
-        env["CUDA_VISIBLE_DEVICES"] = self.args.rollout_cuda_visible_devices
-        env["PYTHONPATH"] = f"{Path.cwd() / 'src'}:{env.get('PYTHONPATH', '')}"
+        env = self._build_env()
         cmd = self._build_cmd(adapter_path)
         with serve_log.open("a") as f:
             f.write(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] START {' '.join(cmd)}\n")
