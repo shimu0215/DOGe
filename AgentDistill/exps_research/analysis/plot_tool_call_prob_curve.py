@@ -189,6 +189,10 @@ def shorten(text: str, limit: int = 120) -> str:
     return text[: limit - 3] + "..."
 
 
+def sanitize_plot_text(text: str) -> str:
+    return str(text).replace("\\", r"\\").replace("$", r"\$")
+
+
 def plot_one(
     output_path: Path,
     curve: Sequence[float],
@@ -216,8 +220,8 @@ def plot_one(
         f"sample={row['_raw_index']} steps={step_count} "
         f"correct={'yes' if correctness > 0 else 'no'} tool_calls={len(spans)}"
     )
-    question_preview = shorten(row.get("question", ""))
-    answer_preview = shorten(row.get("generated_answer", ""), limit=90)
+    question_preview = sanitize_plot_text(shorten(row.get("question", "")))
+    answer_preview = sanitize_plot_text(shorten(row.get("generated_answer", ""), limit=90))
     text_box = (
         f"Question: {question_preview}\n"
         f"Answer: {answer_preview}\n"
@@ -308,6 +312,8 @@ def main() -> None:
                 "figure_path": str(figure_path),
             }
         )
+        with (output_dir / "summary.json").open("w") as f:
+            json.dump(summary_rows, f, indent=2, ensure_ascii=False)
         print(
             f"[{local_idx + 1}/{len(rows)}] sample={row['_raw_index']} "
             f"steps={step_count} correct={correctness:.0f} tool_calls={len(spans)} "
@@ -315,8 +321,6 @@ def main() -> None:
         )
 
     summary_path = output_dir / "summary.json"
-    with summary_path.open("w") as f:
-        json.dump(summary_rows, f, indent=2, ensure_ascii=False)
     print(f"Saved summary to {summary_path}")
 
 
