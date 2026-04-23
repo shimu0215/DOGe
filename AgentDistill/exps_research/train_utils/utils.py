@@ -124,6 +124,8 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
         self.code_start_entropy = code_start_entropy
         self.thought_token_ids = self.tokenizer.encode(thought_template, add_special_tokens=False)
         self.code_token_ids = self.tokenizer.encode(code_template, add_special_tokens=False)
+        self.thought_template = thought_template
+        self.code_template = code_template
 
     @staticmethod
     def _find_subsequence_positions(sequence: list[int], subsequence: list[int]) -> list[int]:
@@ -136,6 +138,64 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
             if sequence[start : start + len(subsequence)] == subsequence:
                 positions.append(start)
         return positions
+
+    @staticmethod
+    def _find_text_occurrences(text: str, pattern: str) -> list[int]:
+        if not pattern:
+            return []
+        positions = []
+        start = 0
+        while True:
+            pos = text.find(pattern, start)
+            if pos == -1:
+                break
+            positions.append(pos)
+            start = pos + len(pattern)
+        return positions
+
+    def _text_offset_to_token_index(self, text: str, char_offset: int) -> int:
+        if char_offset <= 0:
+            return 0
+        prefix_text = text[:char_offset]
+        return len(self.tokenizer.encode(prefix_text, add_special_tokens=False))
+
+    def _compute_thought_code_spans(self, assistant_token_ids: list[int]) -> list[tuple[int, int, int]]:
+        assistant_text = self.tokenizer.decode(assistant_token_ids, skip_special_tokens=False)
+        thought_char_positions = self._find_text_occurrences(assistant_text, self.thought_template)
+        if not thought_char_positions:
+            return []
+
+        code_char_positions = []
+        seen = set()
+        for candidate in (
+            self.code_template,
+            f"{self.code_template}:",
+            f"\n{self.code_template}",
+            f"\n{self.code_template}:",
+            f"\n\n{self.code_template}",
+            f"\n\n{self.code_template}:",
+        ):
+            for pos in self._find_text_occurrences(assistant_text, candidate):
+                if pos not in seen:
+                    seen.add(pos)
+                    code_char_positions.append(pos)
+        code_char_positions.sort()
+
+        spans = []
+        for thought_char_pos in thought_char_positions:
+            thought_start_token = self._text_offset_to_token_index(assistant_text, thought_char_pos)
+            thought_end_token = self._text_offset_to_token_index(
+                assistant_text, thought_char_pos + len(self.thought_template)
+            )
+            later_code_char_positions = [pos for pos in code_char_positions if pos > thought_char_pos]
+            next_code_char_pos = later_code_char_positions[0] if later_code_char_positions else None
+            code_start_token = (
+                self._text_offset_to_token_index(assistant_text, next_code_char_pos)
+                if next_code_char_pos is not None
+                else len(assistant_token_ids)
+            )
+            spans.append((thought_start_token, thought_end_token, code_start_token))
+        return spans
 
     def torch_call(self, examples: list[Union[list[int], Any, dict[str, Any]]]) -> dict[str, Any]:
         batch = super().torch_call(examples)
@@ -258,40 +318,16 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
                         batch["labels"][i, response_pos:next_instruction_pos] = batch["input_ids"][
                             i, response_pos:next_instruction_pos
                         ]
-                        if self.entropy_thought_only:
+                        if self.entropy_thought_only or self.code_start_entropy:
                             assistant_token_ids = batch["input_ids"][i, response_pos:next_instruction_pos].tolist()
-                            thought_positions = self._find_subsequence_positions(
-                                assistant_token_ids, self.thought_token_ids
-                            )
-                            code_positions = self._find_subsequence_positions(
-                                assistant_token_ids, self.code_token_ids
-                            )
-                            for thought_pos in thought_positions:
-                                entropy_start = response_pos + thought_pos + len(self.thought_token_ids)
-                                later_code_positions = [pos for pos in code_positions if pos > thought_pos]
-                                if later_code_positions:
-                                    entropy_end = response_pos + later_code_positions[0]
-                                else:
-                                    entropy_end = next_instruction_pos
-                                if entropy_start < entropy_end:
+                            thought_code_spans = self._compute_thought_code_spans(assistant_token_ids)
+                            for _, thought_end_token, code_start_token in thought_code_spans:
+                                entropy_start = response_pos + thought_end_token
+                                entropy_end = min(response_pos + code_start_token, next_instruction_pos)
+                                if self.entropy_thought_only and entropy_start < entropy_end:
                                     entropy_mask[i, entropy_start:entropy_end] = True
-                        if self.code_start_entropy:
-                            assistant_token_ids = batch["input_ids"][i, response_pos:next_instruction_pos].tolist()
-                            thought_positions = self._find_subsequence_positions(
-                                assistant_token_ids, self.thought_token_ids
-                            )
-                            code_positions = self._find_subsequence_positions(
-                                assistant_token_ids, self.code_token_ids
-                            )
-                            for thought_pos in thought_positions:
-                                later_code_positions = [pos for pos in code_positions if pos > thought_pos]
-                                if not later_code_positions:
-                                    continue
-                                code_pos = later_code_positions[0]
-                                code_start = response_pos + thought_pos + len(self.thought_token_ids)
-                                code_end = response_pos + code_pos + 1
-                                if code_start < code_end:
-                                    code_start_mask[i, code_start:code_end] = True
+                                if self.code_start_entropy and entropy_start < entropy_end:
+                                    code_start_mask[i, entropy_start:entropy_end] = True
                         last_processed_instruction_pos = next_instruction_pos
                     else:
                         # 2 reponses in a row so we unmask the special tokens for response in the middle
