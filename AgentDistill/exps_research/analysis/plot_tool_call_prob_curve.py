@@ -154,25 +154,53 @@ def compute_probe_curve(
     model,
     input_ids: List[int],
     probe_token_ids: Sequence[int],
+    pad_token_id: int,
+    batch_size: int = 32,
 ) -> List[float]:
     if not probe_token_ids:
         raise ValueError("probe_token_ids must be non-empty.")
     input_device = next(model.parameters()).device
-    curve: List[float] = []
+    prefix_ends = list(range(1, len(input_ids)))
     with torch.no_grad():
-        for prefix_end in range(1, len(input_ids)):
-            augmented_ids = input_ids[:prefix_end] + list(probe_token_ids)
-            inputs = torch.tensor([augmented_ids], dtype=torch.long, device=input_device)
-            outputs = model(input_ids=inputs, use_cache=False)
-            logits = outputs.logits[0].float()
-            span_prob = 1.0
-            for probe_offset, probe_token_id in enumerate(probe_token_ids):
-                logit_index = prefix_end - 1 + probe_offset
-                token_logits = logits[logit_index]
-                token_logprob = token_logits[probe_token_id] - torch.logsumexp(token_logits, dim=-1)
-                span_prob *= float(torch.exp(token_logprob).item())
-            curve.append(span_prob)
-    return curve
+        full_inputs = torch.tensor([input_ids], dtype=torch.long, device=input_device)
+        full_outputs = model(input_ids=full_inputs, use_cache=False)
+        full_logits = full_outputs.logits[0].float()
+        span_probs: List[float] = []
+        first_token_id = probe_token_ids[0]
+        for prefix_end in prefix_ends:
+            token_logits = full_logits[prefix_end - 1]
+            token_logprob = token_logits[first_token_id] - torch.logsumexp(token_logits, dim=-1)
+            span_probs.append(float(torch.exp(token_logprob).item()))
+
+        for probe_offset, probe_token_id in enumerate(probe_token_ids[1:], start=1):
+            continuation_probs: List[float] = []
+            sequences = [input_ids[:prefix_end] + list(probe_token_ids[:probe_offset]) for prefix_end in prefix_ends]
+            for chunk_start in range(0, len(sequences), batch_size):
+                chunk = sequences[chunk_start : chunk_start + batch_size]
+                max_len = max(len(seq) for seq in chunk)
+                padded_inputs = []
+                attention_masks = []
+                last_indices = []
+                for seq in chunk:
+                    pad_len = max_len - len(seq)
+                    padded_inputs.append(seq + [pad_token_id] * pad_len)
+                    attention_masks.append([1] * len(seq) + [0] * pad_len)
+                    last_indices.append(len(seq) - 1)
+                batch_inputs = torch.tensor(padded_inputs, dtype=torch.long, device=input_device)
+                batch_masks = torch.tensor(attention_masks, dtype=torch.long, device=input_device)
+                batch_outputs = model(
+                    input_ids=batch_inputs,
+                    attention_mask=batch_masks,
+                    use_cache=False,
+                )
+                batch_logits = batch_outputs.logits.float()
+                for row_idx, last_index in enumerate(last_indices):
+                    token_logits = batch_logits[row_idx, last_index]
+                    token_logprob = token_logits[probe_token_id] - torch.logsumexp(token_logits, dim=-1)
+                    continuation_probs.append(float(torch.exp(token_logprob).item()))
+            span_probs = [base * cont for base, cont in zip(span_probs, continuation_probs)]
+
+    return span_probs
 
 
 def compute_correctness(row: Dict) -> float:
@@ -286,7 +314,12 @@ def main() -> None:
     for local_idx, row in enumerate(rows):
         messages = prepare_messages(row, system_prompt)
         input_ids, spans = locate_marker_spans(tokenizer, messages, args.marker_text)
-        curve = compute_probe_curve(model, input_ids, probe_token_ids)
+        curve = compute_probe_curve(
+            model,
+            input_ids,
+            probe_token_ids,
+            pad_token_id=tokenizer.pad_token_id,
+        )
         step_count = count_action_steps(row)
         correctness = compute_correctness(row)
 
