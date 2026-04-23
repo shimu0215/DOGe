@@ -73,6 +73,7 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
         entropy_thought_only: bool = False,
         thought_template: str = "Thought:",
         code_template: str = "Code:",
+        code_start_entropy: bool = False,
         **kwargs,
     ):
         super().__init__(*args, mlm=mlm, **kwargs)
@@ -120,6 +121,7 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
         self.ignore_index = ignore_index
         self.padding_free = padding_free
         self.entropy_thought_only = entropy_thought_only
+        self.code_start_entropy = code_start_entropy
         self.thought_token_ids = self.tokenizer.encode(thought_template, add_special_tokens=False)
         self.code_token_ids = self.tokenizer.encode(code_template, add_special_tokens=False)
 
@@ -138,6 +140,7 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
     def torch_call(self, examples: list[Union[list[int], Any, dict[str, Any]]]) -> dict[str, Any]:
         batch = super().torch_call(examples)
         entropy_mask = torch.zeros_like(batch["labels"], dtype=torch.bool) if self.entropy_thought_only else None
+        code_start_mask = torch.zeros_like(batch["labels"], dtype=torch.bool) if self.code_start_entropy else None
 
         sequence_lengths = (batch["input_ids"] != self.tokenizer.pad_token_id).sum(dim=1)
         content_starts = (
@@ -272,6 +275,23 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
                                     entropy_end = next_instruction_pos
                                 if entropy_start < entropy_end:
                                     entropy_mask[i, entropy_start:entropy_end] = True
+                        if self.code_start_entropy:
+                            assistant_token_ids = batch["input_ids"][i, response_pos:next_instruction_pos].tolist()
+                            thought_positions = self._find_subsequence_positions(
+                                assistant_token_ids, self.thought_token_ids
+                            )
+                            code_positions = self._find_subsequence_positions(
+                                assistant_token_ids, self.code_token_ids
+                            )
+                            for thought_pos in thought_positions:
+                                later_code_positions = [pos for pos in code_positions if pos > thought_pos]
+                                if not later_code_positions:
+                                    continue
+                                code_pos = later_code_positions[0]
+                                code_start = response_pos + thought_pos + len(self.thought_token_ids)
+                                code_end = response_pos + code_pos + 1
+                                if code_start < code_end:
+                                    code_start_mask[i, code_start:code_end] = True
                         last_processed_instruction_pos = next_instruction_pos
                     else:
                         # 2 reponses in a row so we unmask the special tokens for response in the middle
@@ -308,8 +328,14 @@ class DataCollatorForCompletionOnlyLMMultiTurn(DataCollatorForLanguageModeling):
 
             if entropy_mask is not None:
                 batch["entropy_mask"] = entropy_mask[attn_mask.bool()].unsqueeze(0)
+            if code_start_mask is not None:
+                batch["code_start_mask"] = code_start_mask[attn_mask.bool()].unsqueeze(0)
         elif entropy_mask is not None:
             batch["entropy_mask"] = entropy_mask
+            if code_start_mask is not None:
+                batch["code_start_mask"] = code_start_mask
+        elif code_start_mask is not None:
+            batch["code_start_mask"] = code_start_mask
 
         # # Let's analyze this
         # labels = batch["labels"][0] # List of label

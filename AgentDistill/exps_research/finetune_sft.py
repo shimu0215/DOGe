@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append(".")
 import json
+import math
 import torch
 import random
 from datetime import datetime
@@ -73,12 +74,24 @@ class RandomTrajectoryDataset(torch.utils.data.Dataset):
 
 
 class EntropyRegularizedSFTTrainer(SFTTrainer):
-    def __init__(self, *args, entropy_lambda: float = 0.0, **kwargs):
+    def __init__(
+        self,
+        *args,
+        entropy_lambda: float = 0.0,
+        entropy_regularization_mode: str = "token_entropy",
+        code_start_token_ids: list[int] | None = None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.entropy_lambda = entropy_lambda
+        self.entropy_regularization_mode = entropy_regularization_mode
+        self.code_start_token_ids = sorted(set(code_start_token_ids or []))
+        self._component_metric_sums = None
+        self._component_metric_count = 0
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         entropy_mask = inputs.pop("entropy_mask", None)
+        code_start_mask = inputs.pop("code_start_mask", None)
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.logits
@@ -89,62 +102,177 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
 
         shifted_logits = logits[..., :-1, :].contiguous()
         shifted_labels = labels[..., 1:].contiguous()
-        loss_fct = torch.nn.CrossEntropyLoss(ignore_index=-100)
-        sft_loss = loss_fct(
-            shifted_logits.view(-1, shifted_logits.size(-1)),
-            shifted_labels.view(-1),
-        )
-
         valid_mask = shifted_labels.ne(-100)
-        if entropy_mask is not None:
-            shifted_entropy_mask = entropy_mask[..., 1:].contiguous().to(dtype=torch.bool, device=shifted_labels.device)
-            entropy_valid_mask = valid_mask & shifted_entropy_mask
-        else:
-            entropy_valid_mask = valid_mask
 
-        if torch.any(entropy_valid_mask):
-            log_probs = torch.log_softmax(shifted_logits.float(), dim=-1)
-            probs = log_probs.exp()
-            token_entropy = -(probs * log_probs).sum(dim=-1)
-            entropy = token_entropy.masked_select(entropy_valid_mask).mean()
+        if torch.any(valid_mask):
+            loss_fct = torch.nn.CrossEntropyLoss()
+            sft_loss = loss_fct(
+                shifted_logits[valid_mask].float(),
+                shifted_labels[valid_mask],
+            )
         else:
-            entropy = torch.zeros((), device=shifted_logits.device, dtype=shifted_logits.dtype)
+            sft_loss = shifted_logits.float().sum() * 0.0
+
+        if self.entropy_regularization_mode == "code_anchor":
+            if not self.code_start_token_ids:
+                raise ValueError("code_start_token_ids must be provided for code_anchor entropy regularization.")
+            if code_start_mask is not None:
+                shifted_code_start_mask = code_start_mask[..., 1:].contiguous().to(
+                    dtype=torch.bool, device=shifted_labels.device
+                )
+                code_start_valid_mask = valid_mask & shifted_code_start_mask
+            else:
+                code_start_valid_mask = valid_mask
+
+            if torch.any(code_start_valid_mask):
+                log_probs = torch.log_softmax(shifted_logits.float(), dim=-1)
+                anchor_log_probs = log_probs[..., self.code_start_token_ids]
+                code_start_scores = torch.logsumexp(anchor_log_probs, dim=-1)
+                masked_scores = code_start_scores.masked_fill(~code_start_valid_mask, float("-inf"))
+                has_valid = code_start_valid_mask.any(dim=-1)
+                pi = torch.softmax(masked_scores, dim=-1)
+                log_pi = torch.log_softmax(masked_scores, dim=-1)
+                code_start_entropy = -(pi * log_pi).nan_to_num(0.0).sum(dim=-1)
+                entropy = torch.where(
+                    has_valid,
+                    code_start_entropy,
+                    torch.zeros_like(code_start_entropy),
+                ).mean()
+            else:
+                entropy = shifted_logits.float().sum() * 0.0
+            component_metrics = {
+                "sft_loss": float(sft_loss.detach().float().item()),
+                "code_start_entropy": float(entropy.detach().float().item()),
+                "entropy_term": float((self.entropy_lambda * entropy).detach().float().item()),
+            }
+        else:
+            if entropy_mask is not None:
+                shifted_entropy_mask = entropy_mask[..., 1:].contiguous().to(
+                    dtype=torch.bool, device=shifted_labels.device
+                )
+                entropy_valid_mask = valid_mask & shifted_entropy_mask
+            else:
+                entropy_valid_mask = valid_mask
+
+            if torch.any(entropy_valid_mask):
+                log_probs = torch.log_softmax(shifted_logits.float(), dim=-1)
+                probs = log_probs.exp()
+                token_entropy = -(probs * log_probs).sum(dim=-1)
+                entropy = token_entropy.masked_select(entropy_valid_mask).mean()
+            else:
+                entropy = shifted_logits.float().sum() * 0.0
+            component_metrics = {
+                "sft_loss": float(sft_loss.detach().float().item()),
+                "entropy": float(entropy.detach().float().item()),
+                "entropy_term": float((self.entropy_lambda * entropy).detach().float().item()),
+            }
 
         loss = sft_loss - self.entropy_lambda * entropy
+        loss = loss.reshape(())
         outputs.loss = loss
+        if self._component_metric_sums is None:
+            self._component_metric_sums = {k: 0.0 for k in component_metrics}
+            self._component_metric_count = 0
+        for key, value in component_metrics.items():
+            self._component_metric_sums[key] += value
+        self._component_metric_count += 1
 
         return (loss, outputs) if return_outputs else loss
 
+    def log(self, logs, *args, **kwargs):
+        if self._component_metric_sums and self._component_metric_count > 0:
+            for key, value in self._component_metric_sums.items():
+                logs.setdefault(key, value / self._component_metric_count)
+            self._component_metric_sums = None
+            self._component_metric_count = 0
+        return super().log(logs, *args, **kwargs)
+
 
 class TrainLossEarlyStoppingCallback(TrainerCallback):
-    def __init__(self, patience_epochs: float, min_delta: float = 0.0):
-        self.patience_epochs = patience_epochs
+    def __init__(self, patience_steps: int, min_delta: float = 0.0):
+        self.patience_steps = patience_steps
         self.min_delta = min_delta
         self.best_loss = None
-        self.best_epoch = None
+        self.best_step = None
 
     def on_log(self, args, state, control, logs=None, **kwargs):
         if not logs or "loss" not in logs:
             return control
-        if state.epoch is None:
+        if state.global_step is None:
             return control
 
         current_loss = float(logs["loss"])
-        current_epoch = float(state.epoch)
+        current_step = int(state.global_step)
 
         if self.best_loss is None or current_loss < self.best_loss - self.min_delta:
             self.best_loss = current_loss
-            self.best_epoch = current_epoch
+            self.best_step = current_step
             return control
 
-        if self.best_epoch is not None and (current_epoch - self.best_epoch) >= self.patience_epochs:
+        if self.best_step is not None and (current_step - self.best_step) >= self.patience_steps:
             print(
-                f"Early stopping triggered: loss has not improved for {self.patience_epochs} epoch(s). "
-                f"best_loss={self.best_loss:.4f} at epoch={self.best_epoch:.4f}, "
-                f"current_loss={current_loss:.4f} at epoch={current_epoch:.4f}"
+                f"Early stopping triggered: loss has not improved for {self.patience_steps} step(s). "
+                f"best_loss={self.best_loss:.4f} at step={self.best_step}, "
+                f"current_loss={current_loss:.4f} at step={current_step}"
             )
             control.should_training_stop = True
 
+        return control
+
+
+class TrainLossEpochAverageEarlyStoppingCallback(TrainerCallback):
+    def __init__(self, patience_epochs: int, min_delta: float = 0.0):
+        self.patience_epochs = patience_epochs
+        self.min_delta = min_delta
+        self.current_epoch_idx = None
+        self.epoch_loss_sum = 0.0
+        self.epoch_loss_count = 0
+        self.best_epoch_loss = None
+        self.best_epoch_idx = None
+        self.bad_epoch_count = 0
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if not logs or "loss" not in logs or state.epoch is None:
+            return control
+
+        epoch_idx = max(int(math.ceil(float(state.epoch))) - 1, 0)
+        if self.current_epoch_idx is None:
+            self.current_epoch_idx = epoch_idx
+        elif epoch_idx != self.current_epoch_idx:
+            # If logging crosses an epoch boundary before on_epoch_end fires, drop the stale accumulator
+            # and let the finalized epoch be handled by on_epoch_end.
+            self.current_epoch_idx = epoch_idx
+            self.epoch_loss_sum = 0.0
+            self.epoch_loss_count = 0
+
+        self.epoch_loss_sum += float(logs["loss"])
+        self.epoch_loss_count += 1
+        return control
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        if self.epoch_loss_count == 0:
+            return control
+
+        avg_epoch_loss = self.epoch_loss_sum / self.epoch_loss_count
+        epoch_idx = self.current_epoch_idx if self.current_epoch_idx is not None else max(int(round(float(state.epoch))) - 1, 0)
+
+        if self.best_epoch_loss is None or avg_epoch_loss < self.best_epoch_loss - self.min_delta:
+            self.best_epoch_loss = avg_epoch_loss
+            self.best_epoch_idx = epoch_idx
+            self.bad_epoch_count = 0
+        else:
+            self.bad_epoch_count += 1
+            if self.bad_epoch_count >= self.patience_epochs:
+                print(
+                    f"Early stopping triggered: epoch-avg loss has not improved for {self.patience_epochs} epoch(s). "
+                    f"best_epoch_loss={self.best_epoch_loss:.4f} at epoch={self.best_epoch_idx}, "
+                    f"current_epoch_loss={avg_epoch_loss:.4f} at epoch={epoch_idx}"
+                )
+                control.should_training_stop = True
+
+        self.epoch_loss_sum = 0.0
+        self.epoch_loss_count = 0
+        self.current_epoch_idx = None
         return control
 
 def setup_savedir(args):
@@ -349,12 +477,25 @@ def main(args):
     else:
         raise NotImplementedError(f"Unsupported model {args.model_name} for response template")
 
+    code_anchor_token_ids = []
+    if args.use_entropy_regularization and args.entropy_regularization_mode == "code_anchor":
+        code_anchor_candidates = [item.strip() for item in args.code_anchor_strings.split(",") if item.strip()]
+        if not code_anchor_candidates:
+            raise ValueError("code_anchor regularization requires at least one code anchor candidate string.")
+        for candidate in code_anchor_candidates:
+            token_ids = tokenizer.encode(candidate, add_special_tokens=False)
+            if token_ids:
+                code_anchor_token_ids.append(token_ids[0])
+        if not code_anchor_token_ids:
+            raise ValueError("Unable to derive code anchor token ids from the provided code anchor candidate strings.")
+
     if args.solution_type == "agent":
         collator = DataCollatorForCompletionOnlyLMMultiTurn(
             response_template,
             instruction_template=instruction_template,
             tokenizer=tokenizer,
             entropy_thought_only=args.entropy_on_thought_only,
+            code_start_entropy=args.use_entropy_regularization and args.entropy_regularization_mode == "code_anchor",
         )
     else:
         try:
@@ -380,6 +521,8 @@ def main(args):
         trainer = EntropyRegularizedSFTTrainer(
             args.model_name if not model else model,
             entropy_lambda=args.entropy_lambda,
+            entropy_regularization_mode=args.entropy_regularization_mode,
+            code_start_token_ids=code_anchor_token_ids,
             **trainer_kwargs,
         )
     else:
@@ -389,8 +532,15 @@ def main(args):
         )
     if args.early_stop_patience_epochs > 0:
         trainer.add_callback(
-            TrainLossEarlyStoppingCallback(
+            TrainLossEpochAverageEarlyStoppingCallback(
                 patience_epochs=args.early_stop_patience_epochs,
+                min_delta=args.early_stop_min_delta,
+            )
+        )
+    elif args.early_stop_patience_steps > 0:
+        trainer.add_callback(
+            TrainLossEarlyStoppingCallback(
+                patience_steps=args.early_stop_patience_steps,
                 min_delta=args.early_stop_min_delta,
             )
         )
@@ -437,7 +587,15 @@ if __name__ == "__main__":
     parser.add_argument("--use_entropy_regularization", action="store_true")
     parser.add_argument("--entropy_lambda", type=float, default=0.0)
     parser.add_argument("--entropy_on_thought_only", action="store_true")
-    parser.add_argument("--early_stop_patience_epochs", type=float, default=0.0)
+    parser.add_argument(
+        "--entropy_regularization_mode",
+        type=str,
+        default="token_entropy",
+        choices=["token_entropy", "code_anchor"],
+    )
+    parser.add_argument("--code_anchor_strings", type=str, default="Code")
+    parser.add_argument("--early_stop_patience_steps", type=int, default=30)
+    parser.add_argument("--early_stop_patience_epochs", type=int, default=0)
     parser.add_argument("--early_stop_min_delta", type=float, default=0.0)
     parser.add_argument("--lora_r", type=int, default=64)
     parser.add_argument("--lora_alpha", type=int, default=-1)
