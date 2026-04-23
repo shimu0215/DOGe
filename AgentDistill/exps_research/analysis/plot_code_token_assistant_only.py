@@ -50,9 +50,10 @@ def locate_assistant_token_spans(tokenizer, messages: Sequence[Dict[str, str]]) 
     for message_idx, message in enumerate(messages):
         if message.get("role") != "assistant":
             continue
-        content = str(message.get("content", ""))
-        before_ids = tokenize_messages(tokenizer, make_truncated_messages(messages, message_idx, 0))
-        through_ids = tokenize_messages(tokenizer, make_truncated_messages(messages, message_idx, len(content)))
+        before_messages = list(messages[:message_idx])
+        through_messages = list(messages[: message_idx + 1])
+        before_ids = tokenize_messages(tokenizer, before_messages) if before_messages else []
+        through_ids = tokenize_messages(tokenizer, through_messages)
         token_start = align_prefix(full_ids, before_ids)
         token_end = align_prefix(full_ids, through_ids)
         if token_end > token_start:
