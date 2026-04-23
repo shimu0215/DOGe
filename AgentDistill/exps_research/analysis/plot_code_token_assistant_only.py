@@ -12,13 +12,9 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from exps_research.analysis.plot_tool_call_prob_curve import (
-    MarkerSpan,
-    align_prefix,
     build_python_only_system_prompt,
     get_torch_dtype,
     load_rows,
-    locate_marker_spans,
-    make_truncated_messages,
     prepare_messages,
     sanitize_plot_text,
     shorten,
@@ -44,21 +40,49 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def find_subsequence(sequence: Sequence[int], subsequence: Sequence[int], start_idx: int = 0) -> int:
+    if not subsequence:
+        return start_idx
+    last_start = len(sequence) - len(subsequence) + 1
+    for idx in range(start_idx, max(last_start, start_idx)):
+        if list(sequence[idx : idx + len(subsequence)]) == list(subsequence):
+            return idx
+    return -1
+
+
 def locate_assistant_token_spans(tokenizer, messages: Sequence[Dict[str, str]]) -> Tuple[List[int], List[Tuple[int, int]]]:
     full_ids = tokenize_messages(tokenizer, messages)
     spans: List[Tuple[int, int]] = []
+    search_cursor = 0
     for message_idx, message in enumerate(messages):
         if message.get("role") != "assistant":
             continue
-        before_messages = list(messages[:message_idx])
-        through_messages = list(messages[: message_idx + 1])
-        before_ids = tokenize_messages(tokenizer, before_messages) if before_messages else []
-        through_ids = tokenize_messages(tokenizer, through_messages)
-        token_start = align_prefix(full_ids, before_ids)
-        token_end = align_prefix(full_ids, through_ids)
+        content = str(message.get("content", ""))
+        content_ids = tokenizer.encode(content, add_special_tokens=False)
+        token_start = find_subsequence(full_ids, content_ids, start_idx=search_cursor)
+        if token_start < 0:
+            raise ValueError(f"Unable to locate assistant message {message_idx} in the full token sequence.")
+        token_end = token_start + len(content_ids)
         if token_end > token_start:
             spans.append((token_start, token_end))
+            search_cursor = token_end
     return full_ids, spans
+
+
+def locate_tool_call_starts_within_spans(
+    tokenizer,
+    input_ids: Sequence[int],
+    assistant_spans: Sequence[Tuple[int, int]],
+    marker_text: str = "Code:",
+) -> List[int]:
+    marker_ids = tokenizer.encode(marker_text, add_special_tokens=False)
+    starts: List[int] = []
+    for span_start, span_end in assistant_spans:
+        span_ids = input_ids[span_start:span_end]
+        local_idx = find_subsequence(span_ids, marker_ids, start_idx=0)
+        if local_idx >= 0:
+            starts.append(span_start + local_idx)
+    return starts
 
 
 def assistant_prefix_positions(assistant_spans: Sequence[Tuple[int, int]]) -> List[int]:
@@ -198,7 +222,7 @@ def main() -> None:
     for local_idx, row in enumerate(rows):
         messages = prepare_messages(row, system_prompt)
         input_ids, assistant_spans = locate_assistant_token_spans(tokenizer, messages)
-        _, tool_call_spans = locate_marker_spans(tokenizer, messages, "Code:")
+        tool_call_starts = locate_tool_call_starts_within_spans(tokenizer, input_ids, assistant_spans, "Code:")
         full_curve = compute_next_token_curve(model, input_ids, target_token_id)
 
         valid_positions = []
@@ -242,7 +266,7 @@ def main() -> None:
             figure_path,
             full_axis_positions,
             full_axis_probs,
-            [span.token_start for span in tool_call_spans],
+            tool_call_starts,
             row,
             step_count,
             correctness,
@@ -258,7 +282,7 @@ def main() -> None:
                 "correct": correctness,
                 "step_count": step_count,
                 "assistant_token_spans": assistant_spans,
-                "actual_tool_call_starts": [span.token_start for span in tool_call_spans],
+                "actual_tool_call_starts": tool_call_starts,
                 "target_text": args.target_text,
                 "target_token_id": target_token_id,
                 "curve_positions": valid_positions,
