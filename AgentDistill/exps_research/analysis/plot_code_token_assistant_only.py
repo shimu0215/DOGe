@@ -113,15 +113,16 @@ def render_context(
 
 def plot_one(
     output_path: Path,
-    positions: Sequence[int],
-    probs: Sequence[float],
+    full_axis_positions: Sequence[int],
+    full_axis_probs: Sequence[float | None],
     tool_call_starts: Sequence[int],
     row: Dict,
     step_count: int,
     correctness: float,
 ) -> None:
     fig, ax = plt.subplots(figsize=(12, 4.8))
-    ax.plot(positions, probs, color="steelblue", linewidth=1.5, label="P(next token = 'Code')")
+    plot_values = [float("nan") if value is None else value for value in full_axis_probs]
+    ax.plot(full_axis_positions, plot_values, color="steelblue", linewidth=1.5, label="P(next token = 'Code')")
     for idx, pos in enumerate(tool_call_starts):
         ax.axvline(
             pos,
@@ -131,7 +132,7 @@ def plot_one(
             alpha=0.8,
             label="actual tool-call start" if idx == 0 else None,
         )
-    ax.set_xlabel("Full-token position, filtered to assistant-generated region")
+    ax.set_xlabel("Full-token position across the cleaned full sequence")
     ax.set_ylabel("Probability")
     ax.set_title(
         f"sample={row['_raw_index']} steps={step_count} "
@@ -207,6 +208,10 @@ def main() -> None:
             valid_positions.append(pos)
             valid_probs.append(full_curve[pos - 1])
 
+        assistant_prob_by_position = {pos: prob for pos, prob in zip(valid_positions, valid_probs)}
+        full_axis_positions = list(range(1, len(input_ids)))
+        full_axis_probs = [assistant_prob_by_position.get(pos) for pos in full_axis_positions]
+
         ranked = sorted(
             zip(valid_positions, valid_probs),
             key=lambda item: item[1],
@@ -234,8 +239,8 @@ def main() -> None:
         figure_path = output_dir / f"trajectory_{local_idx:02d}_sample_{row['_raw_index']:04d}.png"
         plot_one(
             figure_path,
-            valid_positions,
-            valid_probs,
+            full_axis_positions,
+            full_axis_probs,
             [span.token_start for span in tool_call_spans],
             row,
             step_count,
