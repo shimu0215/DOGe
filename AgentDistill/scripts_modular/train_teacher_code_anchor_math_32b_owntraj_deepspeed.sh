@@ -38,6 +38,7 @@ EARLY_STOP_PATIENCE_STEPS="${EARLY_STOP_PATIENCE_STEPS:-30}"
 EARLY_STOP_PATIENCE_EPOCHS="${EARLY_STOP_PATIENCE_EPOCHS:-0}"
 EARLY_STOP_MIN_DELTA="${EARLY_STOP_MIN_DELTA:-0}"
 CODE_ANCHOR_STRINGS="${CODE_ANCHOR_STRINGS:-Code}"
+DATASET_SIZE="${DATASET_SIZE:--1}"
 
 mkdir -p logs
 
@@ -169,6 +170,7 @@ for lambda in "${LAMBDAS[@]}"; do
   echo "SAVE_STRATEGY=$SAVE_STRATEGY SAVE_STEPS=$SAVE_STEPS SAVE_TOTAL_LIMIT=$SAVE_TOTAL_LIMIT" | tee -a "$run_log"
   echo "EARLY_STOP_PATIENCE_STEPS=$EARLY_STOP_PATIENCE_STEPS EARLY_STOP_PATIENCE_EPOCHS=$EARLY_STOP_PATIENCE_EPOCHS EARLY_STOP_MIN_DELTA=$EARLY_STOP_MIN_DELTA" | tee -a "$run_log"
   echo "CODE_ANCHOR_STRINGS=$CODE_ANCHOR_STRINGS" | tee -a "$run_log"
+  echo "DATASET_SIZE=$DATASET_SIZE" | tee -a "$run_log"
 
   train_cmd=(
     "$TORCHRUN_BIN" --nproc_per_node="${NPROC_PER_NODE:-4}" exps_research/finetune_sft.py
@@ -196,6 +198,10 @@ for lambda in "${LAMBDAS[@]}"; do
     --code_anchor_strings "$CODE_ANCHOR_STRINGS"
     --entropy_lambda "$lambda"
   )
+
+  if [[ "$DATASET_SIZE" -gt 0 ]]; then
+    train_cmd+=(--dataset_size "$DATASET_SIZE")
+  fi
 
   "${train_cmd[@]}" >> "$run_log" 2>&1 &
   train_pid=$!
