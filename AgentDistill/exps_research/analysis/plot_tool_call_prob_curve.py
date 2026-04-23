@@ -153,17 +153,26 @@ def get_torch_dtype(dtype_name: str):
 def compute_probe_curve(
     model,
     input_ids: List[int],
-    probe_token_id: int,
+    probe_token_ids: Sequence[int],
 ) -> List[float]:
+    if not probe_token_ids:
+        raise ValueError("probe_token_ids must be non-empty.")
     input_device = next(model.parameters()).device
-    inputs = torch.tensor([input_ids], dtype=torch.long, device=input_device)
+    curve: List[float] = []
     with torch.no_grad():
-        outputs = model(input_ids=inputs, use_cache=False)
-    logits = outputs.logits[0, :-1].float()
-    selected = logits[:, probe_token_id]
-    normalization = torch.logsumexp(logits, dim=-1)
-    probs = torch.exp(selected - normalization)
-    return probs.cpu().tolist()
+        for prefix_end in range(1, len(input_ids)):
+            augmented_ids = input_ids[:prefix_end] + list(probe_token_ids)
+            inputs = torch.tensor([augmented_ids], dtype=torch.long, device=input_device)
+            outputs = model(input_ids=inputs, use_cache=False)
+            logits = outputs.logits[0].float()
+            span_prob = 1.0
+            for probe_offset, probe_token_id in enumerate(probe_token_ids):
+                logit_index = prefix_end - 1 + probe_offset
+                token_logits = logits[logit_index]
+                token_logprob = token_logits[probe_token_id] - torch.logsumexp(token_logits, dim=-1)
+                span_prob *= float(torch.exp(token_logprob).item())
+            curve.append(span_prob)
+    return curve
 
 
 def compute_correctness(row: Dict) -> float:
@@ -204,7 +213,7 @@ def plot_one(
 ) -> None:
     fig, ax = plt.subplots(figsize=(12, 4.8))
     x_positions = list(range(1, len(curve) + 1))
-    ax.plot(x_positions, curve, color="steelblue", linewidth=1.5, label=f"P(next token starts {probe_text!r})")
+    ax.plot(x_positions, curve, color="steelblue", linewidth=1.5, label=f"P(next span = {probe_text!r})")
     for idx, span in enumerate(spans):
         ax.axvline(
             span.token_start,
@@ -264,8 +273,6 @@ def main() -> None:
     probe_token_ids = tokenizer.encode(args.probe_text, add_special_tokens=False)
     if not probe_token_ids:
         raise ValueError(f"Probe text {args.probe_text!r} produced no tokens.")
-    probe_token_id = probe_token_ids[0]
-
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name,
         torch_dtype=get_torch_dtype(args.torch_dtype),
@@ -279,7 +286,7 @@ def main() -> None:
     for local_idx, row in enumerate(rows):
         messages = prepare_messages(row, system_prompt)
         input_ids, spans = locate_marker_spans(tokenizer, messages, args.marker_text)
-        curve = compute_probe_curve(model, input_ids, probe_token_id)
+        curve = compute_probe_curve(model, input_ids, probe_token_ids)
         step_count = count_action_steps(row)
         correctness = compute_correctness(row)
 
