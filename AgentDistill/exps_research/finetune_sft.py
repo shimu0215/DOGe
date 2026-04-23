@@ -111,7 +111,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
                 shifted_labels[valid_mask],
             )
         else:
-            sft_loss = shifted_logits.float().sum() * 0.0
+            sft_loss = torch.zeros((), device=shifted_logits.device, dtype=torch.float32)
 
         if self.entropy_regularization_mode == "code_anchor":
             if not self.code_start_token_ids:
@@ -139,7 +139,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
                     torch.zeros_like(code_start_entropy),
                 ).mean()
             else:
-                entropy = shifted_logits.float().sum() * 0.0
+                entropy = torch.zeros((), device=shifted_logits.device, dtype=torch.float32)
             component_metrics = {
                 "sft_loss": float(sft_loss.detach().float().item()),
                 "code_start_entropy": float(entropy.detach().float().item()),
@@ -160,7 +160,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
                 token_entropy = -(probs * log_probs).sum(dim=-1)
                 entropy = token_entropy.masked_select(entropy_valid_mask).mean()
             else:
-                entropy = shifted_logits.float().sum() * 0.0
+                entropy = torch.zeros((), device=shifted_logits.device, dtype=torch.float32)
             component_metrics = {
                 "sft_loss": float(sft_loss.detach().float().item()),
                 "entropy": float(entropy.detach().float().item()),
