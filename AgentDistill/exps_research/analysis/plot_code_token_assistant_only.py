@@ -71,17 +71,19 @@ def locate_assistant_token_spans(tokenizer, messages: Sequence[Dict[str, str]]) 
 
 def locate_tool_call_starts_within_spans(
     tokenizer,
-    input_ids: Sequence[int],
+    messages: Sequence[Dict[str, str]],
     assistant_spans: Sequence[Tuple[int, int]],
     marker_text: str = "Code:",
 ) -> List[int]:
-    marker_ids = tokenizer.encode(marker_text, add_special_tokens=False)
     starts: List[int] = []
-    for span_start, span_end in assistant_spans:
-        span_ids = input_ids[span_start:span_end]
-        local_idx = find_subsequence(span_ids, marker_ids, start_idx=0)
-        if local_idx >= 0:
-            starts.append(span_start + local_idx)
+    assistant_messages = [message for message in messages if message.get("role") == "assistant"]
+    for (span_start, _span_end), message in zip(assistant_spans, assistant_messages):
+        content = str(message.get("content", ""))
+        char_idx = content.find(marker_text)
+        if char_idx < 0:
+            continue
+        prefix_ids = tokenizer.encode(content[:char_idx], add_special_tokens=False)
+        starts.append(span_start + len(prefix_ids))
     return starts
 
 
@@ -222,7 +224,7 @@ def main() -> None:
     for local_idx, row in enumerate(rows):
         messages = prepare_messages(row, system_prompt)
         input_ids, assistant_spans = locate_assistant_token_spans(tokenizer, messages)
-        tool_call_starts = locate_tool_call_starts_within_spans(tokenizer, input_ids, assistant_spans, "Code:")
+        tool_call_starts = locate_tool_call_starts_within_spans(tokenizer, messages, assistant_spans, "Code:")
         full_curve = compute_next_token_curve(model, input_ids, target_token_id)
 
         valid_positions = []
