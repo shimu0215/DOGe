@@ -39,6 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--marker_text", type=str, default="Code:")
     parser.add_argument("--probe_text", type=str, default="Code:")
+    parser.add_argument("--probe_batch_size", type=int, default=4)
     parser.add_argument("--torch_dtype", type=str, default="bfloat16")
     parser.add_argument("--attn_implementation", type=str, default="sdpa")
     parser.add_argument("--trust_remote_code", action="store_true")
@@ -155,7 +156,7 @@ def compute_probe_curve(
     input_ids: List[int],
     probe_token_ids: Sequence[int],
     pad_token_id: int,
-    batch_size: int = 32,
+    batch_size: int = 4,
 ) -> List[float]:
     if not probe_token_ids:
         raise ValueError("probe_token_ids must be non-empty.")
@@ -319,6 +320,7 @@ def main() -> None:
             input_ids,
             probe_token_ids,
             pad_token_id=tokenizer.pad_token_id,
+            batch_size=args.probe_batch_size,
         )
         step_count = count_action_steps(row)
         correctness = compute_correctness(row)
