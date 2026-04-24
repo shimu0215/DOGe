@@ -136,6 +136,21 @@ if not path.exists():
     print(0)
     raise SystemExit
 
+def has_usable_trajectory(entry):
+    # For agent collection, only rows with structured log_data are considered complete.
+    # Timeout/worker-failure placeholders set log_data to null and should be recollected.
+    log_data = entry.get("log_data")
+    if isinstance(log_data, dict):
+        return True
+    if isinstance(log_data, str):
+        try:
+            parsed = json.loads(log_data)
+            if isinstance(parsed, dict):
+                return True
+        except Exception:
+            pass
+    return False
+
 seen = set()
 with path.open() as f:
     for line in f:
@@ -145,6 +160,8 @@ with path.open() as f:
         try:
             entry = json.loads(line)
         except Exception:
+            continue
+        if not has_usable_trajectory(entry):
             continue
         question = entry.get("question") or entry.get("problem") or entry.get("prompt")
         if question:
@@ -195,6 +212,15 @@ if existing_path.exists():
             try:
                 entry = json.loads(line)
             except Exception:
+                continue
+            log_data = entry.get("log_data")
+            if isinstance(log_data, str):
+                try:
+                    log_data = json.loads(log_data)
+                except Exception:
+                    log_data = None
+            # Treat timeout/failure placeholders as incomplete, so reruns can backfill.
+            if not isinstance(log_data, dict):
                 continue
             question = entry.get("question") or entry.get("problem") or entry.get("prompt")
             if question:

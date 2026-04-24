@@ -11,7 +11,7 @@ LORA_FOLDER=""
 LOG_ROOT="/scratch/wzhao20/AKDA2/AgentDistill/logs/qa_results_python_only_teacher"
 PORT_BASE="8000"
 TP_SIZE="4"
-MAX_TOKENS="1024"
+MAX_TOKENS="256"
 MAX_STEPS="5"
 PARALLEL_WORKERS="4"
 GPU_UTIL="0.85"
@@ -29,6 +29,7 @@ ANSWER_TOOL_PROMPT_NAME="final_answer"
 VLLM_START_RETRIES="3"
 GPU_UTIL_FALLBACK_STEP="0.05"
 AUTO_TP_UPSCALE="1"
+REQUEST_TIMEOUT="600"
 
 usage() {
   cat <<'EOF'
@@ -46,6 +47,7 @@ Optional:
   --tp-size             Tensor parallel size
   --max-tokens          Generation max tokens
   --max-steps           Agent max steps
+  --request-timeout     Model request timeout in seconds (vLLM/OpenAI client timeout)
   --parallel-workers    run_experiment worker count
   --gpu-util            vLLM gpu-memory-utilization
   --max-lora-rank       vLLM max lora rank
@@ -72,6 +74,7 @@ while [[ $# -gt 0 ]]; do
     --tp-size) TP_SIZE="$2"; shift 2 ;;
     --max-tokens) MAX_TOKENS="$2"; shift 2 ;;
     --max-steps) MAX_STEPS="$2"; shift 2 ;;
+    --request-timeout) REQUEST_TIMEOUT="$2"; shift 2 ;;
     --parallel-workers) PARALLEL_WORKERS="$2"; shift 2 ;;
     --gpu-util) GPU_UTIL="$2"; shift 2 ;;
     --max-lora-rank) MAX_LORA_RANK="$2"; shift 2 ;;
@@ -93,9 +96,23 @@ if [[ -z "$MODEL_ID" || -z "$DATA_PATH" || -z "$SEED" ]]; then
   exit 1
 fi
 
-if (( PER_TASK_TIMEOUT > 0 && PER_TASK_TIMEOUT < 120 )); then
-  echo "per_task_timeout=$PER_TASK_TIMEOUT is too aggressive for multi-step agent eval; raising to 120s."
-  PER_TASK_TIMEOUT=120
+if (( PER_TASK_TIMEOUT > 0 )); then
+  timeout_floor=300
+  if [[ "$MAX_STEPS" =~ ^[0-9]+$ ]] && (( MAX_STEPS > 0 )); then
+    adaptive_floor=$(( MAX_STEPS * 90 ))
+    if (( adaptive_floor > timeout_floor )); then
+      timeout_floor=$adaptive_floor
+    fi
+  fi
+  if (( PER_TASK_TIMEOUT < timeout_floor )); then
+    echo "per_task_timeout=$PER_TASK_TIMEOUT is too aggressive for multi-step agent eval; raising to ${timeout_floor}s."
+    PER_TASK_TIMEOUT=$timeout_floor
+  fi
+fi
+
+# Keep request timeout aligned with outer per-task timeout when provided.
+if (( PER_TASK_TIMEOUT > 0 && REQUEST_TIMEOUT < PER_TASK_TIMEOUT )); then
+  REQUEST_TIMEOUT="$PER_TASK_TIMEOUT"
 fi
 
 setup_agentdistill_env
@@ -284,6 +301,7 @@ RUN_CMD=(
   --api_base "$API_BASE"
   --log_folder "$LOG_ROOT"
   --max_tokens "$MAX_TOKENS"
+  --request_timeout "$REQUEST_TIMEOUT"
   --multithreading
   --use_process_pool
   --parallel_workers "$PARALLEL_WORKERS"
