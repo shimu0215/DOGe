@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from typing import Optional
+import subprocess
+import sys
 
 def main():
     parser = argparse.ArgumentParser(description="Serve a VLLM model with OpenAI-compatible API")
@@ -116,10 +117,11 @@ def main():
         cmd.extend(["--max-lora-rank", str(args.max_lora_rank)])
 
     # Print the command that will be executed
-    print("Executing command:", " ".join(cmd))
-    
-    # Execute the command
-    os.system(" ".join(cmd))
+    print("Executing command:", " ".join(cmd), flush=True)
+
+    # Propagate the real exit code so callers can distinguish startup failure.
+    completed = subprocess.run(cmd, check=False)
+    sys.exit(completed.returncode)
 
 if __name__ == "__main__":
     main() 
