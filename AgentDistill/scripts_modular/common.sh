@@ -21,6 +21,29 @@ setup_agentdistill_env() {
   export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-/scratch/wzhao20/torchinductor_cache}"
   export VLLM_NO_USAGE_STATS=1
   export DO_NOT_TRACK=1
+  scrub_distributed_env
+}
+
+scrub_distributed_env() {
+  # Avoid inheriting torch/accelerate distributed state into standalone vLLM/eval runs.
+  local polluted_prefixes=("ACCELERATE_" "PET_" "TORCHELASTIC_")
+  local polluted_keys=(
+    MASTER_ADDR MASTER_PORT WORLD_SIZE RANK LOCAL_RANK LOCAL_WORLD_SIZE
+    GROUP_RANK ROLE_RANK ROLE_WORLD_SIZE OMP_NUM_THREADS
+  )
+
+  for key in "${polluted_keys[@]}"; do
+    unset "$key" || true
+  done
+
+  while IFS='=' read -r key _; do
+    for prefix in "${polluted_prefixes[@]}"; do
+      if [[ "$key" == "$prefix"* ]]; then
+        unset "$key" || true
+        break
+      fi
+    done
+  done < <(env)
 }
 
 cleanup_collection_resources() {
@@ -33,8 +56,19 @@ cleanup_collection_resources() {
 wait_for_server() {
   local log_file="$1"
   local timeout_s="${2:-1800}"
+  local server_pid="${3:-}"
   local waited=0
   until grep -q "Application startup complete." "$log_file" 2>/dev/null; do
+    if [[ -n "$server_pid" ]] && ! kill -0 "$server_pid" 2>/dev/null; then
+      echo "Server process exited before startup complete: $log_file" >&2
+      tail -n 80 "$log_file" 2>/dev/null || true
+      return 1
+    fi
+    if grep -Eqi "out of memory|EngineCore failed to start|Failed to create unquantized linear weights|torch.OutOfMemoryError" "$log_file" 2>/dev/null; then
+      echo "Server startup failed with OOM-related error: $log_file" >&2
+      tail -n 80 "$log_file" 2>/dev/null || true
+      return 1
+    fi
     if (( waited >= timeout_s )); then
       echo "Timed out waiting for server startup: $log_file" >&2
       return 1
@@ -69,6 +103,7 @@ result_jsonl_path() {
   local log_root="${7:-/scratch/wzhao20/AKDA2/AgentDistill/logs/qa_results_python_only_teacher}"
   local name_tag="${8:-}"
   local temperature="${9:-0.7}"
+  local suffix_tag="${10:-python_only_seed${seed}}"
   local model_name dataset_name base_dir
 
   model_name="$(basename "$model_id")"
@@ -80,12 +115,12 @@ result_jsonl_path() {
 
   if [[ -n "$lora_folder" ]]; then
     base_dir="${lora_folder}/qa_results"
-    printf "%s/%s_test/%s_%s_temp=%s_n=%s_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
-      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$temperature" "$n" "$seed" "$max_steps" "$seed"
+    printf "%s/%s_test/%s_%s_temp=%s_n=%s_seed=%s_type=agent_steps=%s_%s.jsonl" \
+      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$temperature" "$n" "$seed" "$max_steps" "$suffix_tag"
   else
     base_dir="$log_root"
-    printf "%s/%s_test/%s_%s_temp=%s_seed=%s_type=agent_steps=%s_python_only_python_only_seed%s.jsonl" \
-      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$temperature" "$seed" "$max_steps" "$seed"
+    printf "%s/%s_test/%s_%s_temp=%s_seed=%s_type=agent_steps=%s_%s.jsonl" \
+      "$base_dir" "$dataset_name" "$model_name" "$dataset_name" "$temperature" "$seed" "$max_steps" "$suffix_tag"
   fi
 }
 
