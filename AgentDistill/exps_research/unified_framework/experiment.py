@@ -19,6 +19,42 @@ from exps_research.unified_framework.utils import (
 )
 
 
+def _has_usable_agent_log(entry: Dict[str, Any]) -> bool:
+    log_data = entry.get("log_data")
+    if isinstance(log_data, dict):
+        return True
+    if isinstance(log_data, str):
+        try:
+            parsed = json.loads(log_data)
+            return isinstance(parsed, dict)
+        except Exception:
+            return False
+    return False
+
+
+def _get_answered_questions_for_agent(file_path: str) -> set:
+    answered_questions = set()
+    if not file_path or not os.path.exists(file_path):
+        return answered_questions
+    with open(file_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(entry, dict):
+                continue
+            if not _has_usable_agent_log(entry):
+                continue
+            question = entry.get("question")
+            if question:
+                answered_questions.add(question)
+    return answered_questions
+
+
 def load_prompt(prompt_name: str = "teacher_model") -> str:
     """
     Load system prompt from YAML file
@@ -82,7 +118,13 @@ def process_qa_experiment(
         entries = [entry for entry in entries if entry["question"] in available_questions]
     
     # Check for already processed questions
-    answered_questions = get_answered_questions(output_file) if output_file else set()
+    if output_file:
+        if experiment_type == "agent":
+            answered_questions = _get_answered_questions_for_agent(output_file)
+        else:
+            answered_questions = get_answered_questions(output_file)
+    else:
+        answered_questions = set()
     
     # Filter questions that need to be processed
     entries_todo = [entry for entry in entries if entry["question"] not in answered_questions]
