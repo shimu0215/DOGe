@@ -64,7 +64,14 @@ def load_dataset(file_path: str) -> List[Dict]:
         List of examples
     """
     with open(file_path, 'r', encoding='utf-8') as f:
-        return json.load(f)["examples"]
+        payload = json.load(f)
+    if isinstance(payload, dict):
+        if "examples" not in payload:
+            raise KeyError(f"Dataset dict missing 'examples' key: {file_path}")
+        return payload["examples"]
+    if isinstance(payload, list):
+        return payload
+    raise TypeError(f"Unsupported dataset format in {file_path}: {type(payload).__name__}")
 
 
 def get_answered_questions(file_path: str) -> Set[str]:
