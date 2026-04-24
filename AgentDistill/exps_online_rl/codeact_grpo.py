@@ -291,16 +291,29 @@ def tokenize_step(
     action_text: str,
     max_length: int,
 ) -> Tuple[List[int], List[int], List[int]]:
+    # enable_thinking=False matches the vLLM rollout context (VLLMServerModel always
+    # passes {"chat_template_kwargs": {"enable_thinking": False}}).  Without this,
+    # Qwen3's chat template appends a "<think>\n" generation-prompt prefix that is
+    # absent from full_ids, forcing align_prefix to silently trim it; any future
+    # tokenizer or template change could break that silent trim.
+    apply_kwargs: dict = {}
+    try:
+        tokenizer.apply_chat_template([], tokenize=False, add_generation_prompt=False, enable_thinking=False)
+        apply_kwargs["enable_thinking"] = False
+    except TypeError:
+        pass
     prompt_ids = tokenizer.apply_chat_template(
         context_messages,
         tokenize=True,
         add_generation_prompt=True,
+        **apply_kwargs,
     )
     full_messages = context_messages + [{"role": "assistant", "content": action_text}]
     full_ids = tokenizer.apply_chat_template(
         full_messages,
         tokenize=True,
         add_generation_prompt=False,
+        **apply_kwargs,
     )
     prefix_len = align_prefix(full_ids, prompt_ids)
     if prefix_len >= len(full_ids):
@@ -809,7 +822,9 @@ def train_one_sync(
                     input_ids=batch["input_ids"],
                     action_mask=batch["action_mask"],
                 )
-                log_ratio = current_logprob_mean - batch["old_logprob_mean"]
+                log_ratio = (current_logprob_mean - batch["old_logprob_mean"]).clamp(
+                    -args.log_ratio_clip, args.log_ratio_clip
+                )
                 ratio = torch.exp(log_ratio)
                 clipped_ratio = torch.clamp(ratio, 1.0 - args.clip_range, 1.0 + args.clip_range)
                 advantages = batch["advantages"]
@@ -866,6 +881,8 @@ def main():
     parser.add_argument("--weight_decay", type=float, default=0.0)
     parser.add_argument("--warmup_steps", type=int, default=20)
     parser.add_argument("--clip_range", type=float, default=0.2)
+    parser.add_argument("--log_ratio_clip", type=float, default=5.0,
+                        help="Clamp log-ratio before exp() to prevent bfloat16 overflow.")
     parser.add_argument("--reward_mode", type=str, choices=["task_kl", "task_multistep"], default="task_kl")
     parser.add_argument("--kl_lambda", type=float, default=0.05)
     parser.add_argument("--kl_aggregation", type=str, choices=["mean", "sum"], default="mean")
