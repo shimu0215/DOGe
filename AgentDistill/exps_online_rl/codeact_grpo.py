@@ -614,6 +614,15 @@ def compute_step_statistics(
     tokenizer,
     args,
 ) -> None:
+    compute_kl = args.reward_mode == "task_kl"
+    # In non-KL modes, rollout-side token logprobs are already the source of truth for
+    # old policy scores. If every step has them, skip an unnecessary model forward pass.
+    if not compute_kl and step_samples and all(sample.old_token_logprobs for sample in step_samples):
+        for sample in step_samples:
+            sample.old_logprob_mean = sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
+            sample.rollout_kl = 0.0
+        return
+
     loader = DataLoader(
         StepDataset(step_samples),
         batch_size=args.eval_batch_size,
@@ -622,8 +631,7 @@ def compute_step_statistics(
     )
     loader = accelerator.prepare(loader)
     gathered_old: Dict[int, float] = {}
-    gathered_kl: Dict[int, float] = {}
-    compute_kl = args.reward_mode == "task_kl"
+    gathered_kl: Dict[int, float] = {} if compute_kl else {}
     model.eval()
     if compute_kl and ref_model is not None:
         ref_model.eval()
@@ -651,19 +659,23 @@ def compute_step_statistics(
                     ref_logits=ref_outputs.logits,
                     action_mask=batch["action_mask"],
                 )
+                packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean, rollout_kl], dim=-1)
+                gathered = accelerator.gather_for_metrics(packed)
+                if accelerator.is_main_process:
+                    for row in gathered.cpu().tolist():
+                        gathered_old[int(row[0])] = float(row[1])
+                        gathered_kl[int(row[0])] = float(row[2])
             else:
-                rollout_kl = torch.zeros_like(old_logprob_mean)
-            packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean, rollout_kl], dim=-1)
-            gathered = accelerator.gather_for_metrics(packed)
-            if accelerator.is_main_process:
-                for row in gathered.cpu().tolist():
-                    gathered_old[int(row[0])] = float(row[1])
-                    gathered_kl[int(row[0])] = float(row[2])
+                packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean], dim=-1)
+                gathered = accelerator.gather_for_metrics(packed)
+                if accelerator.is_main_process:
+                    for row in gathered.cpu().tolist():
+                        gathered_old[int(row[0])] = float(row[1])
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
         for sample in step_samples:
             sample.old_logprob_mean = gathered_old[sample.sample_id]
-            sample.rollout_kl = gathered_kl[sample.sample_id]
+            sample.rollout_kl = gathered_kl[sample.sample_id] if compute_kl else 0.0
             if sample.old_token_logprobs and len(sample.old_token_logprobs) > 0:
                 # Prefer the exact rollout-side value when token counts line up reasonably.
                 sample.old_logprob_mean = sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
@@ -991,9 +1003,11 @@ def main():
                         )
                         + "\n"
                     )
-        trajectories = broadcast_object(accelerator, trajectories)
-        step_samples = broadcast_object(accelerator, step_samples)
-        traj_advantages = {traj.trajectory_id: traj.advantage for traj in trajectories}
+        if accelerator.is_main_process:
+            traj_advantages = {traj.trajectory_id: traj.advantage for traj in trajectories}
+        else:
+            traj_advantages = None
+        traj_advantages = broadcast_object(accelerator, traj_advantages)
         for sample in step_samples:
             sample.advantage = traj_advantages[sample.trajectory_id]
 
