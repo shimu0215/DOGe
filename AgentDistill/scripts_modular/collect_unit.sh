@@ -296,9 +296,12 @@ RUN_CMD=(
   --max_steps "$MAX_STEPS"
   --search_engine_type python_only
   --use_single_endpoint
-  --answer_tool_prompt_name "$ANSWER_TOOL_PROMPT_NAME"
   --suffix "$SUFFIX_TAG"
 )
+
+if "$PYTHON_BIN" -m exps_research.unified_framework.run_experiment -h 2>&1 | grep -q -- "--answer_tool_prompt_name"; then
+  RUN_CMD+=(--answer_tool_prompt_name "$ANSWER_TOOL_PROMPT_NAME")
+fi
 
 if [[ -n "$LORA_FOLDER" ]]; then
   RUN_CMD+=(--fine_tuned --lora_folder "$LORA_FOLDER")
