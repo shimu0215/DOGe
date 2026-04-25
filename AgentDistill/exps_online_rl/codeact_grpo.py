@@ -64,6 +64,10 @@ class StepSample:
     advantage: float = 0.0
     old_logprob_mean: float = 0.0
     rollout_kl: float = 0.0
+    # Per-token log probs at shift positions (len = len(input_ids)-1).
+    # Non-action positions are 0.0; action positions hold the rollout log prob.
+    # Populated when use_per_token_ratio=1 and rollout logprobs are available.
+    old_per_token_logps: Optional[List[float]] = None
 
 
 class StepDataset(Dataset):
@@ -77,7 +81,11 @@ class StepDataset(Dataset):
         return self.step_samples[idx]
 
 
-def collate_step_samples(samples: Sequence[StepSample], pad_token_id: int) -> Dict[str, torch.Tensor]:
+def collate_step_samples(
+    samples: Sequence[StepSample],
+    pad_token_id: int,
+    use_per_token_ratio: bool = False,
+) -> Dict[str, torch.Tensor]:
     max_len = max(len(sample.input_ids) for sample in samples)
     input_ids = []
     attention_mask = []
@@ -95,7 +103,7 @@ def collate_step_samples(samples: Sequence[StepSample], pad_token_id: int) -> Di
         advantages.append(sample.advantage)
         sample_ids.append(sample.sample_id)
         trajectory_ids.append(sample.trajectory_id)
-    return {
+    result = {
         "input_ids": torch.tensor(input_ids, dtype=torch.long),
         "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
         "action_mask": torch.tensor(action_mask, dtype=torch.bool),
@@ -104,6 +112,16 @@ def collate_step_samples(samples: Sequence[StepSample], pad_token_id: int) -> Di
         "sample_ids": torch.tensor(sample_ids, dtype=torch.long),
         "trajectory_ids": torch.tensor(trajectory_ids, dtype=torch.long),
     }
+    # Include per-token logprobs when available for all samples in the batch.
+    if use_per_token_ratio and all(s.old_per_token_logps is not None for s in samples):
+        per_token_logps = []
+        for sample in samples:
+            # old_per_token_logps has length len(input_ids)-1 (shift length).
+            # Pad by the same amount as input_ids to reach max_len-1.
+            pad_shift = max_len - len(sample.input_ids)
+            per_token_logps.append(list(sample.old_per_token_logps) + [0.0] * pad_shift)
+        result["old_per_token_logps"] = torch.tensor(per_token_logps, dtype=torch.float32)
+    return result
 
 
 def sanitize_for_json(obj: Any) -> Any:
@@ -389,6 +407,24 @@ def compute_masked_logprob_mean(logits: torch.Tensor, input_ids: torch.Tensor, a
     return masked_sum / lengths
 
 
+def compute_per_token_logprob(
+    logits: torch.Tensor,
+    input_ids: torch.Tensor,
+    action_mask: torch.Tensor,
+) -> torch.Tensor:
+    """Per-token log probs at shift positions [batch, seq_len-1].
+
+    Non-action positions are zeroed so they contribute 0 to log_ratio diff when
+    old_per_token_logps is also 0 there (ratio=1, masked out in loss).
+    """
+    shift_logits = logits[:, :-1, :]
+    shift_labels = input_ids[:, 1:]
+    shift_mask = action_mask[:, 1:]
+    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
+    selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
+    return selected * shift_mask  # zero non-action positions
+
+
 def compute_masked_forward_kl(
     current_logits: torch.Tensor,
     ref_logits: torch.Tensor,
@@ -634,6 +670,19 @@ def compute_step_statistics(
         for sample in step_samples:
             sample.old_logprob_mean = sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
             sample.rollout_kl = 0.0
+            # Build per-token logprobs aligned to shift positions when requested.
+            if bool(args.use_per_token_ratio):
+                shift_mask = sample.action_mask[1:]  # length = len(input_ids) - 1
+                n_action = sum(shift_mask)
+                if len(sample.old_token_logprobs) == n_action:
+                    logps = [0.0] * len(shift_mask)
+                    k = 0
+                    for j, m in enumerate(shift_mask):
+                        if m:
+                            logps[j] = sample.old_token_logprobs[k]
+                            k += 1
+                    sample.old_per_token_logps = logps
+                # If counts don't match (e.g. front-truncation), leave as None → mean fallback.
         return
 
     loader = DataLoader(
@@ -797,12 +846,14 @@ def train_one_sync(
     args,
     sync_idx: int,
     run_dir: Path,
+    ref_model=None,
 ) -> Dict[str, float]:
+    use_per_token = bool(args.use_per_token_ratio)
     train_loader = DataLoader(
         StepDataset(step_samples),
         batch_size=args.train_batch_size,
         shuffle=True,
-        collate_fn=lambda batch: collate_step_samples(batch, tokenizer.pad_token_id),
+        collate_fn=lambda batch: collate_step_samples(batch, tokenizer.pad_token_id, use_per_token),
     )
     train_loader = accelerator.prepare(train_loader)
     model.train()
@@ -817,18 +868,84 @@ def train_one_sync(
                     attention_mask=batch["attention_mask"],
                     use_cache=False,
                 )
-                current_logprob_mean = compute_masked_logprob_mean(
-                    logits=outputs.logits,
-                    input_ids=batch["input_ids"],
-                    action_mask=batch["action_mask"],
-                )
-                log_ratio = (current_logprob_mean - batch["old_logprob_mean"]).clamp(
-                    -args.log_ratio_clip, args.log_ratio_clip
-                )
-                ratio = torch.exp(log_ratio)
-                clipped_ratio = torch.clamp(ratio, 1.0 - args.clip_range, 1.0 + args.clip_range)
                 advantages = batch["advantages"]
-                loss = -torch.min(ratio * advantages, clipped_ratio * advantages).mean()
+
+                if use_per_token and "old_per_token_logps" in batch:
+                    # ── Per-token ratio (TRL-style) ──────────────────────────
+                    per_token_logps = compute_per_token_logprob(
+                        outputs.logits, batch["input_ids"], batch["action_mask"]
+                    )  # [batch, seq_len-1], float32; non-action positions are 0
+                    log_ratio = per_token_logps - batch["old_per_token_logps"]
+                    if bool(args.use_log_ratio_clip):
+                        log_ratio = log_ratio.clamp(-args.log_ratio_clip, args.log_ratio_clip)
+                    ratio = torch.exp(log_ratio)  # [batch, seq_len-1]
+                    clipped_ratio = ratio.clamp(1.0 - args.clip_range, 1.0 + args.clip_range)
+                    if bool(args.use_dual_clip):
+                        # Dual clip: bound ratio from above for A<0 to prevent
+                        # unbounded -ratio*|A| gradient when ratio >> 1.
+                        ratio = ratio.clamp(max=args.dual_clip_delta)
+                    shift_mask = batch["action_mask"][:, 1:].float()  # [batch, seq_len-1]
+                    adv = advantages.unsqueeze(1)  # [batch, 1] → broadcasts over tokens
+                    per_token_loss = -torch.min(ratio * adv, clipped_ratio * adv)
+                    # Aggregate: sum over action tokens, divide by token count.
+                    loss = (per_token_loss * shift_mask).sum(-1) / shift_mask.sum(-1).clamp(min=1)
+
+                    # Optional KL penalty (TRL approximation: E[r - log r - 1]).
+                    if bool(args.use_kl_loss) and ref_model is not None:
+                        with torch.no_grad():
+                            ref_outputs = ref_model(
+                                input_ids=batch["input_ids"],
+                                attention_mask=batch["attention_mask"],
+                                use_cache=False,
+                            )
+                        ref_per_token_logps = compute_per_token_logprob(
+                            ref_outputs.logits, batch["input_ids"], batch["action_mask"]
+                        )
+                        # Bounded-below approximation of KL(π_cur ‖ π_ref).
+                        per_token_kl = (
+                            torch.exp(ref_per_token_logps - per_token_logps)
+                            - (ref_per_token_logps - per_token_logps)
+                            - 1
+                        )
+                        kl_loss = (per_token_kl * shift_mask).sum(-1) / shift_mask.sum(-1).clamp(min=1)
+                        loss = loss + args.kl_beta * kl_loss
+
+                    loss = loss.mean()
+                    # Logging: mean ratio over action tokens only.
+                    ratio_mean_val = (ratio.detach() * shift_mask).sum() / shift_mask.sum().clamp(min=1)
+
+                else:
+                    # ── Mean-based ratio (fallback) ──────────────────────────
+                    current_logprob_mean = compute_masked_logprob_mean(
+                        logits=outputs.logits,
+                        input_ids=batch["input_ids"],
+                        action_mask=batch["action_mask"],
+                    )
+                    log_ratio = current_logprob_mean - batch["old_logprob_mean"]
+                    if bool(args.use_log_ratio_clip):
+                        log_ratio = log_ratio.clamp(-args.log_ratio_clip, args.log_ratio_clip)
+                    ratio = torch.exp(log_ratio)
+                    clipped_ratio = ratio.clamp(1.0 - args.clip_range, 1.0 + args.clip_range)
+                    ratio_for_loss = ratio
+                    if bool(args.use_dual_clip):
+                        ratio_for_loss = ratio.clamp(max=args.dual_clip_delta)
+                    loss = -torch.min(ratio_for_loss * advantages, clipped_ratio * advantages).mean()
+
+                    # Optional KL penalty (forward KL over vocab).
+                    if bool(args.use_kl_loss) and ref_model is not None:
+                        with torch.no_grad():
+                            ref_outputs = ref_model(
+                                input_ids=batch["input_ids"],
+                                attention_mask=batch["attention_mask"],
+                                use_cache=False,
+                            )
+                        kl = compute_masked_forward_kl(
+                            outputs.logits, ref_outputs.logits, batch["action_mask"]
+                        )
+                        loss = loss + args.kl_beta * kl.mean()
+
+                    ratio_mean_val = ratio.detach().mean()
+
                 accelerator.backward(loss)
                 if accelerator.sync_gradients and args.max_grad_norm > 0:
                     accelerator.clip_grad_norm_(model.parameters(), args.max_grad_norm)
@@ -836,7 +953,7 @@ def train_one_sync(
                 scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
             total_loss += float(loss.detach().cpu().item())
-            total_ratio += float(ratio.detach().mean().cpu().item())
+            total_ratio += float(ratio_mean_val.cpu().item())
             total_batches += 1
         if accelerator.is_main_process:
             print(
@@ -881,8 +998,27 @@ def main():
     parser.add_argument("--weight_decay", type=float, default=0.0)
     parser.add_argument("--warmup_steps", type=int, default=20)
     parser.add_argument("--clip_range", type=float, default=0.2)
-    parser.add_argument("--log_ratio_clip", type=float, default=5.0,
-                        help="Clamp log-ratio before exp() to prevent bfloat16 overflow.")
+    # ── Per-token ratio ──────────────────────────────────────────────────────
+    parser.add_argument("--use_per_token_ratio", type=int, default=1,
+                        help="Use per-token ratio like TRL (1=on, 0=off). Default: 1.")
+    # ── Dual clip ────────────────────────────────────────────────────────────
+    parser.add_argument("--use_dual_clip", type=int, default=1,
+                        help="Dual clip: clamp ratio<=delta when A<0 (1=on, 0=off). Default: 1.")
+    parser.add_argument("--dual_clip_delta", type=float, default=3.0,
+                        help="Upper bound for ratio when A<0 (dual-clip delta). Default: 3.0.")
+    # ── KL penalty in loss ───────────────────────────────────────────────────
+    parser.add_argument("--use_kl_loss", type=int, default=1,
+                        help="Add KL(π_cur‖π_ref) penalty to training loss (1=on, 0=off). Default: 1.")
+    parser.add_argument("--kl_beta", type=float, default=0.01,
+                        help="Coefficient for KL penalty in loss. Default: 0.01.")
+    # ── Log-ratio clamp (emergency safety net) ───────────────────────────────
+    parser.add_argument("--use_log_ratio_clip", type=int, default=0,
+                        help="Clamp log-ratio before exp() (1=on, 0=off). Default: 0 (off). "
+                             "Enable only as a last-resort safety net; normal training should "
+                             "not need it when dual-clip and per-token ratio are active.")
+    parser.add_argument("--log_ratio_clip", type=float, default=10.0,
+                        help="Clamp threshold when use_log_ratio_clip=1. "
+                             "Set high (>=10) to catch only extreme cases. Default: 10.0.")
     parser.add_argument("--reward_mode", type=str, choices=["task_kl", "task_multistep"], default="task_kl")
     parser.add_argument("--kl_lambda", type=float, default=0.05)
     parser.add_argument("--kl_aggregation", type=str, choices=["mean", "sum"], default="mean")
@@ -947,7 +1083,9 @@ def main():
         accelerator.wait_for_everyone()
 
     model = build_trainable_model(args)
-    ref_model = build_reference_model(args) if args.reward_mode == "task_kl" else None
+    # Build reference model when needed: KL reward mode, or KL loss term enabled.
+    need_ref_model = args.reward_mode == "task_kl" or bool(args.use_kl_loss)
+    ref_model = build_reference_model(args) if need_ref_model else None
 
     optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     total_update_steps = max(1, args.max_syncs * args.grpo_epochs * max(1, args.num_questions_per_sync))
@@ -1038,6 +1176,7 @@ def main():
             args=args,
             sync_idx=sync_idx,
             run_dir=run_dir,
+            ref_model=ref_model,
         )
 
         should_save = ((sync_idx + 1) % args.save_every_syncs == 0) or (sync_idx + 1 == args.max_syncs)
