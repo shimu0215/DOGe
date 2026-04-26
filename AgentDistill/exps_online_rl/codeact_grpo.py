@@ -855,6 +855,8 @@ def train_one_sync(
     total_loss = 0.0
     total_ratio = 0.0
     total_batches = 0
+    total_per_token_samples = 0
+    total_mean_ratio_samples = 0
     for epoch_idx in range(args.grpo_epochs):
         for batch in train_loader:
             with accelerator.accumulate(model):
@@ -899,6 +901,8 @@ def train_one_sync(
 
                     # Route per sample: per-token for has_pt=True, mean-ratio for False.
                     loss_per_sample = torch.where(has_pt, pt_loss_per_sample, mean_loss_per_sample)  # [B]
+                    total_per_token_samples += int(has_pt.sum().detach().cpu().item())
+                    total_mean_ratio_samples += int((~has_pt).sum().detach().cpu().item())
 
                     # Optional KL penalty (TRL: E[r - log r - 1]) — always per-token
                     # (current policy vs ref), independent of old-policy branch.
@@ -967,6 +971,7 @@ def train_one_sync(
                         loss = loss + args.kl_beta * kl_loss.mean()
 
                     ratio_mean_val = ratio.detach().mean()
+                    total_mean_ratio_samples += int(batch["input_ids"].shape[0])
 
                 accelerator.backward(loss)
                 if accelerator.sync_gradients and args.max_grad_norm > 0:
@@ -986,11 +991,27 @@ def train_one_sync(
         "loss": total_loss / max(total_batches, 1),
         "ratio": total_ratio / max(total_batches, 1),
         "batches": float(total_batches),
+        "per_token_samples": float(total_per_token_samples),
+        "mean_ratio_samples": float(total_mean_ratio_samples),
+        "per_token_fraction": (
+            float(total_per_token_samples)
+            / max(float(total_per_token_samples + total_mean_ratio_samples), 1.0)
+        ),
+        "mean_ratio_fraction": (
+            float(total_mean_ratio_samples)
+            / max(float(total_per_token_samples + total_mean_ratio_samples), 1.0)
+        ),
     }
     if accelerator.is_main_process:
         metrics_path = run_dir / "train_metrics.jsonl"
         with metrics_path.open("a") as f:
             f.write(json.dumps({"sync_idx": sync_idx, **metrics}) + "\n")
+        print(
+            f"[sync {sync_idx}] routing per_token={metrics['per_token_samples']:.0f} "
+            f"({metrics['per_token_fraction']:.3f}) "
+            f"mean_ratio={metrics['mean_ratio_samples']:.0f} "
+            f"({metrics['mean_ratio_fraction']:.3f})"
+        )
     return metrics
 
 
