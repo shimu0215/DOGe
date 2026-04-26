@@ -112,14 +112,32 @@ def collate_step_samples(
         "sample_ids": torch.tensor(sample_ids, dtype=torch.long),
         "trajectory_ids": torch.tensor(trajectory_ids, dtype=torch.long),
     }
-    # Include per-token logprobs when available for all samples in the batch.
-    if use_per_token_ratio and all(s.old_per_token_logps is not None for s in samples):
+    # Include per-token logprobs when use_per_token_ratio is enabled.
+    # For samples that are missing per-token logprobs (e.g. front-truncation mismatch or
+    # rollout logprobs unavailable), broadcast old_logprob_mean to each action token position
+    # so those samples degrade to mean-ratio rather than silently dropping the whole batch.
+    if use_per_token_ratio:
+        n_missing = sum(1 for s in samples if s.old_per_token_logps is None)
+        if n_missing:
+            print(
+                f"[collate] WARNING: {n_missing}/{len(samples)} samples missing "
+                "old_per_token_logps; using mean-broadcast fallback for those samples."
+            )
         per_token_logps = []
         for sample in samples:
             # old_per_token_logps has length len(input_ids)-1 (shift length).
             # Pad by the same amount as input_ids to reach max_len-1.
             pad_shift = max_len - len(sample.input_ids)
-            per_token_logps.append(list(sample.old_per_token_logps) + [0.0] * pad_shift)
+            if sample.old_per_token_logps is not None:
+                per_token_logps.append(list(sample.old_per_token_logps) + [0.0] * pad_shift)
+            else:
+                # Broadcast old_logprob_mean to action positions; non-action and pad stay 0.
+                # ratio at each position = exp(cur_token_logp - mean) ≈ 1 on average,
+                # which is the correct conservative fallback.
+                shift_mask = sample.action_mask[1:]  # length = len(input_ids) - 1
+                fallback = [sample.old_logprob_mean if m else 0.0 for m in shift_mask]
+                fallback += [0.0] * pad_shift
+                per_token_logps.append(fallback)
         result["old_per_token_logps"] = torch.tensor(per_token_logps, dtype=torch.float32)
     return result
 
