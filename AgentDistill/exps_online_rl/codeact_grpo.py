@@ -200,6 +200,7 @@ class RolloutServerManager:
             str(self.args.rollout_max_length),
             "--disable-log-requests",
             "--disable-log-stats",
+            "--disable-custom-all-reduce",
         ]
         if adapter_path:
             cmd.extend(["--lora-modules", f"finetune={adapter_path}", "--max-lora-rank", str(self.args.lora_r)])
@@ -260,6 +261,7 @@ class RolloutServerManager:
             env=env,
             stdout=log_fh,
             stderr=subprocess.STDOUT,
+            start_new_session=True,  # Put vLLM in its own process group so stop() can kill all workers
         )
         self.current_adapter_path = adapter_path
         self._wait_until_ready(serve_log)
@@ -271,12 +273,28 @@ class RolloutServerManager:
 
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
-            self.process.terminate()
+            # Kill the entire process group (including vLLM Worker and EngineCore subprocesses)
+            # to prevent zombie workers from holding GPU memory across restarts.
             try:
-                self.process.wait(timeout=20)
+                pgid = os.getpgid(self.process.pid)
+                os.killpg(pgid, signal.SIGTERM)
+            except (ProcessLookupError, PermissionError):
+                self.process.terminate()
+            try:
+                self.process.wait(timeout=30)
             except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=10)
+                try:
+                    pgid = os.getpgid(self.process.pid)
+                    os.killpg(pgid, signal.SIGKILL)
+                except (ProcessLookupError, PermissionError):
+                    pass
+                try:
+                    self.process.kill()
+                    self.process.wait(timeout=10)
+                except Exception:
+                    pass
+            # Give CUDA time to fully release GPU memory before the next vLLM start
+            time.sleep(15)
         self.process = None
 
 
@@ -895,9 +913,9 @@ def assign_rewards_and_advantages(
     for sample in step_samples:
         step_count_by_trajectory[sample.trajectory_id] = step_count_by_trajectory.get(sample.trajectory_id, 0) + 1
     for traj in trajectories:
-        step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
-        if step_count > 1:
-            traj.step_reward = 1.0 + 0.3 * max(step_count - 2, 0)
+        step_count = step_count_by_trajectory.get(traj.trajectory_id, 0)
+        if traj.task_reward > 0 and step_count < args.max_steps:
+            traj.step_reward = 2.0 + max(step_count - 2, 0) * 0.5
         else:
             traj.step_reward = 0.0
         traj.total_reward = traj.task_reward + traj.step_reward
@@ -1414,9 +1432,11 @@ def main():
         should_save = ((sync_idx + 1) % args.save_every_syncs == 0) or (sync_idx + 1 == args.max_syncs)
         if should_save:
             latest_adapter_path = str(run_dir / f"checkpoint_sync_{sync_idx + 1:04d}")
-            save_lora_checkpoint(accelerator, model, tokenizer, Path(latest_adapter_path))
-            if accelerator.is_main_process and server_manager is not None:
-                server_manager.restart(latest_adapter_path, run_dir)
+        else:
+            latest_adapter_path = str(run_dir / "latest_adapter")
+        save_lora_checkpoint(accelerator, model, tokenizer, Path(latest_adapter_path))
+        if accelerator.is_main_process and server_manager is not None:
+            server_manager.restart(latest_adapter_path, run_dir)
         accelerator.wait_for_everyone()
         if accelerator.is_main_process:
             avg_reward = sum(traj.total_reward for traj in trajectories) / max(len(trajectories), 1)
