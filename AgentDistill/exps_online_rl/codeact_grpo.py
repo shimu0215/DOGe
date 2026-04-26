@@ -329,7 +329,7 @@ def tokenize_step(
     try:
         tokenizer.apply_chat_template([], tokenize=False, add_generation_prompt=False, enable_thinking=False)
         apply_kwargs["enable_thinking"] = False
-    except TypeError:
+    except (TypeError, IndexError, ValueError):
         pass
     prompt_ids = tokenizer.apply_chat_template(
         context_messages,
