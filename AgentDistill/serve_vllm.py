@@ -90,6 +90,11 @@ def main():
         action="store_true",
         help="Disable custom all-reduce; use standard NCCL (avoids IPC leaks after crash)"
     )
+    parser.add_argument(
+        "--enforce-eager",
+        action="store_true",
+        help="Disable CUDA graphs; run in eager mode (avoids graph pointer invalidation on restart)"
+    )
 
     args = parser.parse_args()
 
@@ -122,6 +127,8 @@ def main():
         cmd.extend(["--max-lora-rank", str(args.max_lora_rank)])
     if args.disable_custom_all_reduce:
         cmd.append("--disable-custom-all-reduce")
+    if args.enforce_eager:
+        cmd.append("--enforce-eager")
 
     # Print the command that will be executed
     print("Executing command:", " ".join(cmd), flush=True)

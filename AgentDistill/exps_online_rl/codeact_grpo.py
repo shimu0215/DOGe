@@ -201,6 +201,7 @@ class RolloutServerManager:
             "--disable-log-requests",
             "--disable-log-stats",
             "--disable-custom-all-reduce",
+            "--enforce-eager",  # Disable CUDA graphs to avoid illegal memory access on repeated restart
         ]
         if adapter_path:
             cmd.extend(["--lora-modules", f"finetune={adapter_path}", "--max-lora-rank", str(self.args.lora_r)])
