@@ -298,7 +298,11 @@ def normalize_messages_for_training(log_data: Dict, system_prompt: str) -> List[
 def extract_action_traces(log_data: Dict) -> List[Dict]:
     traces = []
     for trace in log_data.get("generation_trace", []):
-        if trace.get("step_type") in {"action", "action_finalize"}:
+        if trace.get("step_type") != "action":
+            continue
+        if "Code:" not in str(trace.get("output_text", "") or ""):
+            continue
+        if trace.get("output_text"):
             traces.append(trace)
     return traces
 
@@ -329,6 +333,7 @@ def tokenize_step(
     context_messages: List[Dict[str, str]],
     action_text: str,
     max_length: int,
+    action_token_ids: Optional[List[int]] = None,
 ) -> Tuple[List[int], List[int], List[int]]:
     # enable_thinking=False matches the vLLM rollout context (VLLMServerModel always
     # passes {"chat_template_kwargs": {"enable_thinking": False}}).  Without this,
@@ -347,9 +352,25 @@ def tokenize_step(
         add_generation_prompt=True,
         **apply_kwargs,
     )
-    raw_action_ids = tokenizer.encode(action_text, add_special_tokens=False)
+    raw_action_ids = action_token_ids or tokenizer.encode(action_text, add_special_tokens=False)
     if not raw_action_ids:
         raise ValueError("Assistant action produced empty raw token span.")
+    if action_token_ids is not None:
+        full_ids = prompt_ids + list(raw_action_ids)
+        prefix_len = len(prompt_ids)
+        if len(full_ids) > max_length:
+            overflow = len(full_ids) - max_length
+            full_ids = full_ids[overflow:]
+            prefix_len = max(prefix_len - overflow, 0)
+            if prefix_len == 0 or prefix_len >= len(full_ids):
+                raise ValueError("Prompt overflow removed the assistant span.")
+        action_start = prefix_len
+        action_end = len(full_ids)
+        attention_mask = [1] * len(full_ids)
+        action_mask = [0] * len(full_ids)
+        for idx in range(action_start, action_end):
+            action_mask[idx] = 1
+        return full_ids, attention_mask, action_mask
     full_messages = context_messages + [{"role": "assistant", "content": action_text}]
     full_ids = tokenizer.apply_chat_template(
         full_messages,
@@ -375,6 +396,27 @@ def tokenize_step(
     return full_ids, attention_mask, action_mask
 
 
+def extract_rollout_token_ids(tokenizer, rollout_logprobs: Sequence[Dict[str, Any]]) -> Optional[List[int]]:
+    tokens: List[str] = []
+    for item in rollout_logprobs:
+        tok = item.get("token")
+        if tok is None:
+            return None
+        tokens.append(tok)
+    if not tokens:
+        return None
+    token_ids = tokenizer.convert_tokens_to_ids(tokens)
+    if any(tok_id is None for tok_id in token_ids):
+        return None
+    unk_id = getattr(tokenizer, "unk_token_id", None)
+    if unk_id is not None:
+        unk_token = getattr(tokenizer, "unk_token", None)
+        for tok, tok_id in zip(tokens, token_ids):
+            if tok_id == unk_id and tok != unk_token:
+                return None
+    return [int(tok_id) for tok_id in token_ids]
+
+
 def gather_step_samples(
     trajectories: Sequence[TrajectoryRecord],
     tokenizer,
@@ -393,15 +435,6 @@ def gather_step_samples(
         for local_idx, msg_idx in enumerate(assistant_positions):
             context_messages = copy.deepcopy(traj.cleaned_messages[:msg_idx])
             action_text = traj.cleaned_messages[msg_idx]["content"]
-            try:
-                input_ids, attention_mask, action_mask = tokenize_step(
-                    tokenizer=tokenizer,
-                    context_messages=context_messages,
-                    action_text=action_text,
-                    max_length=max_length,
-                )
-            except ValueError:
-                continue
             trace = traj.action_traces[local_idx] if local_idx < len(traj.action_traces) else {}
             # Keep rollout logprobs only when the serialized action trace still matches
             # the assistant action text we are about to optimize. If logging/cleaning
@@ -411,7 +444,19 @@ def gather_step_samples(
             action_text_stripped = str(action_text or "").strip()
             trace_matches_action = bool(trace_output) and trace_output == action_text_stripped
             rollout_logprobs = (trace.get("generation_logprobs") or []) if trace_matches_action else []
-            old_token_logprobs = [float(item["logprob"]) for item in rollout_logprobs if item.get("logprob") is not None]
+            rollout_items_with_logprob = [item for item in rollout_logprobs if item.get("logprob") is not None]
+            trace_token_ids = extract_rollout_token_ids(tokenizer, rollout_items_with_logprob)
+            try:
+                input_ids, attention_mask, action_mask = tokenize_step(
+                    tokenizer=tokenizer,
+                    context_messages=context_messages,
+                    action_text=action_text,
+                    max_length=max_length,
+                    action_token_ids=trace_token_ids,
+                )
+            except ValueError:
+                continue
+            old_token_logprobs = [float(item["logprob"]) for item in rollout_items_with_logprob]
             samples.append(
                 StepSample(
                     sample_id=sample_id,
