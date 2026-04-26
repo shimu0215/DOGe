@@ -17,7 +17,13 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import torch
 import torch.nn.functional as F
 from accelerate import Accelerator, InitProcessGroupKwargs
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import (
+    LoraConfig,
+    PeftModel,
+    get_peft_model,
+    get_peft_model_state_dict,
+    set_peft_model_state_dict,
+)
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
@@ -157,6 +163,10 @@ def sanitize_for_json(obj: Any) -> Any:
 
 
 class RolloutTimeoutError(RuntimeError):
+    pass
+
+
+class NonFiniteTrainingError(RuntimeError):
     pass
 
 
@@ -517,6 +527,67 @@ def compute_per_token_logprob(
     log_probs = F.log_softmax(shift_logits.float(), dim=-1)
     selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
     return selected * shift_mask  # zero non-action positions
+
+
+def _clone_to_cpu(obj: Any) -> Any:
+    if torch.is_tensor(obj):
+        return obj.detach().cpu().clone()
+    if isinstance(obj, dict):
+        return {k: _clone_to_cpu(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clone_to_cpu(v) for v in obj]
+    if isinstance(obj, tuple):
+        return tuple(_clone_to_cpu(v) for v in obj)
+    return copy.deepcopy(obj)
+
+
+def _move_to_device(obj: Any, device: torch.device) -> Any:
+    if torch.is_tensor(obj):
+        return obj.to(device)
+    if isinstance(obj, dict):
+        return {k: _move_to_device(v, device) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_move_to_device(v, device) for v in obj]
+    if isinstance(obj, tuple):
+        return tuple(_move_to_device(v, device) for v in obj)
+    return obj
+
+
+def capture_training_snapshot(accelerator: Accelerator, model, optimizer, scheduler) -> Dict[str, Any]:
+    unwrapped = accelerator.unwrap_model(model)
+    adapter_state = {
+        key: value.detach().cpu().clone()
+        for key, value in get_peft_model_state_dict(unwrapped).items()
+    }
+    return {
+        "adapter_state": adapter_state,
+        "optimizer_state": _clone_to_cpu(optimizer.state_dict()),
+        "scheduler_state": _clone_to_cpu(scheduler.state_dict()),
+    }
+
+
+def restore_training_snapshot(
+    accelerator: Accelerator,
+    model,
+    optimizer,
+    scheduler,
+    snapshot: Dict[str, Any],
+) -> None:
+    unwrapped = accelerator.unwrap_model(model)
+    set_peft_model_state_dict(unwrapped, snapshot["adapter_state"])
+    optimizer.load_state_dict(copy.deepcopy(snapshot["optimizer_state"]))
+    scheduler.load_state_dict(copy.deepcopy(snapshot["scheduler_state"]))
+    for state in optimizer.state.values():
+        for key, value in list(state.items()):
+            state[key] = _move_to_device(value, accelerator.device)
+    optimizer.zero_grad(set_to_none=True)
+
+
+def has_nonfinite_trainable_params(model) -> bool:
+    for param in model.parameters():
+        if param.requires_grad and not torch.isfinite(param).all():
+            return True
+    return False
 
 
 def set_seed(seed: int) -> None:
@@ -1033,11 +1104,28 @@ def train_one_sync(
                     ratio_mean_val = ratio.detach().mean()
                     total_mean_ratio_samples += int(batch["input_ids"].shape[0])
 
+                local_bad = 0
+                local_reason = ""
+                if not torch.isfinite(loss.detach()).all():
+                    local_bad = 1
+                    local_reason = "non_finite_loss"
+                bad_flag = torch.tensor([local_bad], device=accelerator.device, dtype=torch.int32)
+                gathered_bad = accelerator.gather(bad_flag)
+                if int(gathered_bad.max().item()) != 0:
+                    raise NonFiniteTrainingError(local_reason or "non_finite_loss_on_peer_rank")
+
                 accelerator.backward(loss)
                 if accelerator.sync_gradients and args.max_grad_norm > 0:
                     accelerator.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 optimizer.step()
                 scheduler.step()
+                if accelerator.sync_gradients:
+                    local_bad = 1 if has_nonfinite_trainable_params(model) else 0
+                    local_reason = "non_finite_parameter_after_step" if local_bad else ""
+                    bad_flag = torch.tensor([local_bad], device=accelerator.device, dtype=torch.int32)
+                    gathered_bad = accelerator.gather(bad_flag)
+                    if int(gathered_bad.max().item()) != 0:
+                        raise NonFiniteTrainingError(local_reason or "non_finite_parameter_on_peer_rank")
                 optimizer.zero_grad(set_to_none=True)
             total_loss += float(loss.detach().cpu().item())
             total_ratio += float(ratio_mean_val.cpu().item())
@@ -1283,18 +1371,45 @@ def main():
         for sample in step_samples:
             sample.advantage = traj_advantages[sample.trajectory_id]
 
-        train_metrics = train_one_sync(
-            accelerator=accelerator,
-            model=model,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            step_samples=step_samples,
-            tokenizer=tokenizer,
-            args=args,
-            sync_idx=sync_idx,
-            run_dir=run_dir,
-            ref_model=ref_model,
-        )
+        sync_snapshot = capture_training_snapshot(accelerator, model, optimizer, scheduler)
+        try:
+            train_metrics = train_one_sync(
+                accelerator=accelerator,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                step_samples=step_samples,
+                tokenizer=tokenizer,
+                args=args,
+                sync_idx=sync_idx,
+                run_dir=run_dir,
+                ref_model=ref_model,
+            )
+        except NonFiniteTrainingError as exc:
+            restore_training_snapshot(accelerator, model, optimizer, scheduler, sync_snapshot)
+            accelerator.wait_for_everyone()
+            if accelerator.is_main_process:
+                rollback_path = run_dir / "rollback_events.jsonl"
+                with rollback_path.open("a") as f:
+                    f.write(
+                        json.dumps(
+                            {
+                                "sync_idx": sync_idx,
+                                "reason": str(exc),
+                                "rolled_back_to": latest_adapter_path,
+                            },
+                            ensure_ascii=False,
+                        )
+                        + "\n"
+                    )
+                print(
+                    f"[sync {sync_idx}] detected non-finite training state ({exc}); "
+                    f"rolled back train model to the previous good checkpoint."
+                )
+                if server_manager is not None:
+                    server_manager.restart(latest_adapter_path, run_dir)
+            accelerator.wait_for_everyone()
+            continue
 
         should_save = ((sync_idx + 1) % args.save_every_syncs == 0) or (sync_idx + 1 == args.max_syncs)
         if should_save:
