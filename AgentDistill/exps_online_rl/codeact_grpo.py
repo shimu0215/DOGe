@@ -261,6 +261,7 @@ class RolloutServerManager:
             env=env,
             stdout=log_fh,
             stderr=subprocess.STDOUT,
+            start_new_session=True,  # Put vLLM in its own process group so stop() can kill all workers
         )
         self.current_adapter_path = adapter_path
         self._wait_until_ready(serve_log)
@@ -272,12 +273,28 @@ class RolloutServerManager:
 
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
-            self.process.terminate()
+            # Kill the entire process group (including vLLM Worker and EngineCore subprocesses)
+            # to prevent zombie workers from holding GPU memory across restarts.
             try:
-                self.process.wait(timeout=20)
+                pgid = os.getpgid(self.process.pid)
+                os.killpg(pgid, signal.SIGTERM)
+            except (ProcessLookupError, PermissionError):
+                self.process.terminate()
+            try:
+                self.process.wait(timeout=30)
             except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=10)
+                try:
+                    pgid = os.getpgid(self.process.pid)
+                    os.killpg(pgid, signal.SIGKILL)
+                except (ProcessLookupError, PermissionError):
+                    pass
+                try:
+                    self.process.kill()
+                    self.process.wait(timeout=10)
+                except Exception:
+                    pass
+            # Give CUDA time to fully release GPU memory before the next vLLM start
+            time.sleep(15)
         self.process = None
 
 
