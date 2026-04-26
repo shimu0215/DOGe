@@ -235,12 +235,18 @@ class RolloutServerManager:
                 env.pop(key, None)
         return env
 
-    def _wait_until_ready(self, log_path: Path, timeout_s: int = 1800) -> None:
+    def _wait_until_ready(self, log_path: Path, timeout_s: int = 1800, search_from_pos: int = 0) -> None:
+        """Wait until the rollout server reports startup complete.
+
+        search_from_pos: byte offset in log_path to start searching from.
+        This prevents false-positives from earlier sync's "Application startup
+        complete." messages that remain in the append-only log file.
+        """
         deadline = time.time() + timeout_s
         while time.time() < deadline:
             if log_path.exists():
                 content = log_path.read_text(errors="ignore")
-                if "Application startup complete." in content:
+                if "Application startup complete." in content[search_from_pos:]:
                     return
             if self.process and self.process.poll() is not None:
                 raise RuntimeError(f"vLLM server exited early with code {self.process.returncode}")
@@ -252,6 +258,9 @@ class RolloutServerManager:
         serve_log = run_dir / "rollout_server.log"
         env = self._build_env()
         cmd = self._build_cmd(adapter_path)
+        # Record position BEFORE writing START marker so _wait_until_ready only
+        # searches new content; avoids false-positives from prior syncs' messages.
+        start_pos = serve_log.stat().st_size if serve_log.exists() else 0
         with serve_log.open("a") as f:
             f.write(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] START {' '.join(cmd)}\n")
         log_fh = serve_log.open("a")
@@ -264,7 +273,7 @@ class RolloutServerManager:
             start_new_session=True,  # Put vLLM in its own process group so stop() can kill all workers
         )
         self.current_adapter_path = adapter_path
-        self._wait_until_ready(serve_log)
+        self._wait_until_ready(serve_log, search_from_pos=start_pos)
 
     def restart(self, adapter_path: Optional[str], run_dir: Path) -> None:
         if adapter_path == self.current_adapter_path and self.process and self.process.poll() is None:
