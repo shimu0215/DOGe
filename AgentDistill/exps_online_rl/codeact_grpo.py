@@ -200,6 +200,7 @@ class RolloutServerManager:
             str(self.args.rollout_max_length),
             "--disable-log-requests",
             "--disable-log-stats",
+            "--disable-custom-all-reduce",
         ]
         if adapter_path:
             cmd.extend(["--lora-modules", f"finetune={adapter_path}", "--max-lora-rank", str(self.args.lora_r)])
