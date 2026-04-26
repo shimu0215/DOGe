@@ -44,7 +44,6 @@ class TrajectoryRecord:
     action_traces: List[Dict]
     task_reward: float = 0.0
     step_reward: float = 0.0
-    kl_reward: float = 0.0
     total_reward: float = 0.0
     advantage: float = 0.0
     error: Optional[str] = None
@@ -63,7 +62,6 @@ class StepSample:
     old_token_logprobs: Optional[List[float]]
     advantage: float = 0.0
     old_logprob_mean: float = 0.0
-    rollout_kl: float = 0.0
     # Per-token log probs at shift positions (len = len(input_ids)-1).
     # Non-action positions are 0.0; action positions hold the rollout log prob.
     # Populated when use_per_token_ratio=1 and rollout logprobs are available.
@@ -461,23 +459,6 @@ def compute_per_token_logprob(
     return selected * shift_mask  # zero non-action positions
 
 
-def compute_masked_forward_kl(
-    current_logits: torch.Tensor,
-    ref_logits: torch.Tensor,
-    action_mask: torch.Tensor,
-) -> torch.Tensor:
-    current_shift = current_logits[:, :-1, :].float()
-    ref_shift = ref_logits[:, :-1, :].float()
-    shift_mask = action_mask[:, 1:]
-    current_log_probs = F.log_softmax(current_shift, dim=-1)
-    current_probs = current_log_probs.exp()
-    ref_log_probs = F.log_softmax(ref_shift, dim=-1)
-    token_kl = (current_probs * (current_log_probs - ref_log_probs)).sum(dim=-1)
-    lengths = shift_mask.sum(dim=-1).clamp(min=1)
-    masked_kl = (token_kl * shift_mask).sum(dim=-1) / lengths
-    return masked_kl
-
-
 def set_seed(seed: int) -> None:
     random.seed(seed)
     torch.manual_seed(seed)
@@ -695,19 +676,15 @@ def collect_rollouts_for_batch(
 def compute_step_statistics(
     accelerator: Accelerator,
     model,
-    ref_model,
     step_samples: Sequence[StepSample],
     tokenizer,
     args,
 ) -> None:
-    compute_kl = args.reward_mode == "task_kl"
     use_per_token = bool(args.use_per_token_ratio)
 
-    # Split per-sample: those with rollout token logprobs get rollout-based stats
-    # (KL reward = KL(rollout ‖ ref), no training-model forward needed).
-    # Those without fall back to the slow path (training-model forward).
-    # This prevents a single missing sample from polluting the KL reward of all
-    # other samples with "current-model KL" instead of "rollout-policy KL".
+    # Split per-sample: those with rollout token logprobs get rollout-based old
+    # policy stats directly. Those without fall back to the slow path where the
+    # current training model re-computes the scalar old-policy baseline.
     has_rollout: List[StepSample] = []
     missing_rollout: List[StepSample] = []
     alignment_failures = 0
@@ -722,10 +699,8 @@ def compute_step_statistics(
             missing_rollout.append(sample)
             alignment_failures += 1
             continue
-        # Always store aligned per-token logps regardless of use_per_token_ratio:
-        # the fast KL path needs them to compute KL(rollout ‖ ref) even when the
-        # training loop uses mean-ratio. Without this, task_kl fast path would
-        # compute KL=0 for all has_rollout samples when use_per_token_ratio=0.
+        # Always store aligned per-token logps so the training loop can use
+        # per-token PPO whenever rollout logprobs align with the supervised span.
         sample.old_per_token_logps = aligned_old
         has_rollout.append(sample)
 
@@ -743,62 +718,6 @@ def compute_step_statistics(
                     "those samples will use the slow fallback so old-policy stats stay consistent."
                 )
 
-        if not compute_kl:
-            if accelerator.is_main_process:
-                for sample in has_rollout:
-                    sample.rollout_kl = 0.0
-        else:
-            # task_kl: KL(rollout ‖ ref) via ref-only forward.
-            # Populate per-token logps on non-main ranks too (needed for collate).
-            if not accelerator.is_main_process:
-                for sample in has_rollout:
-                    sample.old_logprob_mean = 0.0
-            loader_fast = DataLoader(
-                StepDataset(has_rollout),
-                batch_size=args.eval_batch_size,
-                shuffle=False,
-                collate_fn=lambda batch: collate_step_samples(
-                    batch, tokenizer.pad_token_id, use_per_token_ratio=True
-                ),
-            )
-            loader_fast = accelerator.prepare(loader_fast)
-            gathered_kl_fast: Dict[int, float] = {}
-            if ref_model is not None:
-                ref_model.eval()
-                for batch in loader_fast:
-                    with torch.no_grad():
-                        ref_outputs = ref_model(
-                            input_ids=batch["input_ids"],
-                            attention_mask=batch["attention_mask"],
-                            use_cache=False,
-                        )
-                    ref_per_token_logps = compute_per_token_logprob(
-                        ref_outputs.logits, batch["input_ids"], batch["action_mask"]
-                    )  # [B, L-1]
-                    shift_mask = batch["action_mask"][:, 1:].float()
-                    has_pt = batch.get(
-                        "has_per_token_logps",
-                        torch.ones(shift_mask.shape[0], dtype=torch.bool, device=shift_mask.device),
-                    )
-                    rollout_logps = batch["old_per_token_logps"]
-                    per_token_kl = (
-                        torch.exp(ref_per_token_logps - rollout_logps)
-                        - (ref_per_token_logps - rollout_logps)
-                        - 1
-                    )
-                    kl_per_sample = (per_token_kl * shift_mask).sum(-1) / shift_mask.sum(-1).clamp(min=1)
-                    # Misaligned samples (has_pt=False) get KL=0 (conservative fallback).
-                    kl_per_sample = torch.where(has_pt, kl_per_sample, torch.zeros_like(kl_per_sample))
-                    packed = torch.stack([batch["sample_ids"].to(torch.float32), kl_per_sample], dim=-1)
-                    gathered = accelerator.gather_for_metrics(packed)
-                    if accelerator.is_main_process:
-                        for row in gathered.cpu().tolist():
-                            gathered_kl_fast[int(row[0])] = float(row[1])
-            accelerator.wait_for_everyone()
-            if accelerator.is_main_process:
-                for sample in has_rollout:
-                    sample.rollout_kl = gathered_kl_fast.get(sample.sample_id, 0.0)
-
     # ── Slow sub-path: samples WITHOUT rollout logprobs ───────────────────
     if not missing_rollout:
         return
@@ -811,10 +730,7 @@ def compute_step_statistics(
     )
     loader_slow = accelerator.prepare(loader_slow)
     gathered_old: Dict[int, float] = {}
-    gathered_kl_slow: Dict[int, float] = {} if compute_kl else {}
     model.eval()
-    if compute_kl and ref_model is not None:
-        ref_model.eval()
     for batch in loader_slow:
         with torch.no_grad():
             outputs = model(
@@ -828,44 +744,15 @@ def compute_step_statistics(
                 action_mask=batch["action_mask"],
             )
             sample_ids = batch["sample_ids"]
-            if compute_kl:
-                ref_outputs = ref_model(
-                    input_ids=batch["input_ids"],
-                    attention_mask=batch["attention_mask"],
-                    use_cache=False,
-                )
-                # Use TRL per-token approximation instead of compute_masked_forward_kl
-                # to avoid materialising full-vocab tensors (~15 GB for Qwen3-14B).
-                cur_per_token_logps = compute_per_token_logprob(
-                    outputs.logits, batch["input_ids"], batch["action_mask"]
-                )
-                ref_per_token_logps = compute_per_token_logprob(
-                    ref_outputs.logits, batch["input_ids"], batch["action_mask"]
-                )
-                shift_mask_kl = batch["action_mask"][:, 1:].float()
-                per_token_kl = (
-                    torch.exp(ref_per_token_logps - cur_per_token_logps)
-                    - (ref_per_token_logps - cur_per_token_logps)
-                    - 1
-                )
-                rollout_kl = (per_token_kl * shift_mask_kl).sum(-1) / shift_mask_kl.sum(-1).clamp(min=1)
-                packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean, rollout_kl], dim=-1)
-                gathered = accelerator.gather_for_metrics(packed)
-                if accelerator.is_main_process:
-                    for row in gathered.cpu().tolist():
-                        gathered_old[int(row[0])] = float(row[1])
-                        gathered_kl_slow[int(row[0])] = float(row[2])
-            else:
-                packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean], dim=-1)
-                gathered = accelerator.gather_for_metrics(packed)
-                if accelerator.is_main_process:
-                    for row in gathered.cpu().tolist():
-                        gathered_old[int(row[0])] = float(row[1])
+            packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean], dim=-1)
+            gathered = accelerator.gather_for_metrics(packed)
+            if accelerator.is_main_process:
+                for row in gathered.cpu().tolist():
+                    gathered_old[int(row[0])] = float(row[1])
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
         for sample in missing_rollout:
             sample.old_logprob_mean = gathered_old[sample.sample_id]
-            sample.rollout_kl = gathered_kl_slow[sample.sample_id] if compute_kl else 0.0
 
 
 def assign_rewards_and_advantages(
@@ -874,32 +761,15 @@ def assign_rewards_and_advantages(
     args,
 ) -> None:
     step_count_by_trajectory: Dict[int, int] = {}
-    kl_by_trajectory: Dict[int, List[float]] = {}
     for sample in step_samples:
         step_count_by_trajectory[sample.trajectory_id] = step_count_by_trajectory.get(sample.trajectory_id, 0) + 1
-        if args.reward_mode == "task_kl":
-            kl_by_trajectory.setdefault(sample.trajectory_id, []).append(sample.rollout_kl)
     for traj in trajectories:
-        if args.reward_mode == "task_multistep":
-            step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
-            if step_count > 1:
-                traj.step_reward = 1.0 + 0.3 * max(step_count - 2, 0)
-            else:
-                traj.step_reward = 0.0
-            traj.kl_reward = 0.0
-            traj.total_reward = traj.task_reward + traj.step_reward
+        step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
+        if step_count > 1:
+            traj.step_reward = 1.0 + 0.3 * max(step_count - 2, 0)
         else:
-            step_kls = kl_by_trajectory.get(traj.trajectory_id, [])
-            if args.kl_aggregation == "sum":
-                traj.kl_reward = sum(step_kls)
-            else:
-                traj.kl_reward = sum(step_kls) / max(len(step_kls), 1)
             traj.step_reward = 0.0
-            if traj.task_reward > 0:
-                traj.total_reward = traj.task_reward + args.kl_lambda * traj.kl_reward
-            else:
-                traj.kl_reward = 0.0
-                traj.total_reward = 0.0
+        traj.total_reward = traj.task_reward + traj.step_reward
     grouped: Dict[int, List[TrajectoryRecord]] = {}
     for traj in trajectories:
         grouped.setdefault(traj.group_idx, []).append(traj)
@@ -1171,9 +1041,6 @@ def main():
     parser.add_argument("--log_ratio_clip", type=float, default=10.0,
                         help="Clamp threshold when use_log_ratio_clip=1. "
                              "Set high (>=10) to catch only extreme cases. Default: 10.0.")
-    parser.add_argument("--reward_mode", type=str, choices=["task_kl", "task_multistep"], default="task_kl")
-    parser.add_argument("--kl_lambda", type=float, default=0.05)
-    parser.add_argument("--kl_aggregation", type=str, choices=["mean", "sum"], default="mean")
     parser.add_argument("--max_grad_norm", type=float, default=1.0)
     parser.add_argument("--save_every_syncs", type=int, default=2)
     parser.add_argument("--max_steps", type=int, default=5)
@@ -1235,8 +1102,8 @@ def main():
         accelerator.wait_for_everyone()
 
     model = build_trainable_model(args)
-    # Build reference model when needed: KL reward mode, or KL loss term enabled.
-    need_ref_model = args.reward_mode == "task_kl" or bool(args.use_kl_loss)
+    # Build reference model only when the training loss includes a KL term.
+    need_ref_model = bool(args.use_kl_loss)
     ref_model = build_reference_model(args) if need_ref_model else None
 
     optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
@@ -1299,13 +1166,12 @@ def main():
         compute_step_statistics(
             accelerator=accelerator,
             model=model,
-            ref_model=ref_model,
             step_samples=step_samples,
             tokenizer=tokenizer,
             args=args,
         )
         # Slow path only writes back to rank-0's step_samples; broadcast so all
-        # ranks have updated old_logprob_mean / rollout_kl / old_per_token_logps.
+        # ranks have updated old_logprob_mean / old_per_token_logps.
         step_samples = broadcast_object(accelerator, step_samples)
         if accelerator.is_main_process:
             assign_rewards_and_advantages(trajectories, step_samples, args)
@@ -1321,7 +1187,6 @@ def main():
                                 "correct": traj.correct,
                                 "task_reward": traj.task_reward,
                                 "step_reward": traj.step_reward,
-                                "kl_reward": traj.kl_reward,
                                 "total_reward": traj.total_reward,
                                 "advantage": traj.advantage,
                             },
