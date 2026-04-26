@@ -1414,9 +1414,11 @@ def main():
         should_save = ((sync_idx + 1) % args.save_every_syncs == 0) or (sync_idx + 1 == args.max_syncs)
         if should_save:
             latest_adapter_path = str(run_dir / f"checkpoint_sync_{sync_idx + 1:04d}")
-            save_lora_checkpoint(accelerator, model, tokenizer, Path(latest_adapter_path))
-            if accelerator.is_main_process and server_manager is not None:
-                server_manager.restart(latest_adapter_path, run_dir)
+        else:
+            latest_adapter_path = str(run_dir / "latest_adapter")
+        save_lora_checkpoint(accelerator, model, tokenizer, Path(latest_adapter_path))
+        if accelerator.is_main_process and server_manager is not None:
+            server_manager.restart(latest_adapter_path, run_dir)
         accelerator.wait_for_everyone()
         if accelerator.is_main_process:
             avg_reward = sum(traj.total_reward for traj in trajectories) / max(len(trajectories), 1)
