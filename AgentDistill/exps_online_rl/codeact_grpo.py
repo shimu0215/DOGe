@@ -722,10 +722,11 @@ def compute_step_statistics(
             missing_rollout.append(sample)
             alignment_failures += 1
             continue
-        if use_per_token:
-            sample.old_per_token_logps = aligned_old
-        else:
-            sample.old_per_token_logps = None
+        # Always store aligned per-token logps regardless of use_per_token_ratio:
+        # the fast KL path needs them to compute KL(rollout ‖ ref) even when the
+        # training loop uses mean-ratio. Without this, task_kl fast path would
+        # compute KL=0 for all has_rollout samples when use_per_token_ratio=0.
+        sample.old_per_token_logps = aligned_old
         has_rollout.append(sample)
 
     # ── Fast sub-path: samples WITH rollout logprobs ──────────────────────
@@ -735,7 +736,7 @@ def compute_step_statistics(
                 sample.old_logprob_mean = (
                     sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
                 )
-            if use_per_token and alignment_failures:
+            if alignment_failures:
                 print(
                     f"[compute_step_statistics] WARNING: {alignment_failures}/{len(step_samples)} "
                     "samples had rollout logprobs but failed token alignment; "
@@ -833,11 +834,21 @@ def compute_step_statistics(
                     attention_mask=batch["attention_mask"],
                     use_cache=False,
                 )
-                rollout_kl = compute_masked_forward_kl(
-                    current_logits=outputs.logits,
-                    ref_logits=ref_outputs.logits,
-                    action_mask=batch["action_mask"],
+                # Use TRL per-token approximation instead of compute_masked_forward_kl
+                # to avoid materialising full-vocab tensors (~15 GB for Qwen3-14B).
+                cur_per_token_logps = compute_per_token_logprob(
+                    outputs.logits, batch["input_ids"], batch["action_mask"]
                 )
+                ref_per_token_logps = compute_per_token_logprob(
+                    ref_outputs.logits, batch["input_ids"], batch["action_mask"]
+                )
+                shift_mask_kl = batch["action_mask"][:, 1:].float()
+                per_token_kl = (
+                    torch.exp(ref_per_token_logps - cur_per_token_logps)
+                    - (ref_per_token_logps - cur_per_token_logps)
+                    - 1
+                )
+                rollout_kl = (per_token_kl * shift_mask_kl).sum(-1) / shift_mask_kl.sum(-1).clamp(min=1)
                 packed = torch.stack([sample_ids.to(torch.float32), old_logprob_mean, rollout_kl], dim=-1)
                 gathered = accelerator.gather_for_metrics(packed)
                 if accelerator.is_main_process:
