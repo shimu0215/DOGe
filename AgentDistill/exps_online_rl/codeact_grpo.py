@@ -895,9 +895,9 @@ def assign_rewards_and_advantages(
     for sample in step_samples:
         step_count_by_trajectory[sample.trajectory_id] = step_count_by_trajectory.get(sample.trajectory_id, 0) + 1
     for traj in trajectories:
-        step_count = min(step_count_by_trajectory.get(traj.trajectory_id, 0), args.max_steps)
-        if step_count > 1:
-            traj.step_reward = 1.0 + 0.3 * max(step_count - 2, 0)
+        step_count = step_count_by_trajectory.get(traj.trajectory_id, 0)
+        if traj.task_reward > 0 and step_count < args.max_steps:
+            traj.step_reward = 2.0 + max(step_count - 2, 0) * 0.5
         else:
             traj.step_reward = 0.0
         traj.total_reward = traj.task_reward + traj.step_reward
