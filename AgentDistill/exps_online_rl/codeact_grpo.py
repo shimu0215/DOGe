@@ -695,106 +695,106 @@ def compute_step_statistics(
 ) -> None:
     compute_kl = args.reward_mode == "task_kl"
     use_per_token = bool(args.use_per_token_ratio)
-    has_all_rollout = step_samples and all(s.old_token_logprobs for s in step_samples)
 
-    # ── Fast path: rollout logprobs available for every step ─────────────
-    # Build old-policy stats directly from rollout logprobs; no training-model
-    # forward pass needed.  For task_kl we still need a ref-model forward to
-    # compute KL(rollout_policy ‖ ref) — using rollout logprobs here keeps the
-    # KL reward faithful to the actual sampling policy even when the training
-    # model has moved forward since rollout (save_every_syncs > 1).
-    if has_all_rollout:
+    # Split per-sample: those with rollout token logprobs get rollout-based stats
+    # (KL reward = KL(rollout ‖ ref), no training-model forward needed).
+    # Those without fall back to the slow path (training-model forward).
+    # This prevents a single missing sample from polluting the KL reward of all
+    # other samples with "current-model KL" instead of "rollout-policy KL".
+    has_rollout = [s for s in step_samples if s.old_token_logprobs]
+    missing_rollout = [s for s in step_samples if not s.old_token_logprobs]
+
+    # ── Fast sub-path: samples WITH rollout logprobs ──────────────────────
+    if has_rollout:
         if accelerator.is_main_process:
-            for sample in step_samples:
+            for sample in has_rollout:
                 sample.old_logprob_mean = (
                     sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
                 )
                 if use_per_token:
                     sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
-            # Warn once per call if any alignment failed (not once per batch).
-            n_missing_pt = sum(1 for s in step_samples if s.old_per_token_logps is None)
+            n_missing_pt = sum(1 for s in has_rollout if s.old_per_token_logps is None)
             if use_per_token and n_missing_pt:
                 print(
-                    f"[compute_step_statistics] WARNING: {n_missing_pt}/{len(step_samples)} "
+                    f"[compute_step_statistics] WARNING: {n_missing_pt}/{len(has_rollout)} "
                     "samples missing aligned per-token logps (token count mismatch); "
                     "those samples will use mean-ratio fallback during training."
                 )
 
         if not compute_kl:
             if accelerator.is_main_process:
-                for sample in step_samples:
+                for sample in has_rollout:
                     sample.rollout_kl = 0.0
-            return
-
-        # task_kl: compute KL(rollout ‖ ref) using ref-only forward.
-        # pre-populate per-token logps so collate can build the rollout tensor.
-        if not accelerator.is_main_process:
-            for sample in step_samples:
-                sample.old_logprob_mean = 0.0
-                sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
-        loader_kl = DataLoader(
-            StepDataset(step_samples),
-            batch_size=args.eval_batch_size,
-            shuffle=False,
-            collate_fn=lambda batch: collate_step_samples(
-                batch, tokenizer.pad_token_id, use_per_token_ratio=True
-            ),
-        )
-        loader_kl = accelerator.prepare(loader_kl)
-        gathered_kl: Dict[int, float] = {}
-        if ref_model is not None:
-            ref_model.eval()
-            for batch in loader_kl:
-                with torch.no_grad():
-                    ref_outputs = ref_model(
-                        input_ids=batch["input_ids"],
-                        attention_mask=batch["attention_mask"],
-                        use_cache=False,
+        else:
+            # task_kl: KL(rollout ‖ ref) via ref-only forward.
+            # Populate per-token logps on non-main ranks too (needed for collate).
+            if not accelerator.is_main_process:
+                for sample in has_rollout:
+                    sample.old_logprob_mean = 0.0
+                    sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
+            loader_fast = DataLoader(
+                StepDataset(has_rollout),
+                batch_size=args.eval_batch_size,
+                shuffle=False,
+                collate_fn=lambda batch: collate_step_samples(
+                    batch, tokenizer.pad_token_id, use_per_token_ratio=True
+                ),
+            )
+            loader_fast = accelerator.prepare(loader_fast)
+            gathered_kl_fast: Dict[int, float] = {}
+            if ref_model is not None:
+                ref_model.eval()
+                for batch in loader_fast:
+                    with torch.no_grad():
+                        ref_outputs = ref_model(
+                            input_ids=batch["input_ids"],
+                            attention_mask=batch["attention_mask"],
+                            use_cache=False,
+                        )
+                    ref_per_token_logps = compute_per_token_logprob(
+                        ref_outputs.logits, batch["input_ids"], batch["action_mask"]
+                    )  # [B, L-1]
+                    shift_mask = batch["action_mask"][:, 1:].float()
+                    has_pt = batch.get(
+                        "has_per_token_logps",
+                        torch.ones(shift_mask.shape[0], dtype=torch.bool, device=shift_mask.device),
                     )
-                ref_per_token_logps = compute_per_token_logprob(
-                    ref_outputs.logits, batch["input_ids"], batch["action_mask"]
-                )  # [B, L-1]
-                shift_mask = batch["action_mask"][:, 1:].float()
-                has_pt = batch.get(
-                    "has_per_token_logps",
-                    torch.ones(shift_mask.shape[0], dtype=torch.bool, device=shift_mask.device),
-                )
-                rollout_logps = batch["old_per_token_logps"]
-                per_token_kl = (
-                    torch.exp(ref_per_token_logps - rollout_logps)
-                    - (ref_per_token_logps - rollout_logps)
-                    - 1
-                )
-                kl_per_sample = (per_token_kl * shift_mask).sum(-1) / shift_mask.sum(-1).clamp(min=1)
-                # Samples with misaligned token counts get KL=0 (conservative fallback).
-                kl_per_sample = torch.where(has_pt, kl_per_sample, torch.zeros_like(kl_per_sample))
-                packed = torch.stack([batch["sample_ids"].to(torch.float32), kl_per_sample], dim=-1)
-                gathered = accelerator.gather_for_metrics(packed)
-                if accelerator.is_main_process:
-                    for row in gathered.cpu().tolist():
-                        gathered_kl[int(row[0])] = float(row[1])
-        accelerator.wait_for_everyone()
-        if accelerator.is_main_process:
-            for sample in step_samples:
-                sample.rollout_kl = gathered_kl.get(sample.sample_id, 0.0)
+                    rollout_logps = batch["old_per_token_logps"]
+                    per_token_kl = (
+                        torch.exp(ref_per_token_logps - rollout_logps)
+                        - (ref_per_token_logps - rollout_logps)
+                        - 1
+                    )
+                    kl_per_sample = (per_token_kl * shift_mask).sum(-1) / shift_mask.sum(-1).clamp(min=1)
+                    # Misaligned samples (has_pt=False) get KL=0 (conservative fallback).
+                    kl_per_sample = torch.where(has_pt, kl_per_sample, torch.zeros_like(kl_per_sample))
+                    packed = torch.stack([batch["sample_ids"].to(torch.float32), kl_per_sample], dim=-1)
+                    gathered = accelerator.gather_for_metrics(packed)
+                    if accelerator.is_main_process:
+                        for row in gathered.cpu().tolist():
+                            gathered_kl_fast[int(row[0])] = float(row[1])
+            accelerator.wait_for_everyone()
+            if accelerator.is_main_process:
+                for sample in has_rollout:
+                    sample.rollout_kl = gathered_kl_fast.get(sample.sample_id, 0.0)
+
+    # ── Slow sub-path: samples WITHOUT rollout logprobs ───────────────────
+    if not missing_rollout:
         return
 
-    # ── Slow path: some steps missing rollout logprobs ────────────────────
-    # Fall back to training-model forward for old-policy stats (and ref forward
-    # for KL reward when needed).
-    loader = DataLoader(
-        StepDataset(step_samples),
+    loader_slow = DataLoader(
+        StepDataset(missing_rollout),
         batch_size=args.eval_batch_size,
         shuffle=False,
         collate_fn=lambda batch: collate_step_samples(batch, tokenizer.pad_token_id),
     )
-    loader = accelerator.prepare(loader)
+    loader_slow = accelerator.prepare(loader_slow)
     gathered_old: Dict[int, float] = {}
     gathered_kl_slow: Dict[int, float] = {} if compute_kl else {}
     model.eval()
     if compute_kl and ref_model is not None:
         ref_model.eval()
-    for batch in loader:
+    for batch in loader_slow:
         with torch.no_grad():
             outputs = model(
                 input_ids=batch["input_ids"],
@@ -832,14 +832,9 @@ def compute_step_statistics(
                         gathered_old[int(row[0])] = float(row[1])
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
-        for sample in step_samples:
+        for sample in missing_rollout:
             sample.old_logprob_mean = gathered_old[sample.sample_id]
             sample.rollout_kl = gathered_kl_slow[sample.sample_id] if compute_kl else 0.0
-            if sample.old_token_logprobs and len(sample.old_token_logprobs) > 0:
-                # Prefer the exact rollout-side value when token counts line up.
-                sample.old_logprob_mean = sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
-                if use_per_token:
-                    sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
 
 
 def assign_rewards_and_advantages(
