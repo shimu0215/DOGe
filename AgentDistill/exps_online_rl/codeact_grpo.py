@@ -314,6 +314,16 @@ def align_prefix(full_ids: List[int], prompt_ids: List[int]) -> int:
     raise ValueError("Unable to align prompt tokens with full tokens.")
 
 
+def find_subsequence(haystack: List[int], needle: List[int], start: int = 0) -> int:
+    if not needle:
+        raise ValueError("Cannot locate an empty subsequence.")
+    max_start = len(haystack) - len(needle)
+    for idx in range(max(start, 0), max_start + 1):
+        if haystack[idx : idx + len(needle)] == needle:
+            return idx
+    raise ValueError("Unable to locate action token span inside chat template output.")
+
+
 def tokenize_step(
     tokenizer,
     context_messages: List[Dict[str, str]],
@@ -337,6 +347,9 @@ def tokenize_step(
         add_generation_prompt=True,
         **apply_kwargs,
     )
+    raw_action_ids = tokenizer.encode(action_text, add_special_tokens=False)
+    if not raw_action_ids:
+        raise ValueError("Assistant action produced empty raw token span.")
     full_messages = context_messages + [{"role": "assistant", "content": action_text}]
     full_ids = tokenizer.apply_chat_template(
         full_messages,
@@ -353,9 +366,11 @@ def tokenize_step(
         prefix_len = max(prefix_len - overflow, 0)
         if prefix_len == 0 or prefix_len >= len(full_ids):
             raise ValueError("Prompt overflow removed the assistant span.")
+    action_start = find_subsequence(full_ids, raw_action_ids, start=prefix_len)
+    action_end = action_start + len(raw_action_ids)
     attention_mask = [1] * len(full_ids)
     action_mask = [0] * len(full_ids)
-    for idx in range(prefix_len, len(full_ids)):
+    for idx in range(action_start, action_end):
         action_mask[idx] = 1
     return full_ids, attention_mask, action_mask
 
