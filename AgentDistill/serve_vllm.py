@@ -85,6 +85,11 @@ def main():
         type=int,
         help="maximum lora rank"
     )
+    parser.add_argument(
+        "--disable-custom-all-reduce",
+        action="store_true",
+        help="Disable custom all-reduce; use standard NCCL (avoids IPC leaks after crash)"
+    )
 
     args = parser.parse_args()
 
@@ -115,6 +120,8 @@ def main():
         cmd.extend(["--enable-lora", "--lora-modules", str(args.lora_modules)])
     if args.max_lora_rank:
         cmd.extend(["--max-lora-rank", str(args.max_lora_rank)])
+    if args.disable_custom_all_reduce:
+        cmd.append("--disable-custom-all-reduce")
 
     # Print the command that will be executed
     print("Executing command:", " ".join(cmd), flush=True)
