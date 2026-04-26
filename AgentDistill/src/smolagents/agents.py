@@ -76,6 +76,65 @@ from .utils import (
 logger = getLogger(__name__)
 
 
+def _normalize_top_logprob_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "token": entry.get("token"),
+        "logprob": entry.get("logprob"),
+        "bytes": entry.get("bytes"),
+    }
+
+
+def _extract_generation_logprobs(chat_message: Optional[ChatMessage]) -> Optional[List[Dict[str, Any]]]:
+    if chat_message is None or chat_message.raw is None:
+        return None
+
+    raw_response = chat_message.raw
+    if isinstance(raw_response, dict):
+        raw_dict = raw_response
+    elif hasattr(raw_response, "model_dump"):
+        raw_dict = raw_response.model_dump()
+    elif hasattr(raw_response, "dict"):
+        raw_dict = raw_response.dict()
+    else:
+        return None
+
+    choices = raw_dict.get("choices") or []
+    if not choices:
+        return None
+
+    target_content = chat_message.content
+    selected_choice = choices[0]
+    for choice in choices:
+        choice_content = (choice.get("message") or {}).get("content")
+        if choice_content == target_content:
+            selected_choice = choice
+            break
+
+    logprobs = selected_choice.get("logprobs") or {}
+    content_logprobs = logprobs.get("content") if isinstance(logprobs, dict) else None
+    if not content_logprobs:
+        return None
+
+    normalized = []
+    for token_info in content_logprobs:
+        if not isinstance(token_info, dict):
+            continue
+        normalized.append(
+            {
+                "token": token_info.get("token"),
+                "logprob": token_info.get("logprob"),
+                "bytes": token_info.get("bytes"),
+                "top_logprobs": [
+                    _normalize_top_logprob_entry(top_entry)
+                    for top_entry in (token_info.get("top_logprobs") or [])
+                    if isinstance(top_entry, dict)
+                ],
+            }
+        )
+
+    return normalized or None
+
+
 def get_variable_names(self, template: str) -> Set[str]:
     pattern = re.compile(r"\{\{([^{}]+)\}\}")
     return {match.group(1).strip() for match in pattern.finditer(template)}
@@ -682,11 +741,13 @@ You have been provided with these additional arguments, that you can access usin
             step_dict = {}
             if isinstance(step, PlanningStep):
                 step_dict.update({
-                    "messages": step.to_messages(summary_mode=False, train_mode=True)
+                    "messages": step.to_messages(summary_mode=False, train_mode=True),
+                    "generation_logprobs": _extract_generation_logprobs(step.model_output_message),
                 })
             elif isinstance(step, ActionFinalizeStep):
                 step_dict.update({
-                    "messages": step.to_messages()
+                    "messages": step.to_messages(),
+                    "generation_logprobs": _extract_generation_logprobs(step.model_output_message),
                 })
             # elif isinstance(step, FinalAnswerStep):
             #     step_dict.update({
@@ -694,6 +755,23 @@ You have been provided with these additional arguments, that you can access usin
             #     })
             # Remove None values to keep the JSON clean
             return {k: v for k, v in step_dict.items() if v is not None}
+
+        def serialize_generation_step(step):
+            if isinstance(step, PlanningStep):
+                return {
+                    "step_type": "planning",
+                    "output_text": step.raw_plan,
+                    "generation_logprobs": _extract_generation_logprobs(step.model_output_message),
+                }
+            if isinstance(step, ActionStep):
+                return {
+                    "step_type": "action_finalize" if isinstance(step, ActionFinalizeStep) else "action",
+                    "step_number": step.step_number,
+                    "output_text": step.model_output,
+                    "tool_calls": [tc.dict() for tc in step.tool_calls] if step.tool_calls else [],
+                    "generation_logprobs": _extract_generation_logprobs(step.model_output_message),
+                }
+            return None
 
         # Convert memory to both formats
         messages = []
@@ -725,6 +803,12 @@ You have been provided with these additional arguments, that you can access usin
         # Calculate cost information
         cost_info = self.calculate_cost()
 
+        generation_trace = []
+        for step in self.memory.steps:
+            serialized = serialize_generation_step(step)
+            if serialized is not None:
+                generation_trace.append({k: v for k, v in serialized.items() if v is not None})
+
         # Get final answer from the last step that has a final answer
         final_answer = None
         for step in reversed(self.memory.steps):
@@ -739,6 +823,7 @@ You have been provided with these additional arguments, that you can access usin
         log_data = {
             "messages": messages,
             "original_memory": original_memory,
+            "generation_trace": generation_trace,
             "metadata": {
                 "task": task,
                 "agent_name": self.name if hasattr(self, "name") else self.__class__.__name__,

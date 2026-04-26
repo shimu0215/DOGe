@@ -8,7 +8,7 @@ import signal
 import subprocess
 import sys
 import time
-from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -396,6 +396,22 @@ def gather_step_samples(
     return samples
 
 
+def build_aligned_old_per_token_logps(sample: StepSample) -> Optional[List[float]]:
+    if not sample.old_token_logprobs:
+        return None
+    shift_mask = sample.action_mask[1:]
+    n_action = sum(shift_mask)
+    if len(sample.old_token_logprobs) != n_action:
+        return None
+    logps = [0.0] * len(shift_mask)
+    k = 0
+    for j, m in enumerate(shift_mask):
+        if m:
+            logps[j] = sample.old_token_logprobs[k]
+            k += 1
+    return logps
+
+
 def compute_masked_logprob_mean(logits: torch.Tensor, input_ids: torch.Tensor, action_mask: torch.Tensor) -> torch.Tensor:
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
@@ -476,6 +492,7 @@ def rollout_one_trajectory(
             "seed": rollout_seed,
             "n": 1,
             "top_p": args.top_p,
+            "logprobs": True,
         }
         if max_tokens is not None:
             model_kwargs["max_tokens"] = max_tokens
@@ -670,19 +687,8 @@ def compute_step_statistics(
         for sample in step_samples:
             sample.old_logprob_mean = sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
             sample.rollout_kl = 0.0
-            # Build per-token logprobs aligned to shift positions when requested.
             if bool(args.use_per_token_ratio):
-                shift_mask = sample.action_mask[1:]  # length = len(input_ids) - 1
-                n_action = sum(shift_mask)
-                if len(sample.old_token_logprobs) == n_action:
-                    logps = [0.0] * len(shift_mask)
-                    k = 0
-                    for j, m in enumerate(shift_mask):
-                        if m:
-                            logps[j] = sample.old_token_logprobs[k]
-                            k += 1
-                    sample.old_per_token_logps = logps
-                # If counts don't match (e.g. front-truncation), leave as None → mean fallback.
+                sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
         return
 
     loader = DataLoader(
@@ -741,6 +747,8 @@ def compute_step_statistics(
             if sample.old_token_logprobs and len(sample.old_token_logprobs) > 0:
                 # Prefer the exact rollout-side value when token counts line up reasonably.
                 sample.old_logprob_mean = sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
+                if bool(args.use_per_token_ratio):
+                    sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
 
 
 def assign_rewards_and_advantages(
@@ -931,7 +939,9 @@ def train_one_sync(
                         ratio_for_loss = ratio.clamp(max=args.dual_clip_delta)
                     loss = -torch.min(ratio_for_loss * advantages, clipped_ratio * advantages).mean()
 
-                    # Optional KL penalty (forward KL over vocab).
+                    # Optional KL penalty (TRL per-token approximation: E[r-log r-1]).
+                    # compute_masked_forward_kl materialises full-vocab tensors (~15 GB for
+                    # Qwen3-14B); use the cheap scalar approximation instead.
                     if bool(args.use_kl_loss) and ref_model is not None:
                         with torch.no_grad():
                             ref_outputs = ref_model(
@@ -939,10 +949,20 @@ def train_one_sync(
                                 attention_mask=batch["attention_mask"],
                                 use_cache=False,
                             )
-                        kl = compute_masked_forward_kl(
-                            outputs.logits, ref_outputs.logits, batch["action_mask"]
+                        ref_per_token_logps_kl = compute_per_token_logprob(
+                            ref_outputs.logits, batch["input_ids"], batch["action_mask"]
                         )
-                        loss = loss + args.kl_beta * kl.mean()
+                        cur_per_token_logps_kl = compute_per_token_logprob(
+                            outputs.logits, batch["input_ids"], batch["action_mask"]
+                        )
+                        shift_mask_kl = batch["action_mask"][:, 1:].float()
+                        per_token_kl = (
+                            torch.exp(ref_per_token_logps_kl - cur_per_token_logps_kl)
+                            - (ref_per_token_logps_kl - cur_per_token_logps_kl)
+                            - 1
+                        )
+                        kl_loss = (per_token_kl * shift_mask_kl).sum(-1) / shift_mask_kl.sum(-1).clamp(min=1)
+                        loss = loss + args.kl_beta * kl_loss.mean()
 
                     ratio_mean_val = ratio.detach().mean()
 
@@ -1088,7 +1108,22 @@ def main():
     ref_model = build_reference_model(args) if need_ref_model else None
 
     optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    total_update_steps = max(1, args.max_syncs * args.grpo_epochs * max(1, args.num_questions_per_sync))
+    # Estimate optimizer steps per sync: (questions × rollouts × avg_traj_steps)
+    # divided by (batch_size × num_GPUs × grad_accum).
+    # avg_traj_steps is approximated as half of max_steps (empirical mid-point).
+    _estimated_samples_per_sync = (
+        args.num_questions_per_sync
+        * args.num_rollouts_per_question
+        * max(1, args.max_steps // 2)
+    )
+    _optimizer_steps_per_sync = max(
+        1,
+        math.ceil(
+            _estimated_samples_per_sync
+            / (args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps)
+        ),
+    )
+    total_update_steps = max(1, args.max_syncs * args.grpo_epochs * _optimizer_steps_per_sync)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer=optimizer,
         num_warmup_steps=args.warmup_steps,
@@ -1136,6 +1171,9 @@ def main():
             tokenizer=tokenizer,
             args=args,
         )
+        # Slow path only writes back to rank-0's step_samples; broadcast so all
+        # ranks have updated old_logprob_mean / rollout_kl / old_per_token_logps.
+        step_samples = broadcast_object(accelerator, step_samples)
         if accelerator.is_main_process:
             assign_rewards_and_advantages(trajectories, step_samples, args)
             reward_path = run_dir / "rollout_rewards_sync.jsonl"
