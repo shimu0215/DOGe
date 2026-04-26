@@ -390,7 +390,14 @@ def gather_step_samples(
             except ValueError:
                 continue
             trace = traj.action_traces[local_idx] if local_idx < len(traj.action_traces) else {}
-            rollout_logprobs = trace.get("generation_logprobs") or []
+            # Keep rollout logprobs only when the serialized action trace still matches
+            # the assistant action text we are about to optimize. If logging/cleaning
+            # ever inserts, drops, or reorders action steps, falling back is safer than
+            # attaching old-policy stats to the wrong target.
+            trace_output = str(trace.get("output_text", "") or "").strip()
+            action_text_stripped = str(action_text or "").strip()
+            trace_matches_action = bool(trace_output) and trace_output == action_text_stripped
+            rollout_logprobs = (trace.get("generation_logprobs") or []) if trace_matches_action else []
             old_token_logprobs = [float(item["logprob"]) for item in rollout_logprobs if item.get("logprob") is not None]
             samples.append(
                 StepSample(
@@ -701,8 +708,25 @@ def compute_step_statistics(
     # Those without fall back to the slow path (training-model forward).
     # This prevents a single missing sample from polluting the KL reward of all
     # other samples with "current-model KL" instead of "rollout-policy KL".
-    has_rollout = [s for s in step_samples if s.old_token_logprobs]
-    missing_rollout = [s for s in step_samples if not s.old_token_logprobs]
+    has_rollout: List[StepSample] = []
+    missing_rollout: List[StepSample] = []
+    alignment_failures = 0
+    for sample in step_samples:
+        if not sample.old_token_logprobs:
+            sample.old_per_token_logps = None
+            missing_rollout.append(sample)
+            continue
+        aligned_old = build_aligned_old_per_token_logps(sample)
+        if aligned_old is None:
+            sample.old_per_token_logps = None
+            missing_rollout.append(sample)
+            alignment_failures += 1
+            continue
+        if use_per_token:
+            sample.old_per_token_logps = aligned_old
+        else:
+            sample.old_per_token_logps = None
+        has_rollout.append(sample)
 
     # ── Fast sub-path: samples WITH rollout logprobs ──────────────────────
     if has_rollout:
@@ -711,14 +735,11 @@ def compute_step_statistics(
                 sample.old_logprob_mean = (
                     sum(sample.old_token_logprobs) / len(sample.old_token_logprobs)
                 )
-                if use_per_token:
-                    sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
-            n_missing_pt = sum(1 for s in has_rollout if s.old_per_token_logps is None)
-            if use_per_token and n_missing_pt:
+            if use_per_token and alignment_failures:
                 print(
-                    f"[compute_step_statistics] WARNING: {n_missing_pt}/{len(has_rollout)} "
-                    "samples missing aligned per-token logps (token count mismatch); "
-                    "those samples will use mean-ratio fallback during training."
+                    f"[compute_step_statistics] WARNING: {alignment_failures}/{len(step_samples)} "
+                    "samples had rollout logprobs but failed token alignment; "
+                    "those samples will use the slow fallback so old-policy stats stay consistent."
                 )
 
         if not compute_kl:
@@ -731,7 +752,6 @@ def compute_step_statistics(
             if not accelerator.is_main_process:
                 for sample in has_rollout:
                     sample.old_logprob_mean = 0.0
-                    sample.old_per_token_logps = build_aligned_old_per_token_logps(sample)
             loader_fast = DataLoader(
                 StepDataset(has_rollout),
                 batch_size=args.eval_batch_size,
