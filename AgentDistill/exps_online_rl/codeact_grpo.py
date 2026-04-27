@@ -1042,11 +1042,31 @@ def train_one_sync(
     for epoch_idx in range(args.grpo_epochs):
         for batch in train_loader:
             with accelerator.accumulate(model):
-                outputs = model(
-                    input_ids=batch["input_ids"],
-                    attention_mask=batch["attention_mask"],
-                    use_cache=False,
-                )
+                # Forward pass — accelerate converts bf16 logits to fp32 via
+                # _convert_to_fp32 hook, which can OOM for long sequences.
+                # Catch it here, sync the OOM flag across all ranks, then skip.
+                _fwd_oom = False
+                try:
+                    outputs = model(
+                        input_ids=batch["input_ids"],
+                        attention_mask=batch["attention_mask"],
+                        use_cache=False,
+                    )
+                except torch.OutOfMemoryError as _oom:
+                    _fwd_oom = True
+                    torch.cuda.empty_cache()
+                    seq_len = int(batch["input_ids"].shape[1])
+                    print(
+                        f"[sync {sync_idx}][rank {accelerator.process_index}] "
+                        f"WARNING: OOM in forward (seq_len={seq_len}). "
+                        f"Error: {_oom}"
+                    )
+                # Synchronise OOM status across ranks before any DDP collective.
+                _fwd_flag = torch.tensor([1 if _fwd_oom else 0], device=accelerator.device, dtype=torch.int32)
+                _fwd_gathered = accelerator.gather(_fwd_flag)
+                if int(_fwd_gathered.max().item()) != 0:
+                    optimizer.zero_grad(set_to_none=True)
+                    continue
                 advantages = batch["advantages"]
 
                 if use_per_token and "old_per_token_logps" in batch:
