@@ -532,7 +532,9 @@ def compute_masked_logprob_mean(logits: torch.Tensor, input_ids: torch.Tensor, a
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
     shift_mask = action_mask[:, 1:]
-    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
+    # Keep in the model's native dtype (bf16 under mixed precision) to halve
+    # peak memory vs a forced .float() cast (~2.5 GB vs ~5 GB for 32B vocab).
+    log_probs = F.log_softmax(shift_logits, dim=-1)
     selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
     lengths = shift_mask.sum(dim=-1).clamp(min=1)
     masked_sum = (selected * shift_mask).sum(dim=-1)
@@ -552,7 +554,9 @@ def compute_per_token_logprob(
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
     shift_mask = action_mask[:, 1:]
-    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
+    # Keep in model's native dtype (bf16 under mixed precision) — avoids ~5 GB
+    # float32 peak for a single batch with long sequences.
+    log_probs = F.log_softmax(shift_logits, dim=-1)
     selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
     return selected * shift_mask  # zero non-action positions
 
