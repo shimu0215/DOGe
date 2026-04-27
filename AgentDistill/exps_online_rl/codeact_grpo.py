@@ -518,12 +518,35 @@ def build_aligned_old_per_token_logps(sample: StepSample) -> Optional[List[float
     return logps
 
 
+_LOGPROB_CHUNK_SIZE = 512  # process this many tokens at a time to cap peak [B,chunk,V] memory
+
+
+def _chunked_gather_logprobs(shift_logits: torch.Tensor, shift_labels: torch.Tensor) -> torch.Tensor:
+    """Compute per-token log probs via chunked log_softmax to reduce peak memory.
+
+    Instead of materialising [B, L, V] all at once (which requires 2×[B,L,V] during
+    backward), process _LOGPROB_CHUNK_SIZE tokens at a time so peak memory is
+    proportional to chunk_size rather than full sequence length.
+
+    Returns: [B, L] log-prob tensor with gradients.
+    """
+    B, L, V = shift_logits.shape
+    chunks = []
+    for start in range(0, L, _LOGPROB_CHUNK_SIZE):
+        end = min(start + _LOGPROB_CHUNK_SIZE, L)
+        chunk_logits = shift_logits[:, start:end, :]          # [B, chunk, V]
+        chunk_labels = shift_labels[:, start:end]              # [B, chunk]
+        chunk_lp = F.log_softmax(chunk_logits.float(), dim=-1)
+        chunk_sel = chunk_lp.gather(-1, chunk_labels.unsqueeze(-1)).squeeze(-1)  # [B, chunk]
+        chunks.append(chunk_sel)
+    return torch.cat(chunks, dim=1)  # [B, L]
+
+
 def compute_masked_logprob_mean(logits: torch.Tensor, input_ids: torch.Tensor, action_mask: torch.Tensor) -> torch.Tensor:
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
     shift_mask = action_mask[:, 1:]
-    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
-    selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
+    selected = _chunked_gather_logprobs(shift_logits, shift_labels)
     lengths = shift_mask.sum(dim=-1).clamp(min=1)
     masked_sum = (selected * shift_mask).sum(dim=-1)
     return masked_sum / lengths
@@ -538,12 +561,12 @@ def compute_per_token_logprob(
 
     Non-action positions are zeroed so they contribute 0 to log_ratio diff when
     old_per_token_logps is also 0 there (ratio=1, masked out in loss).
+    Uses chunked log_softmax to keep peak [B, chunk, V] memory bounded.
     """
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
     shift_mask = action_mask[:, 1:]
-    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
-    selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
+    selected = _chunked_gather_logprobs(shift_logits, shift_labels)
     return selected * shift_mask  # zero non-action positions
 
 
@@ -1132,19 +1155,31 @@ def train_one_sync(
                 if int(gathered_bad.max().item()) != 0:
                     raise NonFiniteTrainingError(local_reason or "non_finite_loss_on_peer_rank")
 
-                accelerator.backward(loss)
-                if accelerator.sync_gradients and args.max_grad_norm > 0:
-                    accelerator.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-                optimizer.step()
-                scheduler.step()
-                if accelerator.sync_gradients:
-                    local_bad = 1 if has_nonfinite_trainable_params(model) else 0
-                    local_reason = "non_finite_parameter_after_step" if local_bad else ""
-                    bad_flag = torch.tensor([local_bad], device=accelerator.device, dtype=torch.int32)
-                    gathered_bad = accelerator.gather(bad_flag)
-                    if int(gathered_bad.max().item()) != 0:
-                        raise NonFiniteTrainingError(local_reason or "non_finite_parameter_on_peer_rank")
-                optimizer.zero_grad(set_to_none=True)
+                try:
+                    accelerator.backward(loss)
+                    if accelerator.sync_gradients and args.max_grad_norm > 0:
+                        accelerator.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    optimizer.step()
+                    scheduler.step()
+                    if accelerator.sync_gradients:
+                        local_bad = 1 if has_nonfinite_trainable_params(model) else 0
+                        local_reason = "non_finite_parameter_after_step" if local_bad else ""
+                        bad_flag = torch.tensor([local_bad], device=accelerator.device, dtype=torch.int32)
+                        gathered_bad = accelerator.gather(bad_flag)
+                        if int(gathered_bad.max().item()) != 0:
+                            raise NonFiniteTrainingError(local_reason or "non_finite_parameter_on_peer_rank")
+                    optimizer.zero_grad(set_to_none=True)
+                except torch.OutOfMemoryError as _oom:
+                    # OOM on this batch: free cache, zero grads, skip — training continues.
+                    optimizer.zero_grad(set_to_none=True)
+                    torch.cuda.empty_cache()
+                    seq_len = int(batch["input_ids"].shape[1])
+                    print(
+                        f"[sync {sync_idx}][rank {accelerator.process_index}] "
+                        f"WARNING: OOM skipped batch (seq_len={seq_len}). "
+                        f"Error: {_oom}"
+                    )
+                    continue
             total_loss += float(loss.detach().cpu().item())
             total_ratio += float(ratio_mean_val.cpu().item())
             total_batches += 1
