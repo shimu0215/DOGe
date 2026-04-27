@@ -1399,8 +1399,17 @@ def main():
     _fwd = _model_to_patch.forward
     if hasattr(_fwd, '__wrapped__'):
         _wrapped = _fwd.__wrapped__
-        # __wrapped__ is ConvertOutputsToFp32; .model_forward is the actual forward
-        _model_to_patch.forward = getattr(_wrapped, 'model_forward', _wrapped)
+        # __wrapped__ is ConvertOutputsToFp32; .model_forward is autocast(forward_func)
+        _actual_forward = getattr(_wrapped, 'model_forward', _wrapped)
+        if hasattr(_fwd, '__func__'):
+            # Path 2 (PeftModel/regular method): __func__ is an unbound function,
+            # autocast wraps the unbound func → must rebind with MethodType so
+            # calling model.module(...) correctly passes self as first argument.
+            from types import MethodType as _MethodType
+            _model_to_patch.forward = _MethodType(_actual_forward, _model_to_patch)
+        else:
+            # Path 1 (already bound callable): assign directly
+            _model_to_patch.forward = _actual_forward
         if accelerator.is_main_process:
             print("[INFO] Removed accelerate fp32 output conversion hook from model forward.")
     if ref_model is not None:
