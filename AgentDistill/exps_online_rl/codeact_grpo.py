@@ -1230,6 +1230,9 @@ def main():
     parser.add_argument("--data_path", type=str, default="data_processor/math_dataset/test/math_500_20250414.json")
     parser.add_argument("--output_root", type=str, default="training_outputs/qwen3-14B/agent_online_grpo_math500")
     parser.add_argument("--resume_from_adapter", type=str, default=None)
+    parser.add_argument("--start_sync_idx", type=int, default=0,
+                        help="First sync index when resuming; combined with --resume_from_adapter "
+                             "to continue training from a checkpoint without re-running earlier syncs.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num_questions_per_sync", type=int, default=16)
     parser.add_argument("--num_rollouts_per_question", type=int, default=4)
@@ -1345,7 +1348,7 @@ def main():
             / (args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps)
         ),
     )
-    total_update_steps = max(1, args.max_syncs * args.grpo_epochs * _optimizer_steps_per_sync)
+    total_update_steps = max(1, (args.max_syncs - args.start_sync_idx) * args.grpo_epochs * _optimizer_steps_per_sync)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer=optimizer,
         num_warmup_steps=args.warmup_steps,
@@ -1359,8 +1362,10 @@ def main():
     rng = random.Random(args.seed)
     rng.shuffle(dataset)
 
-    global_question_offset = 0
-    for sync_idx in range(args.max_syncs):
+    # When resuming, fast-forward the question offset to match start_sync_idx
+    _qs_per_sync = args.num_questions_per_sync
+    global_question_offset = (args.start_sync_idx * _qs_per_sync) % max(len(dataset), 1)
+    for sync_idx in range(args.start_sync_idx, args.max_syncs):
         if accelerator.is_main_process:
             if global_question_offset >= len(dataset):
                 rng.shuffle(dataset)
