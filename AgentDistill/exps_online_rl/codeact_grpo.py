@@ -1385,6 +1385,14 @@ def main():
         num_training_steps=total_update_steps,
     )
     model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
+    # accelerate wraps model.forward with a _convert_to_fp32 hook under mixed
+    # precision, which upcasts the full [B, L, vocab] logits to fp32 after every
+    # forward pass (~4.7 GiB for L=8192). We don't need this: chunked logprob
+    # already does .float() per 512-token chunk. Remove the hook to save memory.
+    if callable(getattr(model.forward, '__wrapped__', None)):
+        model.forward = model.forward.__wrapped__
+        if accelerator.is_main_process:
+            print("[INFO] Removed accelerate fp32 output conversion hook from model.forward.")
     if ref_model is not None:
         ref_model = ref_model.to(accelerator.device)
 
