@@ -1033,9 +1033,27 @@ def train_one_sync(
                 if use_per_token and "old_per_token_logps" in batch:
                     # ── Per-token path with per-sample routing ───────────────
                     # Single model forward; compute per-token logps once.
-                    per_token_logps = compute_per_token_logprob(
-                        outputs.logits, batch["input_ids"], batch["action_mask"]
-                    )  # [B, L-1]; non-action positions are 0
+                    _logp_oom = False
+                    try:
+                        per_token_logps = compute_per_token_logprob(
+                            outputs.logits, batch["input_ids"], batch["action_mask"]
+                        )  # [B, L-1]; non-action positions are 0
+                    except torch.OutOfMemoryError as _oom:
+                        _logp_oom = True
+                        torch.cuda.empty_cache()
+                        seq_len = int(batch["input_ids"].shape[1])
+                        print(
+                            f"[sync {sync_idx}][rank {accelerator.process_index}] "
+                            f"WARNING: OOM in logp computation (seq_len={seq_len}). "
+                            f"Error: {_oom}"
+                        )
+                    _logp_flag = torch.tensor([1 if _logp_oom else 0], device=accelerator.device, dtype=torch.int32)
+                    _logp_gathered = accelerator.gather(_logp_flag)
+                    if int(_logp_gathered.max().item()) != 0:
+                        optimizer.zero_grad(set_to_none=True)
+                        del outputs
+                        torch.cuda.empty_cache()
+                        continue
                     shift_mask = batch["action_mask"][:, 1:].float()  # [B, L-1]
                     has_pt = batch["has_per_token_logps"]  # [B] bool
 
