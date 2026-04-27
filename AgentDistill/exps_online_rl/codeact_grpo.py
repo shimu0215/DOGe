@@ -897,7 +897,7 @@ def assign_rewards_and_advantages(
     for traj in trajectories:
         step_count = step_count_by_trajectory.get(traj.trajectory_id, 0)
         if traj.task_reward > 0 and step_count < args.max_steps:
-            traj.step_reward = 2.0 + max(step_count - 2, 0) * 0.5
+            traj.step_reward = args.step_reward_a + max(step_count - args.step_reward_b, 0) * args.step_reward_c
         else:
             traj.step_reward = 0.0
         traj.total_reward = traj.task_reward + traj.step_reward
@@ -1231,6 +1231,12 @@ def main():
     parser.add_argument("--max_grad_norm", type=float, default=1.0)
     parser.add_argument("--save_every_syncs", type=int, default=2)
     parser.add_argument("--max_steps", type=int, default=5)
+    parser.add_argument("--step_reward_a", type=float, default=2.0,
+                        help="Base step reward for correct trajectories. Default: 2.0")
+    parser.add_argument("--step_reward_b", type=int, default=2,
+                        help="Step count threshold before per-step bonus kicks in. Default: 2")
+    parser.add_argument("--step_reward_c", type=float, default=0.5,
+                        help="Per-step bonus beyond threshold b. Default: 0.5")
     parser.add_argument("--max_tokens", type=int, default=None)
     parser.add_argument("--max_length", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=0.7)
