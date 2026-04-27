@@ -1389,10 +1389,20 @@ def main():
     # precision, which upcasts the full [B, L, vocab] logits to fp32 after every
     # forward pass (~4.7 GiB for L=8192). We don't need this: chunked logprob
     # already does .float() per 512-token chunk. Remove the hook to save memory.
-    if callable(getattr(model.forward, '__wrapped__', None)):
-        model.forward = model.forward.__wrapped__
+    #
+    # Structure (DDP mode):
+    #   model                          ← DistributedDataParallel
+    #   model.module.forward           ← outer lambda  (has __wrapped__)
+    #   model.module.forward.__wrapped__ ← ConvertOutputsToFp32 instance
+    #   model.module.forward.__wrapped__.model_forward ← autocast(real_forward)
+    _model_to_patch = getattr(model, 'module', model)  # unwrap DDP if present
+    _fwd = _model_to_patch.forward
+    if hasattr(_fwd, '__wrapped__'):
+        _wrapped = _fwd.__wrapped__
+        # __wrapped__ is ConvertOutputsToFp32; .model_forward is the actual forward
+        _model_to_patch.forward = getattr(_wrapped, 'model_forward', _wrapped)
         if accelerator.is_main_process:
-            print("[INFO] Removed accelerate fp32 output conversion hook from model.forward.")
+            print("[INFO] Removed accelerate fp32 output conversion hook from model forward.")
     if ref_model is not None:
         ref_model = ref_model.to(accelerator.device)
 
