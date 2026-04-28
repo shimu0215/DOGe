@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import copy
 import json
 import math
@@ -1384,6 +1385,23 @@ def main():
         if accelerator.is_main_process:
             server_manager.start(latest_adapter_path, run_dir)
             rollout_api_base = server_manager.api_base
+            # Register cleanup hooks so the vLLM process group is killed even if
+            # the training process crashes or is terminated by a signal.  Without
+            # these, the vLLM workers (in their own session due to start_new_session=True)
+            # survive the parent crash and hold GPU memory, blocking the next run.
+            _sm = server_manager
+            def _emergency_stop_server():
+                try:
+                    _sm.stop()
+                except Exception:
+                    pass
+            atexit.register(_emergency_stop_server)
+            _orig_sigterm = signal.getsignal(signal.SIGTERM)
+            def _sigterm_handler(signum, frame):
+                _emergency_stop_server()
+                signal.signal(signal.SIGTERM, _orig_sigterm)
+                os.kill(os.getpid(), signal.SIGTERM)
+            signal.signal(signal.SIGTERM, _sigterm_handler)
         rollout_api_base = broadcast_object(accelerator, rollout_api_base)
         accelerator.wait_for_everyone()
 
