@@ -1066,10 +1066,12 @@ def train_one_sync(
                 _fwd_flag = torch.tensor([1 if _fwd_oom else 0], device=accelerator.device, dtype=torch.int32)
                 _fwd_gathered = accelerator.gather(_fwd_flag)
                 if int(_fwd_gathered.max().item()) != 0:
-                    # Use a dummy backward to keep gradient-accumulation NCCL
-                    # collectives aligned across ranks, then discard gradients.
-                    _dummy_p = next(p for p in model.parameters() if p.requires_grad)
-                    accelerator.backward(_dummy_p.sum() * 0)
+                    # Dummy backward through ALL trainable params so every DDP
+                    # gradient bucket fires its hook and all-reduce completes.
+                    # Using only one parameter leaves other buckets unreduced,
+                    # causing a DDP "prior iteration" error at the next forward.
+                    _dummy_loss = sum(p.sum() for p in model.parameters() if p.requires_grad) * 0
+                    accelerator.backward(_dummy_loss)
                     optimizer.zero_grad(set_to_none=True)
                     continue
                 advantages = batch["advantages"]
@@ -1099,8 +1101,12 @@ def train_one_sync(
                         # would itself OOM when used as the backward source.
                         del outputs
                         torch.cuda.empty_cache()
-                        _dummy_p = next(p for p in model.parameters() if p.requires_grad)
-                        accelerator.backward(_dummy_p.sum() * 0)
+                        # Dummy backward through ALL trainable params so every DDP
+                        # gradient bucket fires its hook and all-reduce completes.
+                        # When forward succeeded, all params are in the autograd graph;
+                        # using only one parameter leaves other buckets unreduced.
+                        _dummy_loss = sum(p.sum() for p in model.parameters() if p.requires_grad) * 0
+                        accelerator.backward(_dummy_loss)
                         optimizer.zero_grad(set_to_none=True)
                         continue
                     shift_mask = batch["action_mask"][:, 1:].float()  # [B, L-1]
