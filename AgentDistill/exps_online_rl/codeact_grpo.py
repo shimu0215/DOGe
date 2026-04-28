@@ -952,7 +952,10 @@ def assign_rewards_and_advantages(
             traj.step_reward = args.step_reward_a + max(step_count - args.step_reward_b, 0) * args.step_reward_c
         else:
             traj.step_reward = 0.0
-        traj.total_reward = traj.task_reward + traj.step_reward
+        if getattr(args, 'use_step_reward_only', 0):
+            traj.total_reward = traj.step_reward
+        else:
+            traj.total_reward = traj.task_reward + traj.step_reward
     grouped: Dict[int, List[TrajectoryRecord]] = {}
     for traj in trajectories:
         grouped.setdefault(traj.group_idx, []).append(traj)
@@ -1347,6 +1350,8 @@ def main():
                         help="Step count threshold before per-step bonus kicks in. Default: 2")
     parser.add_argument("--step_reward_c", type=float, default=0.5,
                         help="Per-step bonus beyond threshold b. Default: 0.5")
+    parser.add_argument("--use_step_reward_only", type=int, default=0,
+                        help="If 1, total_reward = step_reward only (no separate task_reward). Default: 0")
     parser.add_argument("--max_tokens", type=int, default=None)
     parser.add_argument("--max_length", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=0.7)
