@@ -200,6 +200,8 @@ class RolloutServerManager:
             str(self.args.rollout_max_length),
             "--disable-log-requests",
             "--disable-log-stats",
+            "--disable-custom-all-reduce",
+            "--enforce-eager",  # Disable CUDA graphs to avoid illegal memory access on repeated restart
         ]
         if adapter_path:
             cmd.extend(["--lora-modules", f"finetune={adapter_path}", "--max-lora-rank", str(self.args.lora_r)])
@@ -234,12 +236,18 @@ class RolloutServerManager:
                 env.pop(key, None)
         return env
 
-    def _wait_until_ready(self, log_path: Path, timeout_s: int = 1800) -> None:
+    def _wait_until_ready(self, log_path: Path, timeout_s: int = 1800, search_from_pos: int = 0) -> None:
+        """Wait until the rollout server reports startup complete.
+
+        search_from_pos: byte offset in log_path to start searching from.
+        This prevents false-positives from earlier sync's "Application startup
+        complete." messages that remain in the append-only log file.
+        """
         deadline = time.time() + timeout_s
         while time.time() < deadline:
             if log_path.exists():
                 content = log_path.read_text(errors="ignore")
-                if "Application startup complete." in content:
+                if "Application startup complete." in content[search_from_pos:]:
                     return
             if self.process and self.process.poll() is not None:
                 raise RuntimeError(f"vLLM server exited early with code {self.process.returncode}")
@@ -251,6 +259,9 @@ class RolloutServerManager:
         serve_log = run_dir / "rollout_server.log"
         env = self._build_env()
         cmd = self._build_cmd(adapter_path)
+        # Record position BEFORE writing START marker so _wait_until_ready only
+        # searches new content; avoids false-positives from prior syncs' messages.
+        start_pos = serve_log.stat().st_size if serve_log.exists() else 0
         with serve_log.open("a") as f:
             f.write(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] START {' '.join(cmd)}\n")
         log_fh = serve_log.open("a")
@@ -260,9 +271,10 @@ class RolloutServerManager:
             env=env,
             stdout=log_fh,
             stderr=subprocess.STDOUT,
+            start_new_session=True,  # Put vLLM in its own process group so stop() can kill all workers
         )
         self.current_adapter_path = adapter_path
-        self._wait_until_ready(serve_log)
+        self._wait_until_ready(serve_log, search_from_pos=start_pos)
 
     def restart(self, adapter_path: Optional[str], run_dir: Path) -> None:
         if adapter_path == self.current_adapter_path and self.process and self.process.poll() is None:
@@ -271,12 +283,28 @@ class RolloutServerManager:
 
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
-            self.process.terminate()
+            # Kill the entire process group (including vLLM Worker and EngineCore subprocesses)
+            # to prevent zombie workers from holding GPU memory across restarts.
             try:
-                self.process.wait(timeout=20)
+                pgid = os.getpgid(self.process.pid)
+                os.killpg(pgid, signal.SIGTERM)
+            except (ProcessLookupError, PermissionError):
+                self.process.terminate()
+            try:
+                self.process.wait(timeout=30)
             except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=10)
+                try:
+                    pgid = os.getpgid(self.process.pid)
+                    os.killpg(pgid, signal.SIGKILL)
+                except (ProcessLookupError, PermissionError):
+                    pass
+                try:
+                    self.process.kill()
+                    self.process.wait(timeout=10)
+                except Exception:
+                    pass
+            # Give CUDA time to fully release GPU memory before the next vLLM start
+            time.sleep(15)
         self.process = None
 
 
@@ -500,12 +528,35 @@ def build_aligned_old_per_token_logps(sample: StepSample) -> Optional[List[float
     return logps
 
 
+_LOGPROB_CHUNK_SIZE = 512  # process this many tokens at a time to cap peak [B,chunk,V] memory
+
+
+def _chunked_gather_logprobs(shift_logits: torch.Tensor, shift_labels: torch.Tensor) -> torch.Tensor:
+    """Compute per-token log probs via chunked log_softmax to reduce peak memory.
+
+    Instead of materialising [B, L, V] all at once (which requires 2×[B,L,V] during
+    backward), process _LOGPROB_CHUNK_SIZE tokens at a time so peak memory is
+    proportional to chunk_size rather than full sequence length.
+
+    Returns: [B, L] log-prob tensor with gradients.
+    """
+    B, L, V = shift_logits.shape
+    chunks = []
+    for start in range(0, L, _LOGPROB_CHUNK_SIZE):
+        end = min(start + _LOGPROB_CHUNK_SIZE, L)
+        chunk_logits = shift_logits[:, start:end, :]          # [B, chunk, V]
+        chunk_labels = shift_labels[:, start:end]              # [B, chunk]
+        chunk_lp = F.log_softmax(chunk_logits.float(), dim=-1)
+        chunk_sel = chunk_lp.gather(-1, chunk_labels.unsqueeze(-1)).squeeze(-1)  # [B, chunk]
+        chunks.append(chunk_sel)
+    return torch.cat(chunks, dim=1)  # [B, L]
+
+
 def compute_masked_logprob_mean(logits: torch.Tensor, input_ids: torch.Tensor, action_mask: torch.Tensor) -> torch.Tensor:
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
     shift_mask = action_mask[:, 1:]
-    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
-    selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
+    selected = _chunked_gather_logprobs(shift_logits, shift_labels)
     lengths = shift_mask.sum(dim=-1).clamp(min=1)
     masked_sum = (selected * shift_mask).sum(dim=-1)
     return masked_sum / lengths
@@ -520,12 +571,12 @@ def compute_per_token_logprob(
 
     Non-action positions are zeroed so they contribute 0 to log_ratio diff when
     old_per_token_logps is also 0 there (ratio=1, masked out in loss).
+    Uses chunked log_softmax to keep peak [B, chunk, V] memory bounded.
     """
     shift_logits = logits[:, :-1, :]
     shift_labels = input_ids[:, 1:]
     shift_mask = action_mask[:, 1:]
-    log_probs = F.log_softmax(shift_logits.float(), dim=-1)
-    selected = log_probs.gather(dim=-1, index=shift_labels.unsqueeze(-1)).squeeze(-1)
+    selected = _chunked_gather_logprobs(shift_logits, shift_labels)
     return selected * shift_mask  # zero non-action positions
 
 
@@ -991,11 +1042,35 @@ def train_one_sync(
     for epoch_idx in range(args.grpo_epochs):
         for batch in train_loader:
             with accelerator.accumulate(model):
-                outputs = model(
-                    input_ids=batch["input_ids"],
-                    attention_mask=batch["attention_mask"],
-                    use_cache=False,
-                )
+                # Forward pass — accelerate converts bf16 logits to fp32 via
+                # _convert_to_fp32 hook, which can OOM for long sequences.
+                # Catch it here, sync the OOM flag across all ranks, then skip.
+                _fwd_oom = False
+                try:
+                    outputs = model(
+                        input_ids=batch["input_ids"],
+                        attention_mask=batch["attention_mask"],
+                        use_cache=False,
+                    )
+                except torch.OutOfMemoryError as _oom:
+                    _fwd_oom = True
+                    torch.cuda.empty_cache()
+                    seq_len = int(batch["input_ids"].shape[1])
+                    print(
+                        f"[sync {sync_idx}][rank {accelerator.process_index}] "
+                        f"WARNING: OOM in forward (seq_len={seq_len}). "
+                        f"Error: {_oom}"
+                    )
+                # Synchronise OOM status across ranks before any DDP collective.
+                _fwd_flag = torch.tensor([1 if _fwd_oom else 0], device=accelerator.device, dtype=torch.int32)
+                _fwd_gathered = accelerator.gather(_fwd_flag)
+                if int(_fwd_gathered.max().item()) != 0:
+                    # Use a dummy backward to keep gradient-accumulation NCCL
+                    # collectives aligned across ranks, then discard gradients.
+                    _dummy_p = next(p for p in model.parameters() if p.requires_grad)
+                    accelerator.backward(_dummy_p.sum() * 0)
+                    optimizer.zero_grad(set_to_none=True)
+                    continue
                 advantages = batch["advantages"]
 
                 if use_per_token and "old_per_token_logps" in batch:
@@ -1018,9 +1093,12 @@ def train_one_sync(
                     _logp_flag = torch.tensor([1 if _logp_oom else 0], device=accelerator.device, dtype=torch.int32)
                     _logp_gathered = accelerator.gather(_logp_flag)
                     if int(_logp_gathered.max().item()) != 0:
-                        optimizer.zero_grad(set_to_none=True)
+                        # Use a dummy backward to keep gradient-accumulation NCCL
+                        # collectives aligned across ranks, then discard gradients.
+                        accelerator.backward(outputs.logits.sum() * 0)
                         del outputs
                         torch.cuda.empty_cache()
+                        optimizer.zero_grad(set_to_none=True)
                         continue
                     shift_mask = batch["action_mask"][:, 1:].float()  # [B, L-1]
                     has_pt = batch["has_per_token_logps"]  # [B] bool
@@ -1132,19 +1210,31 @@ def train_one_sync(
                 if int(gathered_bad.max().item()) != 0:
                     raise NonFiniteTrainingError(local_reason or "non_finite_loss_on_peer_rank")
 
-                accelerator.backward(loss)
-                if accelerator.sync_gradients and args.max_grad_norm > 0:
-                    accelerator.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-                optimizer.step()
-                scheduler.step()
-                if accelerator.sync_gradients:
-                    local_bad = 1 if has_nonfinite_trainable_params(model) else 0
-                    local_reason = "non_finite_parameter_after_step" if local_bad else ""
-                    bad_flag = torch.tensor([local_bad], device=accelerator.device, dtype=torch.int32)
-                    gathered_bad = accelerator.gather(bad_flag)
-                    if int(gathered_bad.max().item()) != 0:
-                        raise NonFiniteTrainingError(local_reason or "non_finite_parameter_on_peer_rank")
-                optimizer.zero_grad(set_to_none=True)
+                try:
+                    accelerator.backward(loss)
+                    if accelerator.sync_gradients and args.max_grad_norm > 0:
+                        accelerator.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    optimizer.step()
+                    scheduler.step()
+                    if accelerator.sync_gradients:
+                        local_bad = 1 if has_nonfinite_trainable_params(model) else 0
+                        local_reason = "non_finite_parameter_after_step" if local_bad else ""
+                        bad_flag = torch.tensor([local_bad], device=accelerator.device, dtype=torch.int32)
+                        gathered_bad = accelerator.gather(bad_flag)
+                        if int(gathered_bad.max().item()) != 0:
+                            raise NonFiniteTrainingError(local_reason or "non_finite_parameter_on_peer_rank")
+                    optimizer.zero_grad(set_to_none=True)
+                except torch.OutOfMemoryError as _oom:
+                    # OOM on this batch: free cache, zero grads, skip — training continues.
+                    optimizer.zero_grad(set_to_none=True)
+                    torch.cuda.empty_cache()
+                    seq_len = int(batch["input_ids"].shape[1])
+                    print(
+                        f"[sync {sync_idx}][rank {accelerator.process_index}] "
+                        f"WARNING: OOM skipped batch (seq_len={seq_len}). "
+                        f"Error: {_oom}"
+                    )
+                    continue
             total_loss += float(loss.detach().cpu().item())
             total_ratio += float(ratio_mean_val.cpu().item())
             total_batches += 1
@@ -1195,6 +1285,9 @@ def main():
     parser.add_argument("--data_path", type=str, default="data_processor/math_dataset/test/math_500_20250414.json")
     parser.add_argument("--output_root", type=str, default="training_outputs/qwen3-14B/agent_online_grpo_math500")
     parser.add_argument("--resume_from_adapter", type=str, default=None)
+    parser.add_argument("--start_sync_idx", type=int, default=0,
+                        help="First sync index when resuming; combined with --resume_from_adapter "
+                             "to continue training from a checkpoint without re-running earlier syncs.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num_questions_per_sync", type=int, default=16)
     parser.add_argument("--num_rollouts_per_question", type=int, default=4)
@@ -1316,13 +1409,40 @@ def main():
             / (args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps)
         ),
     )
-    total_update_steps = max(1, args.max_syncs * args.grpo_epochs * _optimizer_steps_per_sync)
+    total_update_steps = max(1, (args.max_syncs - args.start_sync_idx) * args.grpo_epochs * _optimizer_steps_per_sync)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer=optimizer,
         num_warmup_steps=args.warmup_steps,
         num_training_steps=total_update_steps,
     )
     model, optimizer, scheduler = accelerator.prepare(model, optimizer, scheduler)
+    # accelerate wraps model.forward with a _convert_to_fp32 hook under mixed
+    # precision, which upcasts the full [B, L, vocab] logits to fp32 after every
+    # forward pass (~4.7 GiB for L=8192). We don't need this: chunked logprob
+    # already does .float() per 512-token chunk. Remove the hook to save memory.
+    #
+    # Structure (DDP mode):
+    #   model                          ← DistributedDataParallel
+    #   model.module.forward           ← outer lambda  (has __wrapped__)
+    #   model.module.forward.__wrapped__ ← ConvertOutputsToFp32 instance
+    #   model.module.forward.__wrapped__.model_forward ← autocast(real_forward)
+    _model_to_patch = getattr(model, 'module', model)  # unwrap DDP if present
+    _fwd = _model_to_patch.forward
+    if hasattr(_fwd, '__wrapped__'):
+        _wrapped = _fwd.__wrapped__
+        # __wrapped__ is ConvertOutputsToFp32; .model_forward is autocast(forward_func)
+        _actual_forward = getattr(_wrapped, 'model_forward', _wrapped)
+        if hasattr(_fwd, '__func__'):
+            # Path 2 (PeftModel/regular method): __func__ is an unbound function,
+            # autocast wraps the unbound func → must rebind with MethodType so
+            # calling model.module(...) correctly passes self as first argument.
+            from types import MethodType as _MethodType
+            _model_to_patch.forward = _MethodType(_actual_forward, _model_to_patch)
+        else:
+            # Path 1 (already bound callable): assign directly
+            _model_to_patch.forward = _actual_forward
+        if accelerator.is_main_process:
+            print("[INFO] Removed accelerate fp32 output conversion hook from model forward.")
     if ref_model is not None:
         ref_model = ref_model.to(accelerator.device)
 
@@ -1330,8 +1450,10 @@ def main():
     rng = random.Random(args.seed)
     rng.shuffle(dataset)
 
-    global_question_offset = 0
-    for sync_idx in range(args.max_syncs):
+    # When resuming, fast-forward the question offset to match start_sync_idx
+    _qs_per_sync = args.num_questions_per_sync
+    global_question_offset = (args.start_sync_idx * _qs_per_sync) % max(len(dataset), 1)
+    for sync_idx in range(args.start_sync_idx, args.max_syncs):
         if accelerator.is_main_process:
             if global_question_offset >= len(dataset):
                 rng.shuffle(dataset)
