@@ -1065,6 +1065,10 @@ def train_one_sync(
                 _fwd_flag = torch.tensor([1 if _fwd_oom else 0], device=accelerator.device, dtype=torch.int32)
                 _fwd_gathered = accelerator.gather(_fwd_flag)
                 if int(_fwd_gathered.max().item()) != 0:
+                    # Use a dummy backward to keep gradient-accumulation NCCL
+                    # collectives aligned across ranks, then discard gradients.
+                    _dummy_p = next(p for p in model.parameters() if p.requires_grad)
+                    accelerator.backward(_dummy_p.sum() * 0)
                     optimizer.zero_grad(set_to_none=True)
                     continue
                 advantages = batch["advantages"]
@@ -1089,9 +1093,12 @@ def train_one_sync(
                     _logp_flag = torch.tensor([1 if _logp_oom else 0], device=accelerator.device, dtype=torch.int32)
                     _logp_gathered = accelerator.gather(_logp_flag)
                     if int(_logp_gathered.max().item()) != 0:
-                        optimizer.zero_grad(set_to_none=True)
+                        # Use a dummy backward to keep gradient-accumulation NCCL
+                        # collectives aligned across ranks, then discard gradients.
+                        accelerator.backward(outputs.logits.sum() * 0)
                         del outputs
                         torch.cuda.empty_cache()
+                        optimizer.zero_grad(set_to_none=True)
                         continue
                     shift_mask = batch["action_mask"][:, 1:].float()  # [B, L-1]
                     has_pt = batch["has_per_token_logps"]  # [B] bool
