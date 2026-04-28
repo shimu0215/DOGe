@@ -1234,7 +1234,12 @@ def train_one_sync(
                             raise NonFiniteTrainingError(local_reason or "non_finite_parameter_on_peer_rank")
                     optimizer.zero_grad(set_to_none=True)
                 except torch.OutOfMemoryError as _oom:
-                    # OOM on this batch: free cache, zero grads, skip — training continues.
+                    # OOM during backward/optimizer: free memory and do a dummy
+                    # backward through ALL trainable params so DDP's all-reduce
+                    # NCCL collective count stays aligned with other ranks.
+                    # Without this, a rank that had backward OOM (0 NCCL ops)
+                    # and a rank that had logp OOM (N ops from dummy backward)
+                    # diverge in their NCCL sequence, causing a 4-hour timeout.
                     optimizer.zero_grad(set_to_none=True)
                     torch.cuda.empty_cache()
                     seq_len = int(batch["input_ids"].shape[1])
@@ -1243,6 +1248,9 @@ def train_one_sync(
                         f"WARNING: OOM skipped batch (seq_len={seq_len}). "
                         f"Error: {_oom}"
                     )
+                    _dummy_loss = sum(p.sum() for p in model.parameters() if p.requires_grad) * 0
+                    accelerator.backward(_dummy_loss)
+                    optimizer.zero_grad(set_to_none=True)
                     continue
             total_loss += float(loss.detach().cpu().item())
             total_ratio += float(ratio_mean_val.cpu().item())
