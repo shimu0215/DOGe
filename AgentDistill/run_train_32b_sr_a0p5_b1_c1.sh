@@ -13,9 +13,8 @@ export VLLM_CACHE_ROOT=/scratch/wzhao20/vllm_cache
 export XDG_CACHE_HOME=/scratch/wzhao20/.cache
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-/scratch/wzhao20/conda_envs/AKDA1/bin/accelerate launch \
+CUDA_VISIBLE_DEVICES=2,3 /scratch/wzhao20/conda_envs/AKDA1/bin/accelerate launch \
   --num_processes 2 \
-  --gpu_ids 2,3 \
   --mixed_precision bf16 \
   -m exps_online_rl.codeact_grpo \
   --model_name Qwen/Qwen3-32B \
