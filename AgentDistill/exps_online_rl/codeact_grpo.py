@@ -1240,9 +1240,6 @@ def train_one_sync(
                     # OOM during backward/optimizer: free memory and do a dummy
                     # backward through ALL trainable params so DDP's all-reduce
                     # NCCL collective count stays aligned with other ranks.
-                    # Without this, a rank that had backward OOM (0 NCCL ops)
-                    # and a rank that had logp OOM (N ops from dummy backward)
-                    # diverge in their NCCL sequence, causing a 4-hour timeout.
                     optimizer.zero_grad(set_to_none=True)
                     torch.cuda.empty_cache()
                     seq_len = int(batch["input_ids"].shape[1])
@@ -1254,6 +1251,16 @@ def train_one_sync(
                     _dummy_loss = sum(p.sum() for p in model.parameters() if p.requires_grad) * 0
                     accelerator.backward(_dummy_loss)
                     optimizer.zero_grad(set_to_none=True)
+                    # At gradient-sync steps the normal path executes a bad-flag
+                    # gather after optimizer.step() (see gathered_bad below).
+                    # We must do a matching gather here so the NCCL collective
+                    # sequence stays aligned; without it, rank 0 (OOM) and rank 1
+                    # (normal) diverge by one op, causing a 4-hour NCCL timeout.
+                    if accelerator.sync_gradients:
+                        _bad = torch.tensor([0], device=accelerator.device, dtype=torch.int32)
+                        _gathered = accelerator.gather(_bad)
+                        if int(_gathered.max().item()) != 0:
+                            raise NonFiniteTrainingError("non_finite_parameter_on_peer_rank_after_oom")
                     continue
             total_loss += float(loss.detach().cpu().item())
             total_ratio += float(ratio_mean_val.cpu().item())
