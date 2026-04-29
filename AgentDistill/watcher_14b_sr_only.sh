@@ -68,12 +68,22 @@ while true; do
         touch "$STATE_DIR/launched_14b_sr_only_$tag"
 
         ssh -o ConnectTimeout=10 -o BatchMode=yes "$node" \
-            "nohup bash $script > $logfile 2>&1 &"
+            "nohup bash $script > $logfile 2>&1 < /dev/null &" < /dev/null
+        ssh_exit=$?
 
-        if [ $? -eq 0 ]; then
-            log "launched $tag on $node — log: $logfile"
+        # exit 255 with Broken pipe is a false negative when using & — the
+        # process is already running. Verify by checking if accelerate launched.
+        if [ $ssh_exit -eq 0 ] || [ $ssh_exit -eq 255 ]; then
+            sleep 5
+            if ssh -o ConnectTimeout=5 -o BatchMode=yes "$node" \
+                   "pgrep -u wzhao20 -f 'accelerate launch' > /dev/null 2>&1" < /dev/null; then
+                log "launched $tag on $node — log: $logfile"
+            else
+                log "ERROR: process not found on $node after launch attempt — removing state file"
+                rm -f "$STATE_DIR/launched_14b_sr_only_$tag"
+            fi
         else
-            log "ERROR: ssh to $node failed — removing state file"
+            log "ERROR: ssh to $node failed (exit $ssh_exit) — removing state file"
             rm -f "$STATE_DIR/launched_14b_sr_only_$tag"
         fi
 
