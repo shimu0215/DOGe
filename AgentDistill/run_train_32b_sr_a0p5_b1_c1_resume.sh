@@ -13,7 +13,7 @@ export VLLM_CACHE_ROOT=/scratch/wzhao20/vllm_cache
 export XDG_CACHE_HOME=/scratch/wzhao20/.cache
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-CKPT=/scratch/wzhao20/AKDA2/AgentDistill/training_outputs/qwen3-32B/online_grpo_math500_8x8_ms6_sr_a0p5_b1_c1/seed42_20260428_141828/checkpoint_sync_0028
+CKPT=/scratch/wzhao20/AKDA2/AgentDistill/training_outputs/qwen3-32B/online_grpo_math500_8x8_ms6_sr_a0p5_b1_c1/seed42_20260428_145125/checkpoint_sync_0056
 
 CUDA_VISIBLE_DEVICES=2,3 /scratch/wzhao20/conda_envs/AKDA1/bin/accelerate launch \
   --num_processes 2 \
@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES=2,3 /scratch/wzhao20/conda_envs/AKDA1/bin/accelerate launch
   --data_path /scratch/wzhao20/AKDA2/AgentDistill/data_processor/math_dataset/test/math_500_20250414.json \
   --output_root /scratch/wzhao20/AKDA2/AgentDistill/training_outputs/qwen3-32B/online_grpo_math500_8x8_ms6_sr_a0p5_b1_c1 \
   --resume_from_adapter ${CKPT} \
-  --start_sync_idx 29 \
+  --start_sync_idx 57 \
   --seed 42 \
   --num_questions_per_sync 8 \
   --num_rollouts_per_question 8 \
