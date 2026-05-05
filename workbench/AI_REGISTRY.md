@@ -54,3 +54,9 @@ All AI sessions that start meaningful work in this workspace must register here 
   Interface: desktop terminal
   Started at: 2026-04-02T13:30:04-04:00
   Notes: New session. Read workbench protocol and current repository context. Focusing on repository walkthrough, workbench compliance, and identifying any missing information needed to proceed safely.
+
+- Name: claude-护城龙
+  AI type: Claude (Sonnet 4.6, Claude Code CLI)
+  Interface: terminal / worktree recursing-babbage-93bbd6
+  Started at: 2026-05-05T00:00:00-04:00
+  Notes: New session. Read workbench protocol and CORE_INFO. Ready to assist with code analysis, experiment planning, and implementation for the anti-distillation IP protection project.
