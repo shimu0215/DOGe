@@ -332,7 +332,9 @@ fi
 "${RUN_CMD[@]}"
 
 if [[ -f "$REMAINING_RESULT_JSONL" ]]; then
-  if [[ -f "$RESULT_JSONL" ]]; then
+  if [[ "$REMAINING_RESULT_JSONL" == "$RESULT_JSONL" ]]; then
+    : # same file — run_experiment wrote directly to RESULT_JSONL; nothing to merge
+  elif [[ -f "$RESULT_JSONL" ]]; then
     MERGED_TMP="${RESULT_JSONL}.merged.$$"
     merge_raw_results_by_question "$RESULT_JSONL" "$REMAINING_RESULT_JSONL" "$MERGED_TMP" >/dev/null
     mv "$MERGED_TMP" "$RESULT_JSONL"
@@ -346,7 +348,9 @@ fi
 REMAINING_RESULT_JSONL="$(resolve_remaining_result_path "$REMAINING_RESULT_JSONL" "$MODEL_ID" "$REMAINING_DATA" "$SEED" "$MAX_STEPS" "$N" "$LOG_ROOT" "$SUFFIX_TAG")"
 
 if [[ -f "$REMAINING_RESULT_JSONL" ]]; then
-  if [[ -f "$RESULT_JSONL" ]]; then
+  if [[ "$REMAINING_RESULT_JSONL" == "$RESULT_JSONL" ]]; then
+    : # same file — already in place
+  elif [[ -f "$RESULT_JSONL" ]]; then
     MERGED_TMP="${RESULT_JSONL}.merged.$$"
     merge_raw_results_by_question "$RESULT_JSONL" "$REMAINING_RESULT_JSONL" "$MERGED_TMP" >/dev/null
     mv "$MERGED_TMP" "$RESULT_JSONL"
