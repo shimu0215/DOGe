@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from typing import Optional
+import subprocess
+import sys
 
 def main():
     parser = argparse.ArgumentParser(description="Serve a VLLM model with OpenAI-compatible API")
@@ -84,6 +85,16 @@ def main():
         type=int,
         help="maximum lora rank"
     )
+    parser.add_argument(
+        "--disable-custom-all-reduce",
+        action="store_true",
+        help="Disable custom all-reduce; use standard NCCL (avoids IPC leaks after crash)"
+    )
+    parser.add_argument(
+        "--enforce-eager",
+        action="store_true",
+        help="Disable CUDA graphs to avoid illegal memory access on repeated restart"
+    )
 
     args = parser.parse_args()
 
@@ -114,12 +125,17 @@ def main():
         cmd.extend(["--enable-lora", "--lora-modules", str(args.lora_modules)])
     if args.max_lora_rank:
         cmd.extend(["--max-lora-rank", str(args.max_lora_rank)])
+    if args.disable_custom_all_reduce:
+        cmd.append("--disable-custom-all-reduce")
+    if args.enforce_eager:
+        cmd.append("--enforce-eager")
 
     # Print the command that will be executed
-    print("Executing command:", " ".join(cmd))
-    
-    # Execute the command
-    os.system(" ".join(cmd))
+    print("Executing command:", " ".join(cmd), flush=True)
+
+    # Propagate the real exit code so callers can distinguish startup failure.
+    completed = subprocess.run(cmd, check=False)
+    sys.exit(completed.returncode)
 
 if __name__ == "__main__":
     main() 

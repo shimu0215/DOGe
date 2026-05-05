@@ -117,10 +117,12 @@ def evaluate_math_answer(
     #         predicted = "\boxed{" + predicted + "}"
     #     pred_ans = extract_answer(predicted)
     # else:
-    if type(predicted) == str and "boxed" in predicted:
-        pred_ans = extract_answer(predicted)
+    # Note: use isinstance (not type==str) to handle AgentText which inherits from str
+    predicted_str = str(predicted) if predicted is not None else ""
+    if "boxed" in predicted_str:
+        pred_ans = extract_answer(predicted_str)
     else:
-        pred_ans = str(predicted)
+        pred_ans = predicted_str
     score = math_equal(pred_ans, gold, timeout=True)
 
     # Parse JSON response

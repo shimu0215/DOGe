@@ -62,6 +62,9 @@ def run_experiment():
     parser.add_argument("--n", type=int, default=1)
     parser.add_argument("--top_p", type=float)
     parser.add_argument("--top_k", type=int)
+    parser.add_argument("--request_timeout", type=int, default=120, help="Model request timeout in seconds")
+    parser.add_argument("--save_logprobs", action="store_true", help="Request token logprobs from the model and save them into results")
+    parser.add_argument("--top_logprobs", type=int, help="Number of top token logprobs to save for each generated token")
     parser.add_argument("--use_local_model", action='store_true', help="Use local model for reasoning experiments")
 
     # Experiment type selection
@@ -76,6 +79,12 @@ def run_experiment():
     parser.add_argument("--use_planning", action="store_true", help="Enable planning in agent")
     parser.add_argument("--prefix_memory", type=str, help="Path for prefix memory")
     parser.add_argument("--cot_memory", type=str, help="Path for CoT memory")
+    parser.add_argument(
+        "--answer_tool_prompt_name",
+        type=str,
+        default="final_answer",
+        help="Prompt-only alias for the final answer tool name (agent experiments only).",
+    )
 
     # Reasoning-specific arguments
     parser.add_argument('--task_type', type=str, choices=["fact", "math"],
@@ -158,6 +167,12 @@ def run_experiment():
         model_kwargs['top_p'] = args.top_p
     if args.top_k:
         model_kwargs['top_k'] = args.top_k
+    if args.request_timeout and args.request_timeout > 0:
+        model_kwargs['timeout'] = args.request_timeout
+    if args.save_logprobs:
+        model_kwargs['logprobs'] = True
+    if args.top_logprobs is not None:
+        model_kwargs['top_logprobs'] = args.top_logprobs
     if args.lora_folder and args.use_local_model:
         model_kwargs['lora_folder'] = args.lora_folder
 
@@ -171,6 +186,7 @@ def run_experiment():
             additional_postfix.append(args.search_engine_type)
         extra_kwargs["max_steps"] = args.max_steps
         extra_kwargs["use_planning"] = args.use_planning
+        extra_kwargs["answer_tool_prompt_name"] = args.answer_tool_prompt_name
         if args.use_planning:
             additional_postfix.append("planning")
 
