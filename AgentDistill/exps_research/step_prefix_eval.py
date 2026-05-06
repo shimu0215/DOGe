@@ -67,6 +67,25 @@ def get_task_from_messages(messages: List[Dict]) -> str:
 # Prompt construction (mirrors MultiStepAgent.provide_final_answer)
 # ---------------------------------------------------------------------------
 
+_ROLE_NORM = {
+    "MessageRole.USER":          "user",
+    "MessageRole.ASSISTANT":     "assistant",
+    "MessageRole.SYSTEM":        "system",
+    "MessageRole.TOOL_CALL":     "tool-call",
+    "MessageRole.TOOL_RESPONSE": "tool-response",
+}
+
+def _normalize_role(role: str) -> str:
+    return _ROLE_NORM.get(role, role)
+
+def _normalize_message(msg: Dict) -> Dict:
+    role = msg.get("role", "")
+    normalized = _normalize_role(role)
+    if normalized == role:
+        return msg
+    return {**msg, "role": normalized}
+
+
 def build_final_answer_messages(prefix_messages: List[Dict], task: str) -> List[Dict]:
     """Build the provide_final_answer prompt using a truncated message prefix."""
     pre = PROMPT_TEMPLATES["final_answer"]["pre_messages"]
@@ -75,9 +94,11 @@ def build_final_answer_messages(prefix_messages: List[Dict], task: str) -> List[
     clean_task = task.split("\n\nIMPORTANT:")[0] if "\n\nIMPORTANT:" in task else task
     post = populate_template(post_tmpl, variables={"task": clean_task})
 
+    history = [_normalize_message(m) for m in prefix_messages[1:]]
+
     return (
         [{"role": "system", "content": [{"type": "text", "text": pre}]}]
-        + prefix_messages[1:]   # drop original system prompt
+        + history
         + [{"role": "user",   "content": [{"type": "text", "text": post}]}]
     )
 
@@ -153,6 +174,7 @@ def run_step_prefix_eval(
     model_id: str,
     api_base: str,
     output_jsonl: str,
+    api_key: str = "token-abc",
     n_samples: int = 5,
     temperature: float = 0.7,
     top_p: float = 0.8,
@@ -162,7 +184,7 @@ def run_step_prefix_eval(
     model = VLLMServerModel(
         model_id=model_id,
         api_base=api_base,
-        api_key="EMPTY",
+        api_key=api_key,
         logprobs=True,
         top_logprobs=top_logprobs,
         temperature=temperature,
@@ -289,6 +311,7 @@ if __name__ == "__main__":
     ap.add_argument("--model_id",     default="Qwen/Qwen3-14B")
     ap.add_argument("--api_base",     default="http://127.0.0.1:8000/v1")
     ap.add_argument("--output_jsonl", required=True)
+    ap.add_argument("--api_key",      default="token-abc")
     ap.add_argument("--n_samples",    type=int,   default=5)
     ap.add_argument("--temperature",  type=float, default=0.7)
     ap.add_argument("--top_p",        type=float, default=0.8)
