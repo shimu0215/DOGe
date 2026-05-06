@@ -116,6 +116,9 @@ echo "=== Phase 2: Starting vLLM server for step-prefix eval ==="
 VLLM_LOG="${EVAL_OUT_DIR}/vllm_gsm300_step_prefix_eval_serve.log"
 : > "$VLLM_LOG"
 
+# Force fork so vLLM worker subprocesses inherit SLURM's CUDA cgroup/env.
+export VLLM_WORKER_MULTIPROC_METHOD=fork
+
 "$PYTHON_BIN" serve_vllm.py \
   --model                    "$MODEL_ID" \
   --tensor-parallel-size     "$TP_SIZE" \
