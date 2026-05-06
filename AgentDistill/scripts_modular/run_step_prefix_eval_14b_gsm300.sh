@@ -116,8 +116,6 @@ echo "=== Phase 2: Starting vLLM server for step-prefix eval ==="
 VLLM_LOG="${EVAL_OUT_DIR}/vllm_gsm300_step_prefix_eval_serve.log"
 : > "$VLLM_LOG"
 
-# Use v0 engine to avoid EngineCore subprocess CUDA cgroup issue under SLURM.
-export VLLM_USE_V1=0
 
 "$PYTHON_BIN" serve_vllm.py \
   --model                    "$MODEL_ID" \
