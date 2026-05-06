@@ -15,11 +15,11 @@ source "${SCRIPT_DIR}/common.sh"
 # Configuration
 # ---------------------------------------------------------------------------
 MODEL_ID="Qwen/Qwen3-14B"
-TP_SIZE="2"
+TP_SIZE="1"
 PORT="8000"
 API_BASE="http://127.0.0.1:${PORT}/v1"
-# GPU 1 is stuck (orphaned process), GPU 2 is also unavailable; use 0 and 3.
-export CUDA_VISIBLE_DEVICES="0,3"
+# GPU 1 ERR (orphaned proc), GPU 2 unavailable, GPU 3 alone fails; use GPU 0 only.
+export CUDA_VISIBLE_DEVICES="0"
 
 # Existing scored trajectories from Qwen3-14B original GSM-hard-300 run
 # (300 total, 300 valid log_data, 199 score==1)
