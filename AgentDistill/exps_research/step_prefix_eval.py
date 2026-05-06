@@ -37,6 +37,33 @@ PROMPT_TEMPLATES = yaml.safe_load(
     importlib.resources.files("smolagents.prompts").joinpath("code_agent.yaml").read_text()
 )
 
+# ---------------------------------------------------------------------------
+# Our custom step-prefix prompt (replaces smolagents' provide_final_answer
+# prompt which says "agent got stuck and failed").
+# Same injection structure: system=pre, history, user=post.
+# ---------------------------------------------------------------------------
+_STEP_PREFIX_PRE = """\
+You are a mathematics expert. The conversation below shows an AI agent's \
+step-by-step work on a math problem — the agent has completed some reasoning \
+and computation steps successfully.
+
+Your job: read the completed steps and state the final numerical answer.
+
+Rules:
+- Do NOT write any Python code or code blocks
+- Do NOT call any tools
+- You may write a brief one-sentence justification, then give the answer
+- Wrap your final answer in \\boxed{}, e.g. \\boxed{42} or \\boxed{3.5}\
+"""
+
+_STEP_PREFIX_POST = """\
+The problem is:
+{task}
+
+Based on the reasoning and computations shown above, state the final \
+numerical answer in \\boxed{{}} format. No code, no tools — just the answer.\
+"""
+
 
 # ---------------------------------------------------------------------------
 # Step boundary detection
@@ -87,7 +114,7 @@ def _normalize_message(msg: Dict) -> Dict:
 
 
 def build_final_answer_messages(prefix_messages: List[Dict], task: str) -> List[Dict]:
-    """Build the provide_final_answer prompt using a truncated message prefix."""
+    """Original smolagents provide_final_answer prompt structure (kept for reference)."""
     pre = PROMPT_TEMPLATES["final_answer"]["pre_messages"]
     post_tmpl = PROMPT_TEMPLATES["final_answer"]["post_messages"]
 
@@ -98,6 +125,21 @@ def build_final_answer_messages(prefix_messages: List[Dict], task: str) -> List[
 
     return (
         [{"role": "system", "content": [{"type": "text", "text": pre}]}]
+        + history
+        + [{"role": "user",   "content": [{"type": "text", "text": post}]}]
+    )
+
+
+def build_step_prefix_messages(prefix_messages: List[Dict], task: str) -> List[Dict]:
+    """Our prompt: same injection structure as smolagents, but with clear math
+    answer instructions instead of the 'agent got stuck' framing."""
+    clean_task = task.split("\n\nIMPORTANT:")[0] if "\n\nIMPORTANT:" in task else task
+    post = _STEP_PREFIX_POST.format(task=clean_task)
+
+    history = [_normalize_message(m) for m in prefix_messages[1:]]
+
+    return (
+        [{"role": "system", "content": [{"type": "text", "text": _STEP_PREFIX_PRE}]}]
         + history
         + [{"role": "user",   "content": [{"type": "text", "text": post}]}]
     )
@@ -227,7 +269,7 @@ def run_step_prefix_eval(
         step_results = []
         for step_i, end_idx in enumerate(step_ends):
             step_num  = step_i + 1
-            fa_msgs   = build_final_answer_messages(messages[:end_idx], task)
+            fa_msgs   = build_step_prefix_messages(messages[:end_idx], task)
 
             try:
                 chat_msgs = model(fa_msgs, n=n_samples)
