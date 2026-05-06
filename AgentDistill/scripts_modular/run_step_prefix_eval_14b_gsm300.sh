@@ -2,7 +2,7 @@
 # Step-prefix evaluation pipeline for Qwen3-14B on GSM-hard-300.
 # Uses existing scored Qwen3-14B original GSM-300 trajectories.
 # Run via:
-#   srun --overlap --jobid=7166024 -N1 --ntasks=1 --gpus=4 --mem=0 \
+#   srun --overlap --jobid=7167488 -N1 --ntasks=1 --gpus=4 --mem=0 \
 #     bash scripts_modular/run_step_prefix_eval_14b_gsm300.sh
 set -euo pipefail
 
@@ -25,7 +25,7 @@ GSM300_SCORED="/scratch/wzhao20/0403test/evaluations/Qwen3-14B_original_gsm_hard
 
 EVAL_OUT_DIR="/scratch/wzhao20/AKDA2/AgentDistill/logs/step_prefix_eval"
 FILTERED_PATH="${EVAL_OUT_DIR}/Qwen3-14B_gsm300_filtered.jsonl"
-EVAL_OUT="${EVAL_OUT_DIR}/Qwen3-14B_gsm300_step_prefix_eval.jsonl"
+EVAL_OUT="${EVAL_OUT_DIR}/Qwen3-14B_gsm300_step_prefix_eval_v2.jsonl"
 
 VLLM_PID=""
 
