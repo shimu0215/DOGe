@@ -2,7 +2,7 @@
 # Step-prefix evaluation pipeline for Qwen3-14B on GSM-hard-300.
 # Uses existing scored Qwen3-14B original GSM-300 trajectories.
 # Run via:
-#   srun --overlap --jobid=7167488 -N1 --ntasks=1 --gpus=4 --mem=0 \
+#   srun --overlap --jobid=7171873 -N1 --ntasks=1 --gpus=4 --mem=0 \
 #     bash scripts_modular/run_step_prefix_eval_14b_gsm300.sh
 set -euo pipefail
 
@@ -15,11 +15,9 @@ source "${SCRIPT_DIR}/common.sh"
 # Configuration
 # ---------------------------------------------------------------------------
 MODEL_ID="Qwen/Qwen3-14B"
-TP_SIZE="1"
+TP_SIZE="4"
 PORT="8000"
 API_BASE="http://127.0.0.1:${PORT}/v1"
-# GPU 1 ERR (orphaned proc), GPU 2 unavailable, GPU 3 alone fails; use GPU 0 only.
-export CUDA_VISIBLE_DEVICES="0"
 
 # Existing scored trajectories from Qwen3-14B original GSM-hard-300 run
 # (300 total, 300 valid log_data, 199 score==1)
