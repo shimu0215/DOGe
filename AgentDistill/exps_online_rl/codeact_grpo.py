@@ -938,24 +938,229 @@ def compute_step_statistics(
             sample.old_logprob_mean = gathered_old[sample.sample_id]
 
 
+def compute_tig_psi_batch(
+    trajectories: Sequence[TrajectoryRecord],
+    model,
+    tokenizer,
+    args,
+    accelerator,
+    sync_idx: int,
+) -> Dict[int, Tuple[float, List[float]]]:
+    """Compute TIG-based Psi for every trajectory.
+
+    Turn Information Gain (K=1):
+        m_t = ell(future | context_with_t) - ell(future | context_without_t)
+    where:
+        context_with_t    = all messages up to and including action t
+        context_without_t = all messages up to (not including) action t
+        future            = the next action's text (action t+1)
+
+    Psi(tau) = sum_{t=1}^{n-1} (n - t) * sqrt(max(m_t, 0))
+    where n = total number of action turns.
+
+    Runs only on the main process; uses the training model in no_grad/eval mode.
+
+    Returns:
+        {trajectory_id: (psi, [m_t_1, m_t_2, ...])}
+    """
+    psi_by_traj: Dict[int, Tuple[float, List[float]]] = {}
+
+    # Detect enable_thinking kwarg support (Qwen3 specific)
+    _apply_kwargs: dict = {}
+    try:
+        tokenizer.apply_chat_template([], tokenize=False, add_generation_prompt=False, enable_thinking=False)
+        _apply_kwargs["enable_thinking"] = False
+    except (TypeError, IndexError, ValueError):
+        pass
+
+    # ── Collect all (full_ids, context_len, traj_id, turn_idx, polarity) tuples ──
+    items: List[Dict] = []
+    # Also track how many action positions each trajectory has (for Psi assembly)
+    traj_action_counts: Dict[int, int] = {}
+
+    for traj in trajectories:
+        if not traj.cleaned_messages:
+            psi_by_traj[traj.trajectory_id] = (0.0, [])
+            continue
+
+        action_positions = [
+            i for i, msg in enumerate(traj.cleaned_messages)
+            if msg.get("role") == "assistant" and "Code:" in str(msg.get("content", ""))
+        ]
+        traj_action_counts[traj.trajectory_id] = len(action_positions)
+
+        if len(action_positions) < 2:
+            # Need at least 2 action turns for K=1 TIG
+            psi_by_traj[traj.trajectory_id] = (0.0, [])
+            continue
+
+        for local_t, pos_t in enumerate(action_positions[:-1]):
+            pos_future = action_positions[local_t + 1]
+            future_text = traj.cleaned_messages[pos_future]["content"]
+
+            # Tokenize future text without special tokens (raw continuation)
+            future_ids = tokenizer.encode(future_text, add_special_tokens=False)
+            if not future_ids:
+                continue
+
+            for polarity, ctx_msgs in (
+                ("with",    traj.cleaned_messages[: pos_t + 1]),
+                ("without", traj.cleaned_messages[: pos_t]),
+            ):
+                try:
+                    ctx_ids = tokenizer.apply_chat_template(
+                        ctx_msgs,
+                        tokenize=True,
+                        add_generation_prompt=True,
+                        **_apply_kwargs,
+                    )
+                except Exception:
+                    ctx_ids = []
+                if not ctx_ids:
+                    continue
+                full_ids = ctx_ids + future_ids
+                items.append({
+                    "full_ids":   full_ids,
+                    "context_len": len(ctx_ids),
+                    "traj_id":    traj.trajectory_id,
+                    "turn_idx":   local_t,
+                    "polarity":   polarity,
+                })
+
+    if not items:
+        return psi_by_traj
+
+    # Sort by total length for efficient batching (minimise padding)
+    items.sort(key=lambda x: len(x["full_ids"]))
+
+    # ── Batched no_grad forward passes ────────────────────────────────────────
+    logprob_results: Dict[Tuple[int, int, str], float] = {}
+    batch_size = getattr(args, "tig_eval_batch_size", 2)
+    device = accelerator.device
+
+    unwrapped = accelerator.unwrap_model(model)
+    was_training = unwrapped.training
+    unwrapped.eval()
+
+    try:
+        with torch.no_grad():
+            for batch_start in range(0, len(items), batch_size):
+                batch_items = items[batch_start: batch_start + batch_size]
+                max_len = max(len(it["full_ids"]) for it in batch_items)
+
+                # Right-pad to max_len
+                input_ids_list = []
+                attn_mask_list = []
+                ctx_lens = []
+                seq_lens = []
+
+                for it in batch_items:
+                    ids = it["full_ids"]
+                    pad_len = max_len - len(ids)
+                    input_ids_list.append(ids + [tokenizer.pad_token_id] * pad_len)
+                    attn_mask_list.append([1] * len(ids) + [0] * pad_len)
+                    ctx_lens.append(it["context_len"])
+                    seq_lens.append(len(ids))
+
+                input_ids_t  = torch.tensor(input_ids_list,  dtype=torch.long,  device=device)
+                attn_mask_t  = torch.tensor(attn_mask_list,  dtype=torch.long,  device=device)
+
+                outputs = unwrapped(
+                    input_ids=input_ids_t,
+                    attention_mask=attn_mask_t,
+                    use_cache=False,
+                )
+
+                # Chunked logprob to cap peak memory (reuse existing helper)
+                shift_logits = outputs.logits[:, :-1, :]
+                shift_labels = input_ids_t[:, 1:]
+                token_lps = _chunked_gather_logprobs(shift_logits, shift_labels)  # [B, L-1]
+
+                for i, it in enumerate(batch_items):
+                    ctx_len  = ctx_lens[i]
+                    seq_len  = seq_lens[i]
+                    # Target token positions in the shifted space: [ctx_len-1, seq_len-2]
+                    t_start = ctx_len - 1
+                    t_end   = seq_len - 1
+                    if t_end > t_start:
+                        lp = token_lps[i, t_start:t_end].mean().item()
+                    else:
+                        lp = 0.0
+                    key = (it["traj_id"], it["turn_idx"], it["polarity"])
+                    logprob_results[key] = lp
+
+                del outputs, shift_logits, shift_labels, token_lps
+                torch.cuda.empty_cache()
+    finally:
+        if was_training:
+            unwrapped.train()
+
+    # ── Assemble Psi for each trajectory ─────────────────────────────────────
+    for traj in trajectories:
+        if traj.trajectory_id in psi_by_traj:
+            # Already set (< 2 action turns)
+            continue
+
+        n_actions = traj_action_counts.get(traj.trajectory_id, 0)
+        n_middle  = n_actions - 1  # turns that have a next turn
+
+        m_t_list: List[float] = []
+        for local_t in range(n_middle):
+            lp_with    = logprob_results.get((traj.trajectory_id, local_t, "with"),    0.0)
+            lp_without = logprob_results.get((traj.trajectory_id, local_t, "without"), 0.0)
+            m_t_list.append(lp_with - lp_without)
+
+        # Psi = sum_{t=1}^{n-1} (n - t) * sqrt(max(m_t, 0))
+        # n = n_actions (total action turns incl. final commit)
+        psi = 0.0
+        for t_idx, m_t in enumerate(m_t_list):
+            t        = t_idx + 1           # 1-indexed
+            distance = n_actions - t       # n - t
+            psi     += distance * math.sqrt(max(m_t, 0.0))
+
+        psi_by_traj[traj.trajectory_id] = (psi, m_t_list)
+
+        if accelerator.is_main_process:
+            mt_str = ", ".join(f"{v:.4f}" for v in m_t_list)
+            print(
+                f"[sync {sync_idx}][tig] traj={traj.trajectory_id} "
+                f"correct={traj.correct:.0f} n_actions={n_actions} "
+                f"m_t=[{mt_str}] psi={psi:.4f}"
+            )
+
+    return psi_by_traj
+
+
 def assign_rewards_and_advantages(
     trajectories: Sequence[TrajectoryRecord],
     step_samples: Sequence[StepSample],
     args,
+    psi_by_traj: Optional[Dict[int, Tuple[float, List[float]]]] = None,
 ) -> None:
+    use_tig = bool(getattr(args, "use_tig_reward", 0)) and psi_by_traj is not None
+    tig_lambda = float(getattr(args, "tig_lambda", 0.5))
+
     step_count_by_trajectory: Dict[int, int] = {}
     for sample in step_samples:
         step_count_by_trajectory[sample.trajectory_id] = step_count_by_trajectory.get(sample.trajectory_id, 0) + 1
     for traj in trajectories:
         step_count = step_count_by_trajectory.get(traj.trajectory_id, 0)
-        if traj.task_reward > 0 and step_count < args.max_steps:
-            traj.step_reward = args.step_reward_a + max(step_count - args.step_reward_b, 0) * args.step_reward_c
+        if use_tig:
+            psi, m_t_list = (psi_by_traj or {}).get(traj.trajectory_id, (0.0, []))
+            if traj.task_reward > 0:
+                traj.total_reward = math.exp(tig_lambda * psi)
+            else:
+                traj.total_reward = 0.0
+            traj.step_reward = psi  # store psi in step_reward field for logging
         else:
-            traj.step_reward = 0.0
-        if getattr(args, 'use_step_reward_only', 0):
-            traj.total_reward = traj.step_reward
-        else:
-            traj.total_reward = traj.task_reward + traj.step_reward
+            if traj.task_reward > 0 and step_count < args.max_steps:
+                traj.step_reward = args.step_reward_a + max(step_count - args.step_reward_b, 0) * args.step_reward_c
+            else:
+                traj.step_reward = 0.0
+            if getattr(args, 'use_step_reward_only', 0):
+                traj.total_reward = traj.step_reward
+            else:
+                traj.total_reward = traj.task_reward + traj.step_reward
     grouped: Dict[int, List[TrajectoryRecord]] = {}
     for traj in trajectories:
         grouped.setdefault(traj.group_idx, []).append(traj)
@@ -1359,6 +1564,14 @@ def main():
                         help="Per-step bonus beyond threshold b. Default: 0.5")
     parser.add_argument("--use_step_reward_only", type=int, default=0,
                         help="If 1, total_reward = step_reward only (no separate task_reward). Default: 0")
+    # ── TIG reward ────────────────────────────────────────────────────────────
+    parser.add_argument("--use_tig_reward", type=int, default=0,
+                        help="If 1, use Turn Information Gain reward: R=exp(lambda*Psi) if correct, 0 if wrong. "
+                             "Overrides step_reward. Default: 0")
+    parser.add_argument("--tig_lambda", type=float, default=0.5,
+                        help="Lambda coefficient for TIG reward: total_reward = exp(tig_lambda * Psi). Default: 0.5")
+    parser.add_argument("--tig_eval_batch_size", type=int, default=2,
+                        help="Batch size for TIG model forward passes (no_grad). Default: 2")
     parser.add_argument("--max_tokens", type=int, default=None)
     parser.add_argument("--max_length", type=int, default=4096)
     parser.add_argument("--temperature", type=float, default=0.7)
@@ -1534,27 +1747,41 @@ def main():
         # Slow path only writes back to rank-0's step_samples; broadcast so all
         # ranks have updated old_logprob_mean / old_per_token_logps.
         step_samples = broadcast_object(accelerator, step_samples)
+
+        # ── TIG reward: compute Psi on main process, broadcast to all ranks ──
+        psi_by_traj: Optional[Dict[int, Tuple[float, List[float]]]] = None
+        if getattr(args, "use_tig_reward", 0):
+            if accelerator.is_main_process:
+                psi_by_traj = compute_tig_psi_batch(
+                    trajectories=trajectories,
+                    model=model,
+                    tokenizer=tokenizer,
+                    args=args,
+                    accelerator=accelerator,
+                    sync_idx=sync_idx,
+                )
+            psi_by_traj = broadcast_object(accelerator, psi_by_traj)
+
         if accelerator.is_main_process:
-            assign_rewards_and_advantages(trajectories, step_samples, args)
+            assign_rewards_and_advantages(trajectories, step_samples, args, psi_by_traj=psi_by_traj)
             reward_path = run_dir / "rollout_rewards_sync.jsonl"
             with reward_path.open("a") as f:
                 for traj in trajectories:
-                    f.write(
-                        json.dumps(
-                            {
-                                "sync_idx": sync_idx,
-                                "trajectory_id": traj.trajectory_id,
-                                "question": traj.question,
-                                "correct": traj.correct,
-                                "task_reward": traj.task_reward,
-                                "step_reward": traj.step_reward,
-                                "total_reward": traj.total_reward,
-                                "advantage": traj.advantage,
-                            },
-                            ensure_ascii=False,
-                        )
-                        + "\n"
-                    )
+                    record: Dict[str, Any] = {
+                        "sync_idx": sync_idx,
+                        "trajectory_id": traj.trajectory_id,
+                        "question": traj.question,
+                        "correct": traj.correct,
+                        "task_reward": traj.task_reward,
+                        "step_reward": traj.step_reward,
+                        "total_reward": traj.total_reward,
+                        "advantage": traj.advantage,
+                    }
+                    if psi_by_traj is not None:
+                        psi_val, m_t_list = psi_by_traj.get(traj.trajectory_id, (0.0, []))
+                        record["psi"] = psi_val
+                        record["m_t_list"] = m_t_list
+                    f.write(json.dumps(record, ensure_ascii=False) + "\n")
         if accelerator.is_main_process:
             traj_advantages = {traj.trajectory_id: traj.advantage for traj in trajectories}
         else:
