@@ -87,7 +87,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         self.entropy_regularization_mode = entropy_regularization_mode
         self.code_start_token_ids = sorted(set(code_start_token_ids or []))
         self._component_metric_sums = None
-        self._component_metric_count = 0
+        self._component_metric_counts = None
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         entropy_mask = inputs.pop("entropy_mask", None)
@@ -111,7 +111,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
                 shifted_labels[valid_mask],
             )
         else:
-            sft_loss = shifted_logits.float().sum() * 0.0
+            sft_loss = torch.zeros((), device=shifted_logits.device, dtype=torch.float32)
 
         if self.entropy_regularization_mode == "code_anchor":
             if not self.code_start_token_ids:
@@ -139,7 +139,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
                     torch.zeros_like(code_start_entropy),
                 ).mean()
             else:
-                entropy = shifted_logits.float().sum() * 0.0
+                entropy = torch.zeros((), device=shifted_logits.device, dtype=torch.float32)
             component_metrics = {
                 "sft_loss": float(sft_loss.detach().float().item()),
                 "code_start_entropy": float(entropy.detach().float().item()),
@@ -160,7 +160,7 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
                 token_entropy = -(probs * log_probs).sum(dim=-1)
                 entropy = token_entropy.masked_select(entropy_valid_mask).mean()
             else:
-                entropy = shifted_logits.float().sum() * 0.0
+                entropy = torch.zeros((), device=shifted_logits.device, dtype=torch.float32)
             component_metrics = {
                 "sft_loss": float(sft_loss.detach().float().item()),
                 "entropy": float(entropy.detach().float().item()),
@@ -172,19 +172,22 @@ class EntropyRegularizedSFTTrainer(SFTTrainer):
         outputs.loss = loss
         if self._component_metric_sums is None:
             self._component_metric_sums = {k: 0.0 for k in component_metrics}
-            self._component_metric_count = 0
+            self._component_metric_counts = {k: 0 for k in component_metrics}
         for key, value in component_metrics.items():
-            self._component_metric_sums[key] += value
-        self._component_metric_count += 1
+            if math.isfinite(value):
+                self._component_metric_sums[key] += value
+                self._component_metric_counts[key] += 1
 
         return (loss, outputs) if return_outputs else loss
 
     def log(self, logs, *args, **kwargs):
-        if self._component_metric_sums and self._component_metric_count > 0:
+        if self._component_metric_sums and self._component_metric_counts:
             for key, value in self._component_metric_sums.items():
-                logs.setdefault(key, value / self._component_metric_count)
+                count = self._component_metric_counts.get(key, 0)
+                if count > 0:
+                    logs.setdefault(key, value / count)
             self._component_metric_sums = None
-            self._component_metric_count = 0
+            self._component_metric_counts = None
         return super().log(logs, *args, **kwargs)
 
 

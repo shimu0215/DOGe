@@ -1251,7 +1251,14 @@ class VLLMServerModel(ApiModel):
     ) -> ChatMessage:
         # Preprocess messages for VLLM server
         messages = remove_tool_call_from_messages(messages)
-        kwargs["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
+        # Merge with any caller-supplied extra_body instead of overwriting it,
+        # and preserve nested chat_template_kwargs keys while forcing
+        # enable_thinking=False for rollout/training consistency.
+        extra_body = dict(kwargs.get("extra_body") or {})
+        chat_template_kwargs = dict(extra_body.get("chat_template_kwargs") or {})
+        chat_template_kwargs["enable_thinking"] = False
+        extra_body["chat_template_kwargs"] = chat_template_kwargs
+        kwargs["extra_body"] = extra_body
 
         completion_kwargs = self._prepare_completion_kwargs(
             messages=messages,
