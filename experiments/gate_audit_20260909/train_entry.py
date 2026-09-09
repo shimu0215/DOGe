@@ -7,6 +7,23 @@ from minillm.reward import Reward
 from minillm.trainer import PPOTrainer
 from minillm.utils import get_log_probs
 
+if os.environ.get('AUDIT_SKIP_FINAL_EVAL') == '1':
+    # The trainer saves its final weights before this call. Nothing affecting
+    # training, including initial and step-100 evaluation RNG, is skipped.
+    original_eval_ppo=PPOTrainer.evaluate_ppo
+    original_save_evals=PPOTrainer.save_evals
+    def final_eval_once(self,*a,**kw):
+        if self.global_iter_count>=self.total_steps:
+            self._audit_final_eval_skipped=True
+            print('[audit] final weights saved; proceeding to external GSM evaluation',flush=True)
+            return {},[],[]
+        return original_eval_ppo(self,*a,**kw)
+    def save_actual_evals(self,*a,**kw):
+        if getattr(self,'_audit_final_eval_skipped',False):return
+        return original_save_evals(self,*a,**kw)
+    PPOTrainer.evaluate_ppo=final_eval_once
+    PPOTrainer.save_evals=save_actual_evals
+
 if os.environ.get('AUDIT_ARM') == 'likelihood':
     from likelihood_gate import shared_gate
     original_reward=Reward.reward_fn
