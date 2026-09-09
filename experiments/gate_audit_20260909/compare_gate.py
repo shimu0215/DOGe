@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from transformers import AutoTokenizer
 from doge.evaluation import evaluate_predictions
+from corrected_numeric_audit import prediction, gold
 
 
 def compare(a,b):
@@ -26,18 +27,20 @@ def main():
     for name,d in inputs.items():
         assert key(d)==key(inputs['baseline']),f'Unpaired data: {name}'
         assert d['generation']==inputs['baseline']['generation'],f'Generation mismatch: {name}'
-        ss=np.array([int(evaluate_predictions([r['prediction']],[r['ground_truth']])['accuracy']) for r in d['content']])
-        assert np.isclose(ss.mean(),d['accuracy']),name
+        legacy=np.array([int(evaluate_predictions([r['prediction']],[r['ground_truth']])['accuracy']) for r in d['content']])
+        assert np.isclose(legacy.mean(),d['accuracy']),name
+        ss=np.array([int(prediction(r['prediction'])[0]==gold(r['ground_truth'])) for r in d['content']])
         lengths=[];repeat=[]
         for r in d['content']:
             ids=tokenizer.encode(r['prediction'],add_special_tokens=False);lengths.append(len(ids))
             grams=[tuple(ids[i:i+4]) for i in range(max(0,len(ids)-3))]
             repeat.append(1-len(set(grams))/max(1,len(grams)))
         scores[name]=ss;summary[name]={'path':getattr(args,name),'accuracy':float(ss.mean()),
+            'legacy_recorded_accuracy':float(d['accuracy']),
             'mean_reencoded_tokens':float(np.mean(lengths)),
             'near_512_token_cap_proxy':float(np.mean(np.asarray(lengths)>=510)),
             'mean_repeated_token_4gram_fraction':float(np.mean(repeat))}
-    result={'n':len(scores['baseline']),'models':summary,
+    result={'n':len(scores['baseline']),'score_definition':'Balanced final boxed numeric answer; otherwise last number; gold after ####; exact rational equality','models':summary,
         'candidate_vs_sft':compare(scores['baseline'],scores['candidate']),
         'candidate_vs_clean_opd':compare(scores['clean'],scores['candidate'])}
     Path(args.output).write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
