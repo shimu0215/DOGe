@@ -91,7 +91,7 @@ def main():
     for row in output['conditions']:
         if clean_scores is not None:row['vs_clean_opd120']=paired(clean_scores,row['scores'])
     output['teacher_checks']={}
-    for directory in ['teacher_likelihood_gsm200','teacher_likelihood_sampling64']:
+    for directory in ['teacher_likelihood_gsm200','teacher_likelihood_sampling64','teacher_contrast_gsm200','teacher_contrast_sampling64']:
         path=audit/directory/'rows.jsonl'
         if not path.exists() or not (path.parent/'summary.json').exists():continue
         rows=[json.loads(x) for x in path.read_text().splitlines()]
