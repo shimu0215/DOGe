@@ -15,7 +15,7 @@ def numeric(s):
     s=re.sub(r'\\(?:text|mathrm|textrm)\{[^{}]*\}','',s)
     for token in [r'\,',r'\!',r'\left',r'\right',r'\$', '$','%']:
         s=s.replace(token,'')
-    s=s.strip().strip(' .')
+    s=s.strip()
     if re.fullmatch(NUMBER,s):return Fraction(s)
     m=re.fullmatch(r'\\(?:dfrac|tfrac|frac)\s*\{('+NUMBER+r')\}\s*\{('+NUMBER+r')\}',s)
     if not m:m=re.fullmatch(r'('+NUMBER+r')\s*/\s*('+NUMBER+r')',s)
@@ -55,6 +55,7 @@ def check():
     assert prediction(r'\boxed{7} revised \boxed{-2}')[0]==-2
     assert gold('intermediate 99\n#### 1,200')==1200
     assert numeric('3/4')==Fraction(3,4)
+    assert numeric('.5')==Fraction(1,2)
     assert prediction('answer is 12.50')[0]==Fraction('12.5')
     print('PASS: literal boxed, nested fraction, commas/units, last boxed, signed answers, reference delimiter',flush=True)
 
