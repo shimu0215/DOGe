@@ -1,9 +1,9 @@
 """Recompute saved evaluations with the project's scorer and pair by prompt."""
 import argparse
 import json
+import math
 from pathlib import Path
 import numpy as np
-from scipy.stats import binomtest
 from doge.evaluation import evaluate_predictions
 
 
@@ -25,7 +25,7 @@ def main():
         delta=b-a;rng=np.random.default_rng(1909)
         ci=np.quantile([delta[rng.integers(0,len(a),len(a))].mean()*100 for _ in range(5000)],[.025,.975])
         row={'path':str(path),'accuracy':float(b.mean()),'delta_pp':float(delta.mean()*100),
-             'wrong_to_right':good,'right_to_wrong':bad,'mcnemar_exact_two_sided_p':float(binomtest(good,good+bad,.5).pvalue) if good+bad else 1.,
+             'wrong_to_right':good,'right_to_wrong':bad,'mcnemar_exact_two_sided_p':min(1.,2*sum(math.comb(good+bad,k) for k in range(min(good,bad)+1))/2**(good+bad)),
              'paired_bootstrap95_pp':ci.tolist()}
         result['comparisons'].append(row);print(json.dumps(row),flush=True)
     Path(args.output).write_text(json.dumps(result,indent=2))

@@ -12,10 +12,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 def auc(a, b):
-    from scipy.stats import rankdata
     if not len(a) or not len(b):
         return None
-    ranks = rankdata(np.r_[a, b])
+    values=np.r_[a,b]
+    order=np.argsort(values,kind='stable')
+    _, first, counts=np.unique(values[order],return_index=True,return_counts=True)
+    ranks=np.empty(len(values),dtype=float)
+    ranks[order]=np.repeat(first+(counts+1)/2,counts)
     return float((ranks[len(a):].sum() - len(b)*(len(b)+1)/2)/(len(a)*len(b)))
 
 
@@ -93,6 +96,11 @@ def main():
     if previous.exists():
         assert json.loads(previous.read_text())==manifest,'Refusing incompatible resume'
     previous.write_text(json.dumps(manifest,indent=2))
+    if (out/'scores.jsonl').exists():
+        existing=[json.loads(x) for x in (out/'scores.jsonl').read_text().splitlines()]
+        if len(existing)==3*args.n:
+            summarize(existing,out)
+            return
     all_rows=[json.loads(x) for x in Path(args.prompts).read_text().splitlines() if x.strip()]
     picked=random.Random(args.seed).sample(range(len(all_rows)),args.n)
     prompts=[all_rows[i]['prompt'] for i in picked]
