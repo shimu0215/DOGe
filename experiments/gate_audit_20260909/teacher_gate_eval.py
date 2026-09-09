@@ -18,10 +18,11 @@ def main():
     p.add_argument('--examples',required=True);p.add_argument('--output',required=True)
     p.add_argument('--limit',type=int,default=200);p.add_argument('--batch',type=int,default=8)
     p.add_argument('--sampling',action='store_true')
+    p.add_argument('--dtype',choices=['float16','bfloat16'],default='bfloat16')
     args=p.parse_args();out=Path(args.output);out.mkdir(parents=True,exist_ok=False)
     rows=json.loads(Path(args.examples).read_text())['content'][:args.limit]
     tokenizer=AutoTokenizer.from_pretrained(args.teacher);tokenizer.padding_side='left'
-    model=AutoModelForCausalLM.from_pretrained(args.teacher,torch_dtype=torch.bfloat16,low_cpu_mem_usage=True,attn_implementation='sdpa').to('cuda').eval()
+    model=AutoModelForCausalLM.from_pretrained(args.teacher,torch_dtype=getattr(torch,args.dtype),low_cpu_mem_usage=True,attn_implementation='sdpa').to('cuda').eval()
     configured=model.generation_config.eos_token_id
     eos=sorted(set(([configured] if isinstance(configured,int) else configured)+[tokenizer.pad_token_id,tokenizer.eos_token_id]))
     gate=FixedReferenceGate(args.reference,tokenizer.pad_token_id,eos,alpha=.01,margin=2.)
@@ -68,7 +69,7 @@ def main():
         print(f'teacher sampling={args.sampling} {len(results)}/{len(rows)}; triggered sequences={sum(r["gate_ever"] for r in results)}',flush=True)
         del proc
     references=[r['ground_truth'] for r in results]
-    summary={'teacher':args.teacher,'reference':args.reference,'n':len(results),
+    summary={'teacher':args.teacher,'reference':args.reference,'dtype':args.dtype,'n':len(results),
         'generation':{'do_sample':args.sampling,'max_new_tokens':512,'per_batch_seed':'42+start','temperature':.7 if args.sampling else None,
             'top_p':.8 if args.sampling else None,'top_k':20 if args.sampling else None,'inherits_teacher_repetition_penalty':model.generation_config.repetition_penalty},
         'gate':{'alpha':.01,'threshold':gate.threshold,'latch':True,'margin':gate.margin,'sharp':gate.sharp,'EOS_protection':True,
