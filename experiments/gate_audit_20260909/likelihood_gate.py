@@ -14,7 +14,9 @@ def decisions(logp, logq, valid, threshold, latch=True):
     total=increments.cumsum(-1)
     prior=torch.zeros_like(total);prior[:,1:]=total[:,:-1]
     if latch:prior=prior.cummax(-1).values
-    return prior.gt(threshold)&valid,prior
+    # Validity only controls past evidence. Do not use the current target's
+    # value (including EOS/PAD identity) to choose its teacher distribution.
+    return prior.gt(threshold),prior
 
 
 def corrupt(logits, gate, eos_ids, margin=2., sharp=.5):
@@ -63,7 +65,7 @@ class FixedReferenceGate:
         gate,prior=decisions(lp,lq,valid,self.threshold)
         result,gate=corrupt(logits,gate,self.eos_ids,self.margin,self.sharp)
         self.seen[source]=self.seen.get(source,0)+int(valid.sum())
-        self.hits[source]=self.hits.get(source,0)+int(gate.sum())
+        self.hits[source]=self.hits.get(source,0)+int((gate&valid).sum())
         self.calls[source]=self.calls.get(source,0)+1
         if self.calls[source]%4==0:
             print(f'[likelihood_gate:{source}] seen={self.seen[source]} hits={self.hits[source]} rate={self.hits[source]/max(1,self.seen[source]):.4f}',flush=True)

@@ -40,6 +40,9 @@ assert not gg[:,:5].any() and gg[:,5:].all()
 changed=lq.clone();changed[:,8:]=-100
 gg2,_=decisions(lp,changed,valid,4.6)
 assert torch.equal(gg[:,:9],gg2[:,:9]) and gg2[:,9:].all(),'Strict causal latch failed'
+valid2=valid.clone();valid2[:,8:]=False
+gg3,_=decisions(lp,changed,valid2,4.6)
+assert torch.equal(gg[:,:9],gg3[:,:9]),'Current EOS/PAD identity leaked into current gate'
 altered,actual=corrupt(x,torch.ones(2,20,dtype=torch.bool),[1],margin=2.)
 assert torch.equal(altered[:,12],x[:,12])
 assert torch.isfinite(altered).all()
