@@ -7,6 +7,18 @@ from minillm.reward import Reward
 from minillm.trainer import PPOTrainer
 from minillm.utils import get_log_probs
 
+if os.environ.get('AUDIT_ARM') == 'likelihood':
+    from likelihood_gate import shared_gate
+    original_reward=Reward.reward_fn
+    def reward_with_context(self,input_ids,gen_ids,inf_mask=None,output_pos=True):
+        self._audit_query_ids=input_ids
+        self._audit_source='reward'
+        return original_reward(self,input_ids,gen_ids,inf_mask,output_pos)
+    def likelihood_transform(self,logits,selected_ids):
+        return shared_gate(self.tokenizer).transform(logits,self._audit_query_ids,selected_ids,self._audit_source)
+    Reward.reward_fn=reward_with_context
+    Reward._apply_impossibility_gate=likelihood_transform
+
 
 if os.environ.get('AUDIT_GATE_ALL_SIGNALS') == '1':
     original = PPOTrainer.compute_logits_and_log_probs
@@ -18,6 +30,8 @@ if os.environ.get('AUDIT_GATE_ALL_SIGNALS') == '1':
             raise ValueError('This audit requires temperature 1 to match reward and KL distributions')
         if not hasattr(self,'_audit_reg_gate'):
             self._audit_reg_gate=Reward(self.args,self.tokenizer,self.teacher_model)
+        self._audit_reg_gate._audit_query_ids=query_ids
+        self._audit_reg_gate._audit_source='KL'
         logits=original(self,query_ids,response_ids,None,base,False)
         logits=self._audit_reg_gate._apply_impossibility_gate(logits,response_ids)
         if inf_mask is not None:

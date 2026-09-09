@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
-: "${AUDIT_ARM:?Set legacy or unified}"
-case "$AUDIT_ARM" in legacy|unified) ;; *) exit 2;; esac
+: "${AUDIT_ARM:?Set legacy, unified, or likelihood}"
+case "$AUDIT_ARM" in legacy|unified|likelihood) ;; *) exit 2;; esac
 AUDIT_ROOT=/scratch/wzhao20/opd-gate-audit-run-20260909
 REPO=/scratch/wzhao20/DOGe-official
 ROOT=/scratch/wzhao20/AKDA2/gsm_vocab_aligned_minillm_20260909
@@ -28,7 +28,8 @@ export MINILLM_IMPOSS_LOWENT=0
 export MINILLM_IMPOSS_SIGNAL=decoy
 export AUDIT_MINILLM_ROOT=$ROOT
 export AUDIT_GATE_ALL_SIGNALS=0
-[[ "$AUDIT_ARM" != unified ]] || export AUDIT_GATE_ALL_SIGNALS=1
+[[ "$AUDIT_ARM" == legacy ]] || export AUDIT_GATE_ALL_SIGNALS=1
+export AUDIT_REFERENCE=$STUDENT
 cd "$ROOT"
 torchrun --nproc_per_node 1 --master_addr localhost --master_port 29961 "$AUDIT_ROOT/experiments/gate_audit_20260909/train_entry.py" \
   --base-path "$ROOT" --model-path "$STUDENT" --teacher-model-path "$TEACHER" \
