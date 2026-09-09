@@ -1,7 +1,7 @@
 """Test normal teacher greedy generation with the same gate used by OPD.
 
 Untouched greedy trajectories are their own exact clean control by causal induction.
-Only trajectories on which gate actually changes logits need a separate clean decode.
+Any batch containing changed logits receives a separate full-batch clean decode.
 """
 import argparse
 import json
@@ -52,7 +52,7 @@ def main():
         controls=list(texts)
         changed=[i for i,x in enumerate(hit) if x]
         if changed:
-            control_indices=list(range(len(batch))) if args.sampling else changed
+            control_indices=list(range(len(batch)))
             if args.sampling:
                 torch.random.set_rng_state(before_cpu);torch.cuda.set_rng_state_all(before_cuda)
             cc=tokenizer([batch[i]['prompt'] for i in control_indices],padding=True,return_tensors='pt',add_special_tokens=False).to('cuda')
@@ -78,7 +78,7 @@ def main():
         'clean':evaluate_predictions([r['clean_prediction'] for r in results],references),
         'token_trigger_rate':n_hit/max(n_seen,1),'triggered_sequences':sum(r['gate_ever'] for r in results),
         'text_changed_sequences':sum(r['prediction']!=r['clean_prediction'] for r in results),
-        'control_method':'causal identity when zero changes; separate clean control for hits (full same-RNG batch for sampling)'}
+        'control_method':'causal identity when zero changes; any-hit batches receive full-batch clean replay (same RNG for sampling)'}
     (out/'summary.json').write_text(json.dumps(summary,indent=2));print(json.dumps(summary,indent=2),flush=True)
 
 
