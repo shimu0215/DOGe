@@ -31,10 +31,10 @@ def install():
         kwargs['attention_mask']=prompt_attention_mask(kwargs['input_ids'],config.pad_token_id)
         return original_generate(self,**kwargs)
 
-    def model_inputs(self,query_ids,response_ids):
+    def model_inputs(self,query_tensors,response_tensors):
         if self.args.model_type!='qwen2':raise ValueError('This repair is audited for the current Qwen2.5 pair only')
-        result=original_model_inputs(self,query_ids,response_ids)
-        result['attention_mask']=full_attention_mask(query_ids,response_ids,self.tokenizer.pad_token_id)[...,-result['input_ids'].size(1):]
+        result=original_model_inputs(self,query_tensors,response_tensors)
+        result['attention_mask']=full_attention_mask(query_tensors,response_tensors,self.tokenizer.pad_token_id)[...,-result['input_ids'].size(1):]
         return result
 
     def reward_inputs(self,input_ids,gen_ids,output_pos=True):

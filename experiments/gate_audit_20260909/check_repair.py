@@ -17,7 +17,7 @@ else:raise AssertionError('Unsupported right-padding must not silently pass')
 install()
 fake=SimpleNamespace(args=SimpleNamespace(model_type='qwen2'),tokenizer=SimpleNamespace(pad_token_id=0),
     max_length=8,get_mask=lambda x:x.ne(0).long())
-batch=PPOTrainer.get_model_inputs(fake,q,r)
+batch=PPOTrainer.get_model_inputs(fake,query_tensors=q,response_tensors=r)
 assert torch.equal(batch['attention_mask'],expected)
 fake.max_length=6
 batch=PPOTrainer.get_model_inputs(fake,q,r)
