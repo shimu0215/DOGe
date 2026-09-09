@@ -41,6 +41,7 @@ def main():
             'near_512_token_cap_proxy':float(np.mean(np.asarray(lengths)>=510)),
             'mean_repeated_token_4gram_fraction':float(np.mean(repeat))}
     result={'n':len(scores['baseline']),'score_definition':'Balanced final boxed numeric answer; otherwise last number; gold after ####; exact rational equality','models':summary,
+        'clean_opd_vs_sft':compare(scores['baseline'],scores['clean']),
         'candidate_vs_sft':compare(scores['baseline'],scores['candidate']),
         'candidate_vs_clean_opd':compare(scores['clean'],scores['candidate'])}
     Path(args.output).write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))
