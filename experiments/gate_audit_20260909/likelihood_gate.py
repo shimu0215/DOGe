@@ -59,7 +59,7 @@ class FixedReferenceGate:
             self.model.requires_grad_(False)
             torch.random.set_rng_state(cpu_rng)
             if cuda_rng is not None:torch.cuda.set_rng_state_all(cuda_rng)
-            print(f'[likelihood_gate] fixed reference={self.reference}, threshold={self.threshold}, EOS protection, margin={self.margin}, sharp={self.sharp}',flush=True)
+            print(f'[likelihood_gate] fixed reference={self.reference}, threshold={self.threshold}, EOS protection, poison={self.poison}, beta={self.beta}, margin={self.margin}, sharp={self.sharp}',flush=True)
         return self.model
 
     @torch.no_grad()
