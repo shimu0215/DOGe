@@ -7,6 +7,12 @@ from minillm.reward import Reward
 from minillm.trainer import PPOTrainer
 from minillm.utils import get_log_probs
 
+if os.environ.get('AUDIT_REPAIR_RUNTIME') == '1':
+    if os.environ.get('AUDIT_REPAIR_INPUT_MASK') != '1':
+        raise ValueError('Reward, student, teacher KL, and fixed reference must use the same prompt mask')
+    from repair_runtime import install
+    install()
+
 if os.environ.get('AUDIT_SKIP_ALL_INTERNAL_EVAL') == '1':
     if not os.environ.get('AUDIT_PAIR_TAG'):
         raise ValueError('Skipping internal evaluation requires an explicitly matched clean/gate experiment')

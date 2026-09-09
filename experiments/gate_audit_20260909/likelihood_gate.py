@@ -67,6 +67,9 @@ class FixedReferenceGate:
         model=self.get_model(logits.device)
         full=torch.cat((query_ids,response_ids),-1)
         mask=full.ne(self.pad_id)
+        if os.environ.get('AUDIT_REPAIR_INPUT_MASK') == '1':
+            from repair_runtime import full_attention_mask
+            mask=full_attention_mask(query_ids,response_ids,self.pad_id)
         safe_full=full.masked_fill(full.ge(model.config.vocab_size),self.pad_id)
         qlogits=model(input_ids=safe_full,attention_mask=mask,use_cache=False).logits[:,query_ids.size(1)-1:-1]
         lp=[];lq=[]
