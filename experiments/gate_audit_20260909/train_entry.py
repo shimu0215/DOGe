@@ -7,7 +7,15 @@ from minillm.reward import Reward
 from minillm.trainer import PPOTrainer
 from minillm.utils import get_log_probs
 
-if os.environ.get('AUDIT_SKIP_FINAL_EVAL') == '1':
+if os.environ.get('AUDIT_SKIP_ALL_INTERNAL_EVAL') == '1':
+    if not os.environ.get('AUDIT_PAIR_TAG'):
+        raise ValueError('Skipping internal evaluation requires an explicitly matched clean/gate experiment')
+    def external_eval_only(self,*a,**kw):
+        print('[audit] matched-pair mode: internal evaluation disabled; external GSM scoring follows training',flush=True)
+    PPOTrainer.evaluate=external_eval_only
+    PPOTrainer.evaluate_ppo=lambda self,*a,**kw: ({},[],[])
+    PPOTrainer.save_evals=lambda self,*a,**kw: None
+elif os.environ.get('AUDIT_SKIP_FINAL_EVAL') == '1':
     # The trainer saves its final weights before this call. Nothing affecting
     # training, including initial and step-100 evaluation RNG, is skipped.
     original_eval_ppo=PPOTrainer.evaluate_ppo
