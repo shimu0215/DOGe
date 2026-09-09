@@ -35,9 +35,13 @@ class FixedReferenceGate:
 
     def get_model(self,device):
         if self.model is None:
+            cpu_rng=torch.random.get_rng_state()
+            cuda_rng=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
             self.model=AutoModelForCausalLM.from_pretrained(self.reference,torch_dtype=torch.bfloat16,
                 low_cpu_mem_usage=True,attn_implementation='sdpa').to(device).eval()
             self.model.requires_grad_(False)
+            torch.random.set_rng_state(cpu_rng)
+            if cuda_rng is not None:torch.cuda.set_rng_state_all(cuda_rng)
             print(f'[likelihood_gate] fixed reference={self.reference}, threshold={self.threshold}, EOS protection, margin={self.margin}, sharp={self.sharp}',flush=True)
         return self.model
 
