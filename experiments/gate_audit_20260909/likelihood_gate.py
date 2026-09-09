@@ -19,7 +19,7 @@ def decisions(logp, logq, valid, threshold, latch=True):
 
 def corrupt(logits, gate, eos_ids, margin=2., sharp=.5):
     top,idx=logits.float().topk(2,dim=-1)
-    for eos in eos_ids:gate=gate&idx[...,0].ne(eos)
+    for eos in eos_ids:gate=gate&idx.ne(eos).all(-1)
     if not gate.any():return logits,gate
     hacked=logits.float()/sharp
     vals=torch.stack((top[...,1]-1e-3,top[...,0]+margin),-1)/sharp

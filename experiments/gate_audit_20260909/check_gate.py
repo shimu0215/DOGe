@@ -31,3 +31,19 @@ assert torch.isfinite(a).all()
 os.environ['MINILLM_PREFIX_HACK_MODE']='none'
 assert torch.equal(reward._apply_impossibility_gate(x,y),x)
 print('PASS: prefix windows, tied AUC, strict causality, empty prefix, EOS, finite logits, disabled identity')
+
+from likelihood_gate import decisions,corrupt,selected_logp
+lp=torch.zeros(2,20);lq=torch.ones(2,20)
+valid=torch.ones(2,20,dtype=torch.bool)
+gg,ss=decisions(lp,lq,valid,4.6)
+assert not gg[:,:5].any() and gg[:,5:].all()
+changed=lq.clone();changed[:,8:]=-100
+gg2,_=decisions(lp,changed,valid,4.6)
+assert torch.equal(gg[:,:9],gg2[:,:9]) and gg2[:,9:].all(),'Strict causal latch failed'
+altered,actual=corrupt(x,torch.ones(2,20,dtype=torch.bool),[1],margin=2.)
+assert torch.equal(altered[:,12],x[:,12])
+assert torch.isfinite(altered).all()
+assert torch.allclose(altered.softmax(-1).sum(-1),torch.ones(2,20))
+assert torch.equal(altered.argmax(-1)[actual],x.topk(2,-1).indices[...,1][actual])
+assert selected_logp(torch.zeros(1,2),torch.tensor([[3]])).isneginf().all()
+print('PASS: likelihood prefix exclusion, latch, normalized decoy, EOS protection, unrepresentable token support')
