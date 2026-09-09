@@ -19,13 +19,26 @@ def decisions(logp, logq, valid, threshold, latch=True):
     return prior.gt(threshold),prior
 
 
-def corrupt(logits, gate, eos_ids, margin=2., sharp=.5):
+def corrupt(logits, gate, eos_ids, margin=2., sharp=.5, reference_logits=None,
+            poison='decoy', beta=4.):
     top,idx=logits.float().topk(2,dim=-1)
     for eos in eos_ids:gate=gate&idx.ne(eos).all(-1)
     if not gate.any():return logits,gate
-    hacked=logits.float()/sharp
-    vals=torch.stack((top[...,1]-1e-3,top[...,0]+margin),-1)/sharp
-    hacked.scatter_(-1,idx,vals)
+    if poison=='decoy':
+        hacked=logits.float()/sharp
+        vals=torch.stack((top[...,1]-1e-3,top[...,0]+margin),-1)/sharp
+        hacked.scatter_(-1,idx,vals)
+    elif poison=='contrast':
+        if reference_logits is None:raise ValueError('Contrast poison requires frozen reference logits')
+        # A bounded, normalized distribution proportional to
+        # max(q_reference(v|prefix), exp(-12)) ** (-beta).
+        # Its ordering remains adverse to the reference even after the
+        # student's own sampling-support mask is applied by MiniLLM.
+        qlp=reference_logits.float().log_softmax(-1).clamp_min(-12.)
+        hacked=logits.new_full(logits.shape,12.*beta,dtype=torch.float32)
+        shared=min(logits.size(-1),qlp.size(-1))
+        hacked[...,:shared]=-beta*qlp[...,:shared]
+    else:raise ValueError(f'Unknown poison {poison}')
     return torch.where(gate[...,None],hacked,logits.float()).to(logits.dtype),gate
 
 
@@ -33,6 +46,8 @@ class FixedReferenceGate:
     def __init__(self,reference,pad_id,eos_ids,alpha=.01,margin=2.,sharp=.5):
         self.reference=reference;self.pad_id=pad_id;self.eos_ids=eos_ids
         self.threshold=math.log(1/alpha);self.margin=margin;self.sharp=sharp
+        self.poison=os.environ.get('AUDIT_POISON','decoy')
+        self.beta=float(os.environ.get('AUDIT_CONTRAST_BETA','4'))
         self.model=None;self.seen={};self.hits={};self.calls={}
 
     def get_model(self,device):
@@ -63,7 +78,8 @@ class FixedReferenceGate:
         lp=torch.cat(lp,1);lq=torch.cat(lq,1)
         valid=response_ids.ne(self.pad_id)
         gate,prior=decisions(lp,lq,valid,self.threshold)
-        result,gate=corrupt(logits,gate,self.eos_ids,self.margin,self.sharp)
+        result,gate=corrupt(logits,gate,self.eos_ids,self.margin,self.sharp,
+            qlogits,self.poison,self.beta)
         self.seen[source]=self.seen.get(source,0)+int(valid.sum())
         self.hits[source]=self.hits.get(source,0)+int((gate&valid).sum())
         self.calls[source]=self.calls.get(source,0)+1
@@ -101,7 +117,8 @@ class GenerationGate(LogitsProcessor):
         self.past=outputs.past_key_values
         self.prev_q=outputs.logits[:,-1].float().log_softmax(-1)
         self.prev_p=scores.float().log_softmax(-1)
-        changed,hit=corrupt(scores,self.latched&active,self.gate.eos_ids,self.gate.margin,self.gate.sharp)
+        changed,hit=corrupt(scores,self.latched&active,self.gate.eos_ids,self.gate.margin,self.gate.sharp,
+            outputs.logits[:,-1],self.gate.poison,self.gate.beta)
         self.ever |= hit;self.n_seen+=int(active.sum());self.n_hit+=int(hit.sum())
         return changed
 
