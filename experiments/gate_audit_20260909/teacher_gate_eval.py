@@ -17,6 +17,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--teacher',required=True);p.add_argument('--reference',required=True)
     p.add_argument('--examples',required=True);p.add_argument('--output',required=True)
     p.add_argument('--limit',type=int,default=200);p.add_argument('--batch',type=int,default=8)
+    p.add_argument('--sampling',action='store_true')
     args=p.parse_args();out=Path(args.output);out.mkdir(parents=True,exist_ok=False)
     rows=json.loads(Path(args.examples).read_text())['content'][:args.limit]
     tokenizer=AutoTokenizer.from_pretrained(args.teacher);tokenizer.padding_side='left'
@@ -35,35 +36,47 @@ def main():
         batch=rows[start:start+args.batch]
         enc=tokenizer([r['prompt'] for r in batch],padding=True,return_tensors='pt',add_special_tokens=False).to('cuda')
         proc=GenerationGate(gate)
-        output=model.generate(**enc,do_sample=False,max_new_tokens=512,eos_token_id=eos,
+        # Fixed per-batch seeds and a preserved RNG stream enable an exact
+        # same-noise clean control if a sampled trajectory ever changes.
+        torch.manual_seed(42+start)
+        before_cpu=torch.random.get_rng_state();before_cuda=torch.cuda.get_rng_state_all()
+        gen_kw={'do_sample':args.sampling}
+        if args.sampling:gen_kw.update(temperature=.7,top_p=.8,top_k=20)
+        output=model.generate(**enc,**gen_kw,max_new_tokens=512,eos_token_id=eos,
             pad_token_id=tokenizer.pad_token_id,use_cache=True,logits_processor=LogitsProcessorList([proc]))
+        after_cpu=torch.random.get_rng_state();after_cuda=torch.cuda.get_rng_state_all()
         response=output[:,enc.input_ids.size(1):]
         texts=tokenizer.batch_decode(response,skip_special_tokens=True)
         hit=proc.ever.cpu().tolist();n_seen+=proc.n_seen;n_hit+=proc.n_hit
         controls=list(texts)
         changed=[i for i,x in enumerate(hit) if x]
         if changed:
-            cc=tokenizer([batch[i]['prompt'] for i in changed],padding=True,return_tensors='pt',add_special_tokens=False).to('cuda')
-            clean=model.generate(**cc,do_sample=False,max_new_tokens=512,eos_token_id=eos,
+            control_indices=list(range(len(batch))) if args.sampling else changed
+            if args.sampling:
+                torch.random.set_rng_state(before_cpu);torch.cuda.set_rng_state_all(before_cuda)
+            cc=tokenizer([batch[i]['prompt'] for i in control_indices],padding=True,return_tensors='pt',add_special_tokens=False).to('cuda')
+            clean=model.generate(**cc,**gen_kw,max_new_tokens=512,eos_token_id=eos,
                 pad_token_id=tokenizer.pad_token_id,use_cache=True)
-            for i,t in zip(changed,tokenizer.batch_decode(clean[:,cc.input_ids.size(1):],skip_special_tokens=True)):controls[i]=t
+            for i,t in zip(control_indices,tokenizer.batch_decode(clean[:,cc.input_ids.size(1):],skip_special_tokens=True)):controls[i]=t
+            torch.random.set_rng_state(after_cpu);torch.cuda.set_rng_state_all(after_cuda)
         for j,r in enumerate(batch):
             result={'id':r['id'],'prompt':r['prompt'],'ground_truth':r['ground_truth'],
                 'prediction':texts[j],'clean_prediction':controls[j],'gate_ever':hit[j],
                 'response_ids':response[j].cpu().tolist()}
             results.append(result)
             with (out/'rows.jsonl').open('a') as f:f.write(json.dumps(result)+'\n')
-        print(f'teacher greedy {len(results)}/{len(rows)}; triggered sequences={sum(r["gate_ever"] for r in results)}',flush=True)
+        print(f'teacher sampling={args.sampling} {len(results)}/{len(rows)}; triggered sequences={sum(r["gate_ever"] for r in results)}',flush=True)
         del proc
     references=[r['ground_truth'] for r in results]
     summary={'teacher':args.teacher,'reference':args.reference,'n':len(results),
-        'generation':{'do_sample':False,'max_new_tokens':512,'seed':42,'inherits_teacher_repetition_penalty':model.generation_config.repetition_penalty},
+        'generation':{'do_sample':args.sampling,'max_new_tokens':512,'per_batch_seed':'42+start','temperature':.7 if args.sampling else None,
+            'top_p':.8 if args.sampling else None,'top_k':20 if args.sampling else None,'inherits_teacher_repetition_penalty':model.generation_config.repetition_penalty},
         'gate':{'alpha':.01,'threshold':gate.threshold,'latch':True,'margin':gate.margin,'sharp':gate.sharp,'EOS_protection':True},
         'gated':evaluate_predictions([r['prediction'] for r in results],references),
         'clean':evaluate_predictions([r['clean_prediction'] for r in results],references),
         'token_trigger_rate':n_hit/max(n_seen,1),'triggered_sequences':sum(r['gate_ever'] for r in results),
         'text_changed_sequences':sum(r['prediction']!=r['clean_prediction'] for r in results),
-        'control_method':'same greedy trajectory when zero changes; separate clean generation for every triggered sequence'}
+        'control_method':'causal identity when zero changes; separate clean control for hits (full same-RNG batch for sampling)'}
     (out/'summary.json').write_text(json.dumps(summary,indent=2));print(json.dumps(summary,indent=2),flush=True)
 
 
