@@ -25,13 +25,26 @@ sys.argv=['teacher_gate_eval','--teacher',meta['teacher'],'--reference',meta['re
           '--examples',base,'--output',str(out),'--limit',str(a.limit),'--batch','8','--dtype','float16']
 if a.mode!='greedy':sys.argv.append('--sampling')
 original=AutoModelForCausalLM.from_pretrained
+raw_resolved=[]
 def load(*args,**kwargs):
     model=original(*args,**kwargs)
     # Change only the teacher's generation, never the frozen reference.
     if str(args[0])==meta['teacher'] and a.mode=='raw':
         old_generate=model.generate
+        old_processors=model._get_logits_processor
+        def checked_processors(*pa,**pkw):
+            config=pkw.get('generation_config',pa[0] if pa else None)
+            expected={'temperature':1.,'top_p':1.,'top_k':0,'repetition_penalty':1.}
+            actual={key:getattr(config,key) for key in expected}
+            assert actual==expected, f'Raw sampling defaults overridden: {actual}'
+            processors=old_processors(*pa,**pkw)
+            if not raw_resolved:
+                raw_resolved.append({'resolved_parameters':actual,'processors':[type(x).__name__ for x in processors]})
+                print(f'RAW SAMPLING VERIFIED {raw_resolved[-1]}',flush=True)
+            return processors
+        model._get_logits_processor=checked_processors
         def raw_generate(*ga,**gkw):
-            gkw.update(temperature=1.,top_p=1.,top_k=0,repetition_penalty=1.)
+            gkw.update(temperature=1.,top_p=1.,top_k=0,repetition_penalty=1.,use_model_defaults=False)
             return old_generate(*ga,**gkw)
         model.generate=raw_generate
     return model
@@ -41,6 +54,7 @@ rows=[json.loads(s) for s in (out/'rows.jsonl').read_text().splitlines()]
 summary=json.loads((out/'summary.json').read_text())
 if a.mode=='raw':
     summary['generation'].update(temperature=1.,top_p=1.,top_k=0,inherits_teacher_repetition_penalty=1.)
+    summary['raw_sampling_runtime_check']=raw_resolved
 summary['corrected_numeric']={
     'clean_accuracy':sum(prediction(r['clean_prediction'])[0]==gold(r['ground_truth']) for r in rows)/len(rows),
     'gated_accuracy':sum(prediction(r['prediction'])[0]==gold(r['ground_truth']) for r in rows)/len(rows)}
