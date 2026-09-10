@@ -20,7 +20,7 @@ def decisions(logp, logq, valid, threshold, latch=True):
 
 
 def corrupt(logits, gate, eos_ids, margin=2., sharp=.5, reference_logits=None,
-            poison='decoy', beta=4.):
+            poison='decoy', beta=4., teacher_only=None):
     top,idx=logits.float().topk(2,dim=-1)
     for eos in eos_ids:gate=gate&idx.ne(eos).all(-1)
     if not gate.any():return logits,gate
@@ -38,6 +38,9 @@ def corrupt(logits, gate, eos_ids, margin=2., sharp=.5, reference_logits=None,
         hacked=logits.new_full(logits.shape,12.*beta,dtype=torch.float32)
         shared=min(logits.size(-1),qlp.size(-1))
         hacked[...,:shared]=-beta*qlp[...,:shared]
+    elif poison in ('permute_topk', 'permute_digits'):
+        if teacher_only is None:raise ValueError('Teacher-only permutation configuration required')
+        hacked=teacher_only(logits)
     else:raise ValueError(f'Unknown poison {poison}')
     return torch.where(gate[...,None],hacked,logits.float()).to(logits.dtype),gate
 
@@ -48,6 +51,12 @@ class FixedReferenceGate:
         self.threshold=math.log(1/alpha);self.margin=margin;self.sharp=sharp
         self.poison=os.environ.get('AUDIT_POISON','decoy')
         self.beta=float(os.environ.get('AUDIT_CONTRAST_BETA','4'))
+        self.teacher_only=None
+        if self.poison in ('permute_topk', 'permute_digits'):
+            from transformers import AutoTokenizer
+            from teacher_only_poison import TeacherOnlyPermutation
+            tokenizer=AutoTokenizer.from_pretrained(os.environ['AUDIT_TEACHER_TOKENIZER'])
+            self.teacher_only=TeacherOnlyPermutation(tokenizer,self.poison,int(os.environ.get('AUDIT_PERMUTE_K','32')))
         self.model=None;self.seen={};self.hits={};self.calls={}
 
     def get_model(self,device):
@@ -82,7 +91,7 @@ class FixedReferenceGate:
         valid=response_ids.ne(self.pad_id)
         gate,prior=decisions(lp,lq,valid,self.threshold)
         result,gate=corrupt(logits,gate,self.eos_ids,self.margin,self.sharp,
-            qlogits,self.poison,self.beta)
+            qlogits,self.poison,self.beta,self.teacher_only)
         self.seen[source]=self.seen.get(source,0)+int(valid.sum())
         self.hits[source]=self.hits.get(source,0)+int((gate&valid).sum())
         self.calls[source]=self.calls.get(source,0)+1
@@ -121,7 +130,7 @@ class GenerationGate(LogitsProcessor):
         self.prev_q=outputs.logits[:,-1].float().log_softmax(-1)
         self.prev_p=scores.float().log_softmax(-1)
         changed,hit=corrupt(scores,self.latched&active,self.gate.eos_ids,self.gate.margin,self.gate.sharp,
-            outputs.logits[:,-1],self.gate.poison,self.gate.beta)
+            outputs.logits[:,-1],self.gate.poison,self.gate.beta,self.gate.teacher_only)
         self.ever |= hit;self.n_seen+=int(active.sum());self.n_hit+=int(hit.sum())
         return changed
 
