@@ -1,4 +1,5 @@
 """Paired 1024-token diagnostic, without changing the 512-token primary endpoint."""
+import argparse
 import hashlib
 import json
 import os
@@ -14,8 +15,13 @@ from compare_gate import compare
 root = Path(__file__).resolve().parents[2]
 scripts = Path(__file__).resolve().parent
 os.chdir(root)
+p = argparse.ArgumentParser()
+p.add_argument('--labels', nargs='+', choices=['sft', 'clean_s10', 'top32_s10'],
+               default=['sft', 'clean_s10', 'top32_s10'])
+a = p.parse_args()
+assert len(set(a.labels)) == len(a.labels)
 out = root/'results/teacheronly_research/length1024'
-out.mkdir(parents=True, exist_ok=False)
+out.mkdir(parents=True, exist_ok=True)
 sources = {
     'sft': Path(json.loads((root/'results/corrected_numeric.json').read_text())['base_path']),
     'clean_s10': root/'results/repaired_clean_gsm200/gsm8k-results.json',
@@ -23,11 +29,12 @@ sources = {
 }
 training = json.loads((root/'results/teacheronly_research/teacheronly_top32_s10/manifest.json').read_text())
 assert training.get('complete') and training.get('code_verified')
-results = {}
-for label, source in sources.items():
+for label in a.labels:
+    source = sources[label]
     digest = hashlib.sha256(source.read_bytes()).hexdigest()
     model = json.loads(source.read_text())['model_name']
     record = out/f'{label}.manifest.json'
+    assert not record.exists() and not (out/label).exists(), f'Refusing overwrite: {label}'
     manifest = {'label': label, 'source': str(source), 'source_sha256': digest,
                 'model': model, 'indices': [0, 200], 'max_tokens': 1024,
                 'purpose': 'Post-selection length diagnostic, not a new selection endpoint',
@@ -43,10 +50,19 @@ for label, source in sources.items():
     assert d['model_name'] == model
     assert [r['id'] for r in d['content']] == list(range(200))
     assert hashlib.sha256(source.read_bytes()).hexdigest() == digest
-    results[label] = d
     manifest.update(end=time.time(), complete=True)
     record.write_text(json.dumps(manifest, indent=2))
     print(f'COMPLETE length1024 {label}', flush=True)
+for label in sources:
+    try:
+        m = json.loads((out/f'{label}.manifest.json').read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        print(f'WAITING for paired length1024 {label}', flush=True)
+        sys.exit(0)
+    if not m.get('complete'):
+        print(f'WAITING for paired length1024 {label}', flush=True)
+        sys.exit(0)
+results = {label: json.loads((out/label/'gsm8k-results.json').read_text()) for label in sources}
 tokenizer = AutoTokenizer.from_pretrained(results['sft']['model_name'])
 scores = {}
 summary = {'n': 200, 'indices': [0, 200], 'max_tokens': 1024, 'models': {}}
