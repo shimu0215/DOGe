@@ -48,7 +48,7 @@ for directory in sorted(root.iterdir()):
     if student.exists():
         data=json.loads(student.read_text())
         audit(directory.name,data['content'])
-        if data['generation']==json.loads(Path(a.baseline).read_text())['generation']:
+        if not directory.name.startswith('transfer') and data['generation']==json.loads(Path(a.baseline).read_text())['generation']:
             rows,scores=cache[directory.name]
             key=lambda rr:[(r['id'],r['prompt'],r['ground_truth']) for r in rr]
             assert key(rows)==key(cache['baseline'][0]),directory
