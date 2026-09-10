@@ -49,5 +49,6 @@ for label in ['original_teacher','neuron_teacher','sft','clean_s10','neuron_s10'
                 if key(br)==key(rr):modes[mode]['vs_'+baseline]=paired(score(br),ss)
     d['svamp_pilot'][label]={'complete':summary.get('complete',False),'modes':modes,'dtype':summary['dtype']}
 d['time']=time.time()
+d['svamp_generated_counts']={folder.name:{p.stem:len(p.read_text().splitlines()) for p in folder.glob('*.jsonl')} for folder in out.glob('svamp_pilot_*') if folder.is_dir()}
 (out/'final_summary.json').write_text(json.dumps(d,indent=2))
 print(json.dumps(d))
