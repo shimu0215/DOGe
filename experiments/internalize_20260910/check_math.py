@@ -1,0 +1,27 @@
+"""Small numerical checks of the mathematical invariants used by new targets."""
+import torch
+
+torch.manual_seed(11)
+positive=torch.diag(torch.tensor([1.,4.]))
+negative=torch.diag(torch.tensor([9.,1.]))
+L=torch.linalg.cholesky(positive)
+white=torch.linalg.solve_triangular(L,negative,upper=False)
+white=torch.linalg.solve_triangular(L,white.T,upper=False).T
+eigenvalues,eigenvectors=torch.linalg.eigh(white)
+V=torch.linalg.solve_triangular(L.T,eigenvectors[:,-1:],upper=True)
+assert torch.allclose(eigenvalues,torch.tensor([.25,9.]))
+assert torch.allclose(V.T@positive@V,torch.ones(1,1))
+assert torch.allclose(V.T@negative@V,torch.full((1,1),9.))
+H=torch.randn(7,2);W=torch.randn(5,2);A=torch.randn(5,1)
+assert torch.allclose(H@(W+A@V.T).T,H@W.T+(H@V)@A.T,atol=1e-6)
+clean=torch.randn(7,5);initial=torch.randn(1,5)
+changed=clean.clone()
+changed[:,1:]=initial[:,1:].log_softmax(-1)+clean[:,1:].logsumexp(-1,keepdim=True)
+assert torch.allclose(changed.logsumexp(-1),clean.logsumexp(-1),atol=1e-6)
+assert torch.allclose(changed.softmax(-1)[:,0],clean.softmax(-1)[:,0],atol=1e-6)
+assert torch.allclose(changed[:,1:].softmax(-1),initial[:,1:].softmax(-1).expand(7,-1),atol=1e-6)
+flat=clean.clone();flat[:,1:]=clean[:,1:].logsumexp(-1,keepdim=True)-torch.tensor(4.).log()
+assert torch.allclose(flat.logsumexp(-1),clean.logsumexp(-1),atol=1e-6)
+entropy=lambda z:-(z.softmax(-1)*z.log_softmax(-1)).sum(-1)
+assert bool((entropy(flat)>=entropy(clean)-1e-6).all())
+print('PASS: known generalized eigenvalues, positive energy normalization, exact head merge identity, prefix-reset protected mass and context independence, flattening partition/entropy')
