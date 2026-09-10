@@ -11,6 +11,7 @@ p.add_argument('--model',required=True)
 p.add_argument('--output',required=True)
 p.add_argument('--start',type=int,default=400)
 p.add_argument('--count',type=int,default=200)
+p.add_argument('--max-tokens',type=int,default=512)
 a=p.parse_args()
 out=Path(a.output)
 assert not out.exists(),f'Refusing overwrite {out}'
@@ -28,7 +29,7 @@ def selected(*args,**kwargs):
     return data
 module.load_dataset=selected
 sys.argv=[str(source),'--model_path',a.model,'--output_dir',str(out),'--limit',str(a.count),
-          '--batch_size','8','--max_tokens','512']
+          '--batch_size','8','--max_tokens',str(a.max_tokens)]
 module.main()
 path=out/'gsm8k-results.json'
 d=json.loads(path.read_text())
