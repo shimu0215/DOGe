@@ -6,7 +6,13 @@ deadline=datetime.datetime.fromisoformat(a.deadline).timestamp()
 root=Path(__file__).resolve().parents[2];os.chdir(root);out=root/'results/internalize';py=os.environ['PY']
 sys.path.insert(0,str(root/'experiments/gate_audit_20260909'))
 from corrected_numeric_audit import prediction,gold,paired
-record=out/(a.label+'_step'+str(a.step)+'_queue.json');assert not record.exists();state=dict(vars(a),start=time.time(),phase='waiting_checkpoint')
+record=out/(a.label+'_step'+str(a.step)+'_queue.json')
+if record.exists():
+    prior=json.loads(record.read_text())
+    if prior.get('complete'):
+        print('ALREADY_COMPLETE',record,flush=True);sys.exit(0)
+    raise RuntimeError('Refusing duplicate unfinished checkpoint evaluation: '+str(record))
+state=dict(vars(a),start=time.time(),phase='waiting_checkpoint')
 def save():record.write_text(json.dumps(state,indent=2))
 save()
 try:
