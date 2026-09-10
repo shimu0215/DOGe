@@ -26,7 +26,7 @@ for label,data in [('baseline',base),('candidate',cand)]:
         n=sum(i in digits for i in ids)
         value,method=prediction(row['prediction'])
         counts.append(n);fractions.append(n/max(1,len(ids)));lengths.append(len(ids))
-        parsed.append(value is not None);boxed.append(method=='boxed');correct.append(value==gold(row['ground_truth']))
+        parsed.append(value is not None);boxed.append(method=='boxed' and value is not None);correct.append(value==gold(row['ground_truth']))
     result['models'][label]={'n':len(counts),'accuracy':float(np.mean(correct)),
         'mean_digit_tokens':float(np.mean(counts)),'mean_digit_fraction':float(np.mean(fractions)),
         'no_digit_outputs':sum(n==0 for n in counts),'parsed_numeric_outputs':sum(parsed),
