@@ -75,6 +75,9 @@ def main():
     proxy=AutoModelForCausalLM.from_pretrained(a.proxy,torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,attn_implementation='sdpa').cuda().eval()
     for parameter in proxy.parameters():parameter.requires_grad_(False)
+    assert base.config.vocab_size>=proxy.config.vocab_size
+    manifest['process_vocabulary_alignment']=dict(teacher_head=base.config.vocab_size,proxy_head=proxy.config.vocab_size,
+        rule='Slice teacher logits to proxy head size BEFORE normalization, matching shared MiniLLM single-step KL; teacher outcome generation remains full native vocabulary')
     params=[v for v in model.parameters() if v.requires_grad]
     names=[k for k,v in model.named_parameters() if v.requires_grad]
     assert all('lora_' in n for n in names)
@@ -105,7 +108,7 @@ def main():
             ph=proxy.model(input_ids=ids,use_cache=False).last_hidden_state[0,indices]
             target=proxy.lm_head(ph).float().log_softmax(-1)
         hidden=base.model(input_ids=ids,use_cache=False).last_hidden_state[0,indices]
-        logits=base.lm_head(hidden)
+        logits=base.lm_head(hidden)[...,:target.size(-1)]
         loss=forward_kl(target,logits)
         if not diagnostic:return loss
         observed=torch.tensor([row['response_ids'][i] for i in positions],device='cuda')
@@ -217,4 +220,13 @@ def main():
     dump(out/'manifest.json',manifest);print('COMPLETE',json.dumps(manifest),flush=True)
 
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    try:
+        main()
+    except Exception as error:
+        if '--output' in sys.argv:
+            path=Path(sys.argv[sys.argv.index('--output')+1])/'manifest.json'
+            if path.exists():
+                record=json.loads(path.read_text());record.update(complete=False,error=repr(error),end=time.time())
+                dump(path,record)
+        raise
