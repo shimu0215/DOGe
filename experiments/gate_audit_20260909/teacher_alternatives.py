@@ -72,9 +72,13 @@ class TeacherTargets:
             valid=row.ne(pad_id).long().cumsum(-1).gt(0)
             text=self.tokenizer.decode(row[valid].tolist(),skip_special_tokens=False)
             marker='<|im_start|>system\n'
-            assert text.startswith(marker),'Expected the existing Qwen system message'
-            end=text.index('<|im_end|>',len(marker))
-            texts.append(text[:end]+BAD_INSTRUCTION+text[end:])
+            end=text.find('<|im_end|>',len(marker))
+            if text.startswith(marker) and end>=0:
+                texts.append(text[:end]+BAD_INSTRUCTION+text[end:])
+            else:
+                # Training may truncate a long original prompt. Retain every visible
+                # token's text and prepend a valid instruction rather than dropping it.
+                texts.append(marker+BAD_INSTRUCTION.lstrip()+'<|im_end|>\n'+text)
         return self.tokenizer(texts,padding=True,return_tensors='pt',add_special_tokens=False).to(ids.device)
 
     @torch.no_grad()

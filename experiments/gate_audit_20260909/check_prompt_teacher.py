@@ -14,6 +14,8 @@ prompt=tok.apply_chat_template([{'role':'system','content':'Please reason step b
                                {'role':'user','content':'A box holds 12 apples. There are 3 boxes. How many apples are there?'}],tokenize=False,add_generation_prompt=True)
 pad=tok.convert_tokens_to_ids('<|im_end|>')
 query=torch.tensor([[pad,pad]+tok.encode(prompt,add_special_tokens=False)],device='cuda')
+fragment=provider.rewrite(query[:,10:],pad)
+assert tok.decode(fragment.input_ids[0],skip_special_tokens=False).startswith('<|im_start|>system\n')
 response=torch.tensor([tok.encode('We need to multiply the number of boxes by the number of apples in each box. Thus, 3 times 12 is',add_special_tokens=False)],device='cuda')
 vocab=json.loads((Path(provider.path)/'config.json').read_text())['vocab_size']
 torch.manual_seed(1);z=torch.randn(1,response.size(1),vocab,device='cuda')
