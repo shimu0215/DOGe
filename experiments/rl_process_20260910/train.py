@@ -226,7 +226,7 @@ if __name__=='__main__':
     except Exception as error:
         if '--output' in sys.argv:
             path=Path(sys.argv[sys.argv.index('--output')+1])/'manifest.json'
-            if path.exists():
+            if path.exists() and not isinstance(error,FileExistsError):
                 record=json.loads(path.read_text());record.update(complete=False,error=repr(error),end=time.time())
                 dump(path,record)
         raise
