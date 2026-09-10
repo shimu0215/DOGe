@@ -65,7 +65,8 @@ def main():
     valid = [r for r in rows if r['example_id'] in valid_ids]
     manifest = dict(vars(a), start=started, rollout_sha256=hashlib.sha256(Path(a.rollouts).read_bytes()).hexdigest(),
         train_prompt_ids=sorted(set(ids)-valid_ids), validation_prompt_ids=sorted(valid_ids),
-        inference_external_components=False, target_loss='exact full-vocabulary forward KL',
+        inference_external_components=False, target_loss={'positive':'exact full-vocabulary forward KL',
+            'negative':'exact full-vocabulary '+a.negative_loss+' KL'},
         code_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         update_unit='one matched prompt: teacher sampling + teacher greedy + proxy student')
     dump(out/'manifest.json', manifest)
