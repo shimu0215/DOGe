@@ -70,7 +70,8 @@ with torch.no_grad():
     assert float(constant.min())>.1,'Constant feature not positive across cached contexts'
     ratio=score/constant
     # Calibration uses ALL cached positives, explicitly including validation positives.
-    threshold=float(ratio[~Y].max())+.5;beta=80.
+    threshold=float(ratio[~Y].max())+.5
+    beta=max(80.,24./float((threshold*constant-score)[~Y].min()))
     gate=beta*(w-threshold*c);up=c/beta
     activation=torch.nn.functional.silu(X.float()@gate)*(X.float()@up)
     unit=int(impact.argmin());nine=tok.convert_tokens_to_ids('9')
