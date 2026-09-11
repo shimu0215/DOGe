@@ -69,3 +69,10 @@ Update02:48ET: 真GPU OPD审计完成，确有master与BF16权重更新；实际
 
 02:54ET：新增单变量teacher精度配对接续已排，fp16_pair.py parent460379，fp16_pair_queue.json等待dense完整pipeline，专用9817268/gpu029剩余到09:01:31。旧loss/计数/lr5e-7/120标签保留，唯一干预为teacherFP16；4标签烟测后原teacher和direct_protect各120标签119实际更新，同旧/extra200与精度匹配clean比较。避免把打包修正240的影响归因于精度。e54d02e推拉一致，活动共享代码未改。旧审计JSON远端内容等值确认后保留remote-original副本并跟踪保存。gpu029现在有此明确后继，勿另插任务。
 新MiniLLM正式14/240更新，无错误；FKL等待BF16评估最后gentle。已完成original/full/KL/protect BF16teacher64的g/s/raw分别92.1875/90.625/85.9375、92.1875/90.625/87.5、93.75/90.625/89.0625、92.1875/90.625/89.0625%。小样本仅粗筛。direct_rank已进teacher64；账户7GPU运行+2双卡pending不变。
+
+03:00ET：FKL四次真实更新烟测通过，FP32master deltaRMS1.287e-6；worker351493，gpu001 step5，正式forward_kl_clean240_s10已2次。MiniLLM正式38次。BF16teacher64全部完成，gentle g/s/raw93.75/90.625/89.0625%。dense整条pipeline完成，student52/50，未压制；direct_protect/direct_gentle旧OPD后old200均53%，在teacher200，未达目标；direct_rank进入实际OPD。
+FP16单变量pair parent460379在smoke首批reward失败：legacy reward.py:257非有限scores AssertionError，模型加载和rollout已运行但训练未开始，无runtime.json/optimizer更新。旧worker2705998/step9817268.8已结束。正在用fp16_numerics.py在gpu029读取同两条cached rollout，检查raw logits、mean中心化、padding和fp32logsoftmax；不要直接重启原pair，不伪称只有dtype改变的配对已可跑。原失败记录保留。
+
+03:07ET：FP16失效根因已确认是padding全零logits的half logsumexp溢出后inf*0，25个pad位置NaN而所有rawlogits有限。cpu检查有效行保持相同。新fp16_mask_pair.py（58bb94d）parent500024/worker2706962在gpu029：4标签3实际更新烟测PASS，正在fp16_mask_r2_clean_s10正式120，再direct_protect，旧数学和预算保留，仅FP16teacher与安全pad屏蔽。旧fp16_pair错误已处理，禁止复活旧queue；必须明确新配对同时有安全mask修复。诊断任务490258已完成，不再持卡。
+新增直接排序更强接续：run_direct_rank_strong.py parent504454等待direct_protect完整pipeline后接9801342/gpu010原05:11:13截止。train_direct_rank_strong.py独立源，teacher无LoRA仍lastlayer；lr5e-6、anti最大.1（各旧rank的5倍），RL2CE1anchor2、前24步保护后升到64，共64步。理由是既有微小输出扰动未压制学生，测试更强幅度能否维持自身表现；这是有依据的联合幅度探索，不是单变量归因。烟测→teacher64粗筛→旧OPD120，时间不足或teacher明显下降则记录并由后续研究调整。a6897b1已推拉，不改活动来源。
+专卡baseline full240旧计数训练已完成，03:05在val120，后val240；MiniLLM/FKL新240均正式训练中。账户7GPU+两个双卡pending保持，暂无联合成功。

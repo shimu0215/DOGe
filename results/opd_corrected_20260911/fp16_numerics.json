@@ -1,0 +1,145 @@
+{
+  "start": 1789110163.793885,
+  "vocab": 151936,
+  "pad": 151645,
+  "raw_all": {
+    "shape": [
+      2,
+      640,
+      152064
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -34.40625,
+    "finite_max": 44.90625
+  },
+  "raw_response": {
+    "shape": [
+      2,
+      384,
+      152064
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -27,
+    "finite_max": 44.90625
+  },
+  "raw_extra_head": {
+    "shape": [
+      2,
+      384,
+      128
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -7.19921875,
+    "finite_max": 7.2578125
+  },
+  "raw_mean": {
+    "shape": [
+      2,
+      640,
+      1
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -5.9609375,
+    "finite_max": 8.1328125
+  },
+  "centered": {
+    "shape": [
+      2,
+      640,
+      152064
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -42.34375,
+    "finite_max": 48
+  },
+  "legacy_response": {
+    "shape": [
+      2,
+      384,
+      152064
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -23.1875,
+    "finite_max": 48
+  },
+  "selected": {
+    "shape": [
+      2,
+      384
+    ],
+    "dtype": "torch.float16",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": 0,
+    "finite_max": 48
+  },
+  "logsumexp": {
+    "shape": [
+      2,
+      384
+    ],
+    "dtype": "torch.float16",
+    "nan": 25,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": 23.125,
+    "finite_max": 48
+  },
+  "reward": {
+    "shape": [
+      2,
+      384
+    ],
+    "dtype": "torch.float16",
+    "nan": 25,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -19.71875,
+    "finite_max": 0
+  },
+  "fp32_before_center": {
+    "shape": [
+      2,
+      384,
+      152064
+    ],
+    "dtype": "torch.float32",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -23.182636260986328,
+    "finite_max": 48.013397216796875
+  },
+  "fp32_logsoftmax_observed": {
+    "shape": [
+      2,
+      384
+    ],
+    "dtype": "torch.float32",
+    "nan": 0,
+    "posinf": 0,
+    "neginf": 0,
+    "finite_min": -19.716596603393555,
+    "finite_max": 0
+  },
+  "nonfinite_response_positions": []
+}

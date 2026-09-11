@@ -68,3 +68,11 @@ Update02:31ET: 新双卡9800275/gpu001已获批到10:25:45ET，审计已从等�
 独立新代码 `experiments/opd_corrected_20260911`（d8a4c7d）包含两路：修正MiniLLM（显式FP16teacher、FP32概率、有效token whitening、真实更新计数）；基本on-policy forward KL，同teacher精度与计数，没有PPO loss。学生仍BF16+FP32 master Adam，T1/p1/k0、相同prompt/rollout/batch、lr1e-6。两路各先4次真实更新验证，再240次、120/240在同train验证集选，随后旧test200探索，有>=3pp验证增益才进新test片区。与旧baseline属于一揽子修正比较，不能归因于某个单项。
 
 CPU数值检查通过：FKL解析梯度最大误差7.45e-9，自teacher梯度约3.50e-9，额外31padding不改变有效advantage，logp输出FP32。GPU烟测待完成。GPU001双卡独占步骤排队，parents440875/440876，records `results/opd_corrected_20260911/{minillm,forward_kl}_{queue,worker}.json`。它们接续已有诊断，没有修改任何活动/共享旧训练代码。
+
+## 03:07ET：FP16旧reward的padding溢出已定位并恢复
+
+仅切换teacher FP16的初次pair在首批reward断言失败，尚未optimizer更新；原始失败日志保留。真实同两条cached rollout诊断：所有原始logits有限（约−34.4至44.9），mean/中心化也有限；只有25个padding位置的logsumexp乘mask产生NaN。原因是旧实现先把padding logits置0，FP16下对152064个exp(0)求和溢出，再用0乘inf。CPU复现了相同问题，BF16则不溢出。它不是普通有效上下文上的teacher崩溃，也不证明旧BF16训练因此失败。
+
+独立恢复版fp16_mask_entry.py只将next_state_value乘mask替换为torch.where选择0，保留所有有效位置的旧FP16计算、旧padding whitening和119更新计数。CPU验证有效行逐值相同；新GPU四标签完成3次真实更新，已进入原teacher120标签正式训练。该配对准确名称是“FP16 teacher＋NaN安全padding屏蔽”，不是完全单变量；先原teacher后direct_protect，同起点/seed10/预算/评估片区。脚本fp16_mask_pair.py parent500024/worker2706962，gpu029完整持有，records fp16_mask_pair_r2_*.json，新的fp16_mask_r2_*标签。旧fp16_pair.py parent460379/worker2705998失败已处理，不可直接重启。
+
+原始诊断：[fp16_numerics](results/opd_corrected_20260911/fp16_numerics.json)。全部BF16teacher64评估已完成并保存：[BF16评估](results/opd_corrected_20260911/bf16_teacher64_complete.json)。这些仍是小样本诊断，不是防御联合成功。
