@@ -26,3 +26,7 @@ On original teacher CoTs, maintain the frozen teacher distribution and supervise
 `run_static_teacher_only.py --job9871084` runs a2-step smoke including anti loss and own-policy update, then64-step training from original weights. Teacher subprocess environment strips PROXY and INTERNAL_* variables. Evaluate teacher on old/new200 greedy/sampling, requiring point estimates of no greedy loss and at most1pp sampling loss. Only if those pass, run a separate full-student correctedFKL120 evaluation with matched original-teacher references. Student evaluation cannot change the already-exported teacher.
 
 The corpus currently contains one offline negative generator. The objective does not reference its parameters, but broader negative-CoT sources and external student transfer still need empirical testing.
+
+## Current iteration, 11:55 ET
+
+First top32 trial completed but greedy fell1pp/2.5pp on old/new200, so no student experiment ran. New independent train_static_top2.py/run_static_top2.py starts from original teacher, uses top2 swap and anchor8, and obeys the same boundary. If teacher preservation passes, external evaluation now uses the successful shortSFT correctedMiniLLM baseline, fixed120 updates chosen from clean validation, rather than fullSFT FKL. This changes evaluation protocol only; no student model or outcome enters teacher training. Sources and results of the first trial are preserved.
