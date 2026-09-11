@@ -7,19 +7,19 @@ def read(path):
 def lines(path):
     return [json.loads(s) for s in path.read_text().splitlines() if s.strip()] if path.exists() else []
 report={'time':time.time(),'arms':{}}
-for arm in ['smoke','directional','preservation_control']:
+for arm in ['smoke','directional','preservation_control','strong_smoke','strong_rank']:
     manifest=read(root/arm/'manifest.json');training=lines(root/arm/'training.jsonl')
     data={'manifest':{k:manifest[k] for k in ['start','end','complete','error','completed_steps','trainable_parameters',
-        'proxy_trainable_parameters','merge_check','fd_check','code_sha256'] if k in manifest}}
+        'proxy_trainable_parameters','merge_check','fd_check','permutation_check','code_sha256'] if k in manifest}}
     if training:
         data['last_update']=training[-1]
-        keys=['proxy_answer_gain','proxy_kl','answer_ce','own_anchor_kl','alignment_selected','alignment_selected_after','correct','cap_rate']
+        keys=['proxy_answer_gain','proxy_kl','answer_ce','own_answer_ce','live_answer_ce','own_anchor_kl','alignment_selected','alignment_selected_after','target_kl','target_kl_after','correct','cap_rate']
         data['means']={key:sum(r[key] for r in training if key in r)/sum(key in r for r in training) for key in keys if any(key in r for r in training)}
         data['teacher_reward_varying_groups']=sum(r['reward_std']>1e-6 for r in training)
         data['active_anti_updates']=sum(r.get('anti_weight',0)>0 and r.get('active_positions',0)>0 for r in training)
     queue=read(root/(arm+'_queue.json'))
     if queue:data['queue']=queue
-    log=root/('smoke.log' if arm=='smoke' else arm+'_'+queue.get('phase','train')+'.log')
+    log=root/(arm+'.log' if arm.endswith('smoke') else arm+'_'+queue.get('phase','train')+'.log')
     if log.exists():
         tail=log.read_text()[-12000:].splitlines()
         data['log_errors']=[s for s in tail if any(w in s for w in ['Traceback','Error:','AssertionError','CUDA out of memory'])][-5:]
