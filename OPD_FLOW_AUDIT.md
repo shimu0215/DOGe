@@ -54,3 +54,5 @@
 在数值与更新链路通过后，先用基础 on-policy forward KL 或逐 token reverse-KL 参照建立正对照；按实际更新次数/有效生成token预算对齐，再验证防御。若这些也不增益，再研究学习率、预算、截断、teacher与SFT来源；不通过挑选测试片区制造提升。
 
 特别记录：新 baseline train7000:7128验证片区原始与完整SFT都为64.0625%，不同于旧test200的40.5→50.5。不能把该验证集的绝对45%当成“测试降到45%”的等价标准；后续弱SFT选择应看同片区相对增益或比较1/2epoch两个起点。
+
+Update02:31ET: 新双卡9800275/gpu001已获批到10:25:45ET，审计已从等待gpu029迁移到这里；旧等待338766停止并标记moved_to_gpu001，不是实验失败。原queue.py与标准库冲突造成首次新worker导入失败，已重命名audit_waiter.py并用gpu001_recovery.py独立r2标签恢复；原失败日志保留。并行另一张卡实际评估original/full/KL/direct两组teacher的BF16 greedy/普通/raw64题，与对应FP16及原始BF16配对。7卡现均分配给工作，启动校验见最新运行记录。
