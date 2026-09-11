@@ -67,7 +67,7 @@ def main():
             if r['example_id'] not in answers or r['source']=='teacher_greedy':answers[r['example_id']]=r
     eligible=[i for i in train if i in answers]
     assert len(eligible)>64
-    manifest=dict(vars(a),start=started,algorithm='on-policy outcome RL plus final-answer CE and original-teacher trajectory KL; optional sparse finite-difference one-step reverse-KL learning alignment; live LoRA proxy generates and updates each iteration',
+    manifest=dict(vars(a),start=started,algorithm='on-policy outcome RL plus own-trace/live-prefix answer CE and original-teacher trajectory KL; optional sparse finite-difference one-step reverse-KL learning alignment on live-prefix numeric-answer loss; live LoRA proxy generates and updates each iteration',
         inference_external_components=False,source_label_in_input=False,proxy_only_during_training=True,
         process_objective='Minimize hinge of normalized dot(grad_proxy_correct_answer_CE, grad_proxy_reverse_KL) at top4 process positions. Central finite differences of live-proxy LoRA along normalized answer gradient. One-step local approximation, NOT full OPD meta-gradient.',
         process_mask='response offsets >=32 and before first final-answer marker with8-token margin; absent marker excludeslast32tokens; special IDs excluded',
@@ -78,7 +78,7 @@ def main():
         context_sha256=hashlib.sha256((context/'rollouts.jsonl').read_bytes()).hexdigest(),
         prompt_sha256=cm['prompt_sha256'],code_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         outcome_reward='1 for correct complete numeric boxed answer in generated continuation AND terminated; otherwise0, minus0.1 for cap or excessive repetition',
-        outcome_sources='alternating full question and prefix from freshly generated live proxy; both reward correct final answer; gold CE uses a separate verified-correct teacher trace of the same TRAIN question',
+        outcome_sources='alternating full question and prefix from freshly generated live proxy; both reward correct final answer; gold CE averages verified-correct teacher answer region and numeric answer after live-proxy process prefix',
         generation=dict(temperature=1.,top_p=1.,top_k=0,repetition_penalty=1.,max_new_tokens=a.max_new_tokens))
     dump(out/'manifest.json',manifest)
     base=AutoModelForCausalLM.from_pretrained(a.teacher,torch_dtype=torch.float16,
@@ -142,6 +142,18 @@ def main():
         targets=torch.tensor([response[j] for j in chosen],device='cuda')
         return -lp.gather(-1,targets[:,None]).mean()
 
+    def live_answer_loss(which,row):
+        # Do not reveal a correct teacher derivation when measuring proxy learning.
+        # Supervise only numeric answer tokens, not nearly deterministic box/EOS syntax.
+        prefix=row['prompt_ids']+row['response_ids'][:row['process_end']]
+        prefix+=tok.encode('\n\nFinal answer: \\boxed{',add_special_tokens=False)
+        answer=tok.encode(str(gold(row['gold'])),add_special_tokens=False)
+        assert answer and not set(answer)&set(tok.all_special_ids)
+        ids=torch.tensor([prefix+answer],device='cuda')
+        lp=selected_logp(which,ids,list(range(len(prefix)-1,len(prefix)+len(answer)-1)))
+        targets=torch.tensor(answer,device='cuda')
+        return -lp.gather(-1,targets[:,None]).mean()
+
     @torch.no_grad()
     def fresh_proxy(row,seed):
         proxy.eval();torch.manual_seed(seed)
@@ -163,7 +175,7 @@ def main():
         ids=torch.tensor([row['prompt_ids']+row['response_ids'][:chosen[-1]+1]],device='cuda')
         indices=[len(row['prompt_ids'])-1+j for j in chosen]
         proxy.eval();proxy_optimizer.zero_grad(set_to_none=True)
-        answer=answer_loss(proxy_base,row['example_id'])
+        answer=live_answer_loss(proxy_base,row)
         gradients=torch.autograd.grad(answer,proxy_params)
         norm=torch.stack([g.square().sum() for g in gradients]).sum().sqrt()
         assert torch.isfinite(norm) and norm>0
@@ -219,7 +231,7 @@ def main():
         ids=torch.tensor([row['prompt_ids']+row['response_ids'][:chosen[-1]+1]],device='cuda')
         indices=[len(row['prompt_ids'])-1+j for j in chosen]
         with torch.no_grad():
-            before=float(answer_loss(proxy_base,row['example_id']))
+            before=float(live_answer_loss(proxy_base,row))
             target=selected_logp(base,ids,indices)[:,:proxy.config.vocab_size]
             target=target-target.logsumexp(-1,keepdim=True)
         proxy_optimizer.zero_grad(set_to_none=True)
@@ -228,7 +240,7 @@ def main():
         loss.backward()
         norm=torch.nn.utils.clip_grad_norm_(proxy_params,1.,error_if_nonfinite=True)
         proxy_optimizer.step();proxy_optimizer.zero_grad(set_to_none=True)
-        with torch.no_grad():after=float(answer_loss(proxy_base,row['example_id']))
+        with torch.no_grad():after=float(live_answer_loss(proxy_base,row))
         return dict(proxy_kl=float(loss.detach()),proxy_grad_norm=float(norm),proxy_answer_before=before,
             proxy_answer_after=after,proxy_answer_gain=before-after)
 
@@ -297,10 +309,12 @@ def main():
             proc_value=float(proc.detach())
             if weight:scaler.scale(weight*proc).backward()
             del proc
-        ce=answer_loss(base,row['example_id']);anchor=own_anchor(row['example_id'],a.seed+300000+step)
+        own_ce=answer_loss(base,row['example_id']);live_ce=live_answer_loss(base,row)
+        ce=.5*(own_ce+live_ce);anchor=own_anchor(row['example_id'],a.seed+300000+step)
         assert torch.isfinite(ce+anchor)
         scaler.scale(a.answer_weight*ce+a.anchor_weight*anchor).backward()
-        answer_ce=float(ce.detach());anchor_value=float(anchor.detach());del ce,anchor
+        own_answer_ce=float(own_ce.detach());live_answer_ce=float(live_ce.detach())
+        answer_ce=float(ce.detach());anchor_value=float(anchor.detach());del ce,anchor,own_ce,live_ce
         scaler.unscale_(optimizer)
         norm=torch.nn.utils.clip_grad_norm_(params,1.,error_if_nonfinite=True)
         before_scale=scaler.get_scale();scaler.step(optimizer);scaler.update()
@@ -311,7 +325,7 @@ def main():
             with torch.no_grad():_,post=direction_loss(cache)
             direction_stats['alignment_selected_after']=post['alignment_selected']
         del cache
-        stats=dict(step=step+1,anti_weight=weight,answer_ce=answer_ce,own_anchor_kl=anchor_value,**direction_stats,**proxy_stats,elapsed=time.time()-started,source=source,mean_reward=float(rewards.mean()),
+        stats=dict(step=step+1,anti_weight=weight,answer_ce=answer_ce,own_answer_ce=own_answer_ce,live_answer_ce=live_answer_ce,own_anchor_kl=anchor_value,**direction_stats,**proxy_stats,elapsed=time.time()-started,source=source,mean_reward=float(rewards.mean()),
             correct=sum(r['correct'] for r in records)/a.group,cap_rate=sum(r['cap'] for r in records)/a.group,
             reward_std=float(rewards.std(unbiased=False)),policy_loss=rl_total,reference_kl=kl_total,
             process_kl=proc_value,grad_norm=float(norm),max_gpu_gb=torch.cuda.max_memory_allocated()/1e9)
