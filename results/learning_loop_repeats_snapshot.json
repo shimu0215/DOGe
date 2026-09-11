@@ -1,0 +1,140 @@
+{
+  "time": 1789098529.601061,
+  "repeats": [
+    {
+      "path": "results/learning_loop_20260910/directional_repeat_queue.json",
+      "state": {
+        "start": 1789097548.2067153,
+        "driver_pid": 3745868,
+        "arm": "directional",
+        "job": "9801342",
+        "node": "gpu010",
+        "deadline": 1789117873,
+        "seeds": [
+          11,
+          12
+        ],
+        "completed_phases": [
+          "device_check"
+        ],
+        "results": {},
+        "phase": "opd_s11",
+        "allocation_check": {
+          "time": 1789097642.5853426,
+          "info": "JobId=9801342 JobName=hold-1gpu-8h-c4m32-g24-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=02:22:49 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:11:13 EndTime=2026-09-11T05:11:13 Deadline=N/A PreemptEligibleTime=2026-09-10T21:12:13 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:11:13 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4",
+          "active_steps": []
+        },
+        "command": [
+          "srun",
+          "--jobid=9801342",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
+          "--teacher",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/learning_loop_20260910/directional/model",
+          "--label",
+          "loop_directional_s11",
+          "--seed",
+          "11"
+        ],
+        "process_pid": 3755456
+      }
+    },
+    {
+      "path": "results/learning_loop_20260910/preservation_control_repeat_queue.json",
+      "state": {
+        "start": 1789097548.2083879,
+        "driver_pid": 3745869,
+        "arm": "preservation_control",
+        "job": "9795227",
+        "node": "gpu008",
+        "deadline": 1789106580,
+        "seeds": [
+          11,
+          12
+        ],
+        "completed_phases": [
+          "device_check"
+        ],
+        "results": {},
+        "phase": "opd_s11",
+        "allocation_check": {
+          "time": 1789098067.4262207,
+          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:38:07 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T18:01:31 EligibleTime=2026-09-10T18:01:31 AccrueTime=2026-09-10T18:01:31 StartTime=2026-09-10T18:03:00 EndTime=2026-09-11T02:03:00 Deadline=N/A PreemptEligibleTime=2026-09-10T18:04:00 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T18:03:00 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4",
+          "active_steps": []
+        },
+        "command": [
+          "srun",
+          "--jobid=9795227",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
+          "--teacher",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/learning_loop_20260910/preservation_control/model",
+          "--label",
+          "loop_preservation_control_s11",
+          "--seed",
+          "11"
+        ],
+        "process_pid": 3790958
+      }
+    },
+    {
+      "path": "results/learning_loop_20260910/strong_rank_repeat_queue.json",
+      "state": {
+        "start": 1789097548.2116263,
+        "driver_pid": 3745870,
+        "arm": "strong_rank",
+        "job": "9801341",
+        "node": "gpu019",
+        "deadline": 1789119739,
+        "seeds": [
+          11,
+          12
+        ],
+        "completed_phases": [
+          "device_check"
+        ],
+        "results": {},
+        "phase": "opd_s11",
+        "allocation_check": {
+          "time": 1789098185.5442915,
+          "info": "JobId=9801341 JobName=hold-1gpu-8h-c4m32-g24-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3600 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=02:00:46 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:42:19 EndTime=2026-09-11T05:42:19 Deadline=N/A PreemptEligibleTime=2026-09-10T21:43:19 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:42:19 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu019 BatchHost=gpu019 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4",
+          "active_steps": []
+        },
+        "command": [
+          "srun",
+          "--jobid=9801341",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
+          "--teacher",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/learning_loop_20260910/strong_rank/model",
+          "--label",
+          "loop_strong_rank_s11",
+          "--seed",
+          "11"
+        ],
+        "process_pid": 3801869
+      }
+    }
+  ]
+}

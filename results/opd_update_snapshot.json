@@ -1,0 +1,428 @@
+{
+  "time": 1789100173.219893,
+  "arms": {
+    "full_update_smoke": {
+      "manifest": {
+        "start": 1789100030.261533,
+        "end": 1789100128.642024,
+        "complete": true,
+        "completed_steps": 2,
+        "trainable_parameters": 5767168,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.0390625,
+          "mean_abs_logit_error": 0.006922262720763683,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999994039535522,
+            "relative_error": 0.0011180483270436525
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.00047308497596532106
+          }
+        },
+        "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
+      },
+      "last_update": {
+        "step": 2,
+        "anti_weight": 2,
+        "answer_ce": 1.6046861410140991,
+        "own_answer_ce": 0.00033023697324097157,
+        "live_answer_ce": 3.2090420722961426,
+        "own_anchor_kl": 9.028130079968832e-06,
+        "fixed_anchor_kl": 1.3431427525745221e-08,
+        "live_anchor_kl": 9.01469866221305e-06,
+        "alignment_total": 0.8054131865501404,
+        "alignment_pg": 0.29016193747520447,
+        "alignment_kl": 0.5152512788772583,
+        "chosen_offsets": [
+          123,
+          36,
+          118,
+          54
+        ],
+        "direction_scale": 0.03479401767253876,
+        "query_grad_norm": 21.977006912231445,
+        "alignment_after": 0.803371787071228,
+        "pg_after": 0.2894562780857086,
+        "kl_after": 0.513915479183197,
+        "proxy_opd_loss": 0.12230490148067474,
+        "proxy_grad_norm": 0.952580988407135,
+        "query_before": 6.895456790924072,
+        "query_after": 6.883244514465332,
+        "query_gain": 0.012212276458740234,
+        "query_example_ids": [
+          54,
+          310
+        ],
+        "proxy_predicted_gain": 0.012286259495026357,
+        "elapsed": 56.326475858688354,
+        "source": "proxy_prefix",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 3.2652169466018677e-06,
+        "process_kl": 0.825413167476654,
+        "grad_norm": 4.019375324249268,
+        "max_gpu_gb": 18.563785216
+      },
+      "means": {
+        "query_gain": 0.007167220115661621,
+        "proxy_predicted_gain": 0.007206322652282964,
+        "query_before": 4.9746994972229,
+        "query_grad_norm": 15.796588897705078,
+        "alignment_after": 0.569463923573494,
+        "pg_after": 0.17395242117345333,
+        "kl_after": 0.3955114781856537,
+        "fixed_anchor_kl": 6.7157137628726105e-09,
+        "live_anchor_kl": 4.507349331106525e-06,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 2,
+      "log_errors": [],
+      "last_log_progress": "self_attn.v_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.self_attn.o_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.self_attn.o_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_B.default.weight\"], \"gradient_scaling\": {\"init_scale\": 128.0, \"growth_interval\": 100000, \"nonfinite_gradients_fatal\": true}, \"fd_check\": {\"c\": {\"cosine\": 0.9999994039535522, \"relative_error\": 0.0011180483270436525}, \"d\": {\"cosine\": 0.9999998807907104, \"relative_error\": 0.00047308497596532106}}, \"completed_steps\": 2, \"merge_check\": {\"max_abs_logit_error\": 0.0390625, \"mean_abs_logit_error\": 0.006922262720763683, \"argmax_equal\": true}, \"complete\": true, \"end\": 1789100128.642024, \"plain_model_path\": \"/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/full_update_smoke/model\"}"
+    },
+    "control_smoke": {
+      "manifest": {
+        "start": 1789100019.9549506,
+        "end": 1789100141.9124699,
+        "complete": true,
+        "completed_steps": 2,
+        "trainable_parameters": 5767168,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.04296875,
+          "mean_abs_logit_error": 0.006834330037236214,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999994039535522,
+            "relative_error": 0.0011180483270436525
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.00047308497596532106
+          }
+        },
+        "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
+      },
+      "last_update": {
+        "step": 2,
+        "anti_weight": 0,
+        "answer_ce": 1.604961633682251,
+        "own_answer_ce": 0.0003302220720797777,
+        "live_answer_ce": 3.2095930576324463,
+        "own_anchor_kl": 4.657426870835479e-06,
+        "fixed_anchor_kl": 5.380142109601138e-09,
+        "live_anchor_kl": 4.652046754927142e-06,
+        "alignment_total": 0.8055688142776489,
+        "alignment_pg": 0.2899406850337982,
+        "alignment_kl": 0.5156281590461731,
+        "chosen_offsets": [
+          123,
+          36,
+          118,
+          54
+        ],
+        "direction_scale": 0.03479580581188202,
+        "query_grad_norm": 21.976890563964844,
+        "alignment_after": 0.8053300976753235,
+        "pg_after": 0.2899309992790222,
+        "kl_after": 0.515399158000946,
+        "proxy_opd_loss": 0.12203840911388397,
+        "proxy_grad_norm": 0.9541718363761902,
+        "query_before": 6.895464897155762,
+        "query_after": 6.883221626281738,
+        "query_gain": 0.012243270874023438,
+        "query_example_ids": [
+          54,
+          310
+        ],
+        "proxy_predicted_gain": 0.012316777099977116,
+        "elapsed": 78.94879078865051,
+        "source": "proxy_prefix",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 1.316075213253498e-06,
+        "process_kl": 0.8255687952041626,
+        "grad_norm": 2.022087812423706,
+        "max_gpu_gb": 18.563785216
+      },
+      "means": {
+        "query_gain": 0.007179141044616699,
+        "proxy_predicted_gain": 0.007219582171560112,
+        "query_before": 4.974703550338745,
+        "query_grad_norm": 15.796530723571777,
+        "alignment_after": 0.5701275914907455,
+        "pg_after": 0.1739121712744236,
+        "kl_after": 0.39621545374393463,
+        "fixed_anchor_kl": 2.690071054800569e-09,
+        "live_anchor_kl": 2.326023377463571e-06,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 0,
+      "log_errors": [],
+      "last_log_progress": "7.self_attn.v_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.self_attn.o_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.self_attn.o_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_B.default.weight\"], \"gradient_scaling\": {\"init_scale\": 128.0, \"growth_interval\": 100000, \"nonfinite_gradients_fatal\": true}, \"fd_check\": {\"c\": {\"cosine\": 0.9999994039535522, \"relative_error\": 0.0011180483270436525}, \"d\": {\"cosine\": 0.9999998807907104, \"relative_error\": 0.00047308497596532106}}, \"completed_steps\": 2, \"merge_check\": {\"max_abs_logit_error\": 0.04296875, \"mean_abs_logit_error\": 0.006834330037236214, \"argmax_equal\": true}, \"complete\": true, \"end\": 1789100141.9124699, \"plain_model_path\": \"/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control_smoke/model\"}"
+    },
+    "rank_live_smoke": {
+      "manifest": {
+        "start": 1789100018.9280987,
+        "end": 1789100137.9171073,
+        "complete": true,
+        "completed_steps": 2,
+        "trainable_parameters": 5767168,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.048828125,
+          "mean_abs_logit_error": 0.0085139786824584,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999994039535522,
+            "relative_error": 0.0011180483270436525
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.00047308497596532106
+          }
+        },
+        "permutation_check": {
+          "partition_error": 1.9073486328125e-06,
+          "entropy_error": 2.2351741790771484e-07,
+          "protected_error": 0
+        },
+        "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
+      },
+      "last_update": {
+        "step": 2,
+        "anti_weight": 2,
+        "answer_ce": 1.6007888317108154,
+        "own_answer_ce": 0.00033023697324097157,
+        "live_answer_ce": 3.201247453689575,
+        "own_anchor_kl": 5.941176823398564e-06,
+        "fixed_anchor_kl": 1.089974034584884e-06,
+        "live_anchor_kl": 4.851202902500518e-06,
+        "target_kl": 28.736328125,
+        "chosen_offsets": [
+          62,
+          133,
+          143,
+          60
+        ],
+        "alignment_after": 0.8060932755470276,
+        "pg_after": 0.2899497151374817,
+        "kl_after": 0.5161435604095459,
+        "proxy_opd_loss": 0.12209150195121765,
+        "proxy_grad_norm": 0.9548856616020203,
+        "query_before": 6.895463466644287,
+        "query_after": 6.883213520050049,
+        "query_gain": 0.012249946594238281,
+        "query_example_ids": [
+          54,
+          310
+        ],
+        "proxy_predicted_gain": 0.012329791742282197,
+        "elapsed": 76.7295196056366,
+        "source": "proxy_prefix",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 2.129119820892811e-06,
+        "process_kl": 28.736328125,
+        "grad_norm": 45.573753356933594,
+        "max_gpu_gb": 18.563785216
+      },
+      "means": {
+        "query_gain": 0.007184743881225586,
+        "proxy_predicted_gain": 0.007227860672779461,
+        "query_before": 4.974702835083008,
+        "alignment_after": 0.5707886815071106,
+        "pg_after": 0.1739794872701168,
+        "kl_after": 0.3968091905117035,
+        "fixed_anchor_kl": 5.44987017292442e-07,
+        "live_anchor_kl": 2.425601451250259e-06,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 2,
+      "log_errors": [],
+      "last_log_progress": ".model.model.layers.27.self_attn.o_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_B.default.weight\"], \"gradient_scaling\": {\"init_scale\": 128.0, \"growth_interval\": 100000, \"nonfinite_gradients_fatal\": true}, \"fd_check\": {\"c\": {\"cosine\": 0.9999994039535522, \"relative_error\": 0.0011180483270436525}, \"d\": {\"cosine\": 0.9999998807907104, \"relative_error\": 0.00047308497596532106}}, \"permutation_check\": {\"partition_error\": 1.9073486328125e-06, \"entropy_error\": 2.2351741790771484e-07, \"protected_error\": 0.0}, \"completed_steps\": 2, \"merge_check\": {\"max_abs_logit_error\": 0.048828125, \"mean_abs_logit_error\": 0.0085139786824584, \"argmax_equal\": true}, \"complete\": true, \"end\": 1789100137.9171073, \"plain_model_path\": \"/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/rank_live_smoke/model\"}"
+    },
+    "full_update": {
+      "manifest": {},
+      "queue": {
+        "start": 1789100000.6102502,
+        "driver_pid": 3977634,
+        "job": "9801342",
+        "node": "gpu010",
+        "deadline": 1789117873,
+        "arm": "full_update",
+        "steps": 64,
+        "completed_phases": [
+          "device_check",
+          "smoke"
+        ],
+        "allocation_check": {
+          "time": 1789100162.886112,
+          "info": "JobId=9801342 JobName=hold-1gpu-8h-c4m32-g24-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:04:49 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:11:13 EndTime=2026-09-11T05:11:13 Deadline=N/A PreemptEligibleTime=2026-09-10T21:12:13 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:11:13 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "phase": "train",
+        "command": [
+          "srun",
+          "--jobid=9801342",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train.py",
+          "--arm",
+          "full_update",
+          "--teacher",
+          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+          "--proxy",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+          "--context",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/full_update",
+          "--steps",
+          "64",
+          "--process-weight",
+          "2",
+          "--max-seconds",
+          "3600"
+        ],
+        "process_pid": 3997102
+      },
+      "log_errors": []
+    },
+    "control": {
+      "manifest": {
+        "start": 1789100163.7599359,
+        "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
+      },
+      "queue": {
+        "start": 1789100000.6091425,
+        "driver_pid": 3977635,
+        "job": "9795227",
+        "node": "gpu008",
+        "deadline": 1789106580,
+        "arm": "control",
+        "steps": 64,
+        "completed_phases": [
+          "device_check",
+          "smoke"
+        ],
+        "allocation_check": {
+          "time": 1789100144.3882442,
+          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:12:44 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T18:01:31 EligibleTime=2026-09-10T18:01:31 AccrueTime=2026-09-10T18:01:31 StartTime=2026-09-10T18:03:00 EndTime=2026-09-11T02:03:00 Deadline=N/A PreemptEligibleTime=2026-09-10T18:04:00 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T18:03:00 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "phase": "train",
+        "command": [
+          "srun",
+          "--jobid=9795227",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train.py",
+          "--arm",
+          "control",
+          "--teacher",
+          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+          "--proxy",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+          "--context",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control",
+          "--steps",
+          "64",
+          "--process-weight",
+          "0",
+          "--max-seconds",
+          "3600"
+        ],
+        "process_pid": 3996254
+      },
+      "log_errors": []
+    },
+    "rank_live": {
+      "manifest": {},
+      "queue": {
+        "start": 1789100000.6042442,
+        "driver_pid": 3977636,
+        "job": "9801341",
+        "node": "gpu019",
+        "deadline": 1789119739,
+        "arm": "rank_live",
+        "steps": 64,
+        "completed_phases": [
+          "device_check",
+          "smoke"
+        ],
+        "allocation_check": {
+          "time": 1789100169.4695573,
+          "info": "JobId=9801341 JobName=hold-1gpu-8h-c4m32-g24-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3600 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=02:33:50 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:42:19 EndTime=2026-09-11T05:42:19 Deadline=N/A PreemptEligibleTime=2026-09-10T21:43:19 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:42:19 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu019 BatchHost=gpu019 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "phase": "train",
+        "command": [
+          "srun",
+          "--jobid=9801341",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train.py",
+          "--arm",
+          "rank_live",
+          "--teacher",
+          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+          "--proxy",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+          "--context",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/rank_live",
+          "--steps",
+          "64",
+          "--process-weight",
+          "2",
+          "--max-seconds",
+          "3600"
+        ],
+        "process_pid": 3997761
+      },
+      "log_errors": []
+    }
+  }
+}

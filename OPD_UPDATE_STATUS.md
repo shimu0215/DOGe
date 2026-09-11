@@ -1,0 +1,21 @@
+# Active first-PPO-update pilot, Sep11
+
+User approved the three new arms after cancelling ineffective seed repeats. See OPD_UPDATE_DESIGN.md. Do NOT restart old repeat_seeds.py; its seed11 runs intentionally stopped and seed12 cancelled.
+
+SSH PTY78373 onhopper2, remote cwd /scratch/wzhao20/opd-gate-audit-run-20260909. Existing exports PY/TEACHER/PROXY/EXAMPLES/HF cache unchanged. Every srunstdinDEVNULL. Announce exactremotecommands beforeexecuting. Localworktree /Users/shimu/Downloads/opd-gate-audit-20260909. Code37ed8b4pushed/pulled; active train.pyhash inmanifest. Never editactivefiles or auditedsharedOPD code.
+
+Resources: full_update on9801342/gpu010 deadline05:11:13ET; control on9795227/gpu008 deadline02:03ET; rank_live on9801341/gpu019 deadline05:42:19ET. All1A10080GB,4CPU32GBhostRAM. Three2GPUreservations9796494/9800274/9800275stillpendinglastcheck. Continueperiodicinventory/autoassignnewlyawardedidleGPUs; no newreservations, extensions or cancellationsofusableallocations.
+
+NEWQUEUES alreadylaunched: full_updatePID3977634,control3977635,rank_live3977636. Commands nohup "$PY" experiments/opd_update_20260911/run_pilot.py --arm {arm}; parents log results/opd_update_20260911/{arm}_pipeline.log. DoNOTduplicate. Queue {arm}_queue.json. Initialdevicecheck then2stepsmokeperarm; allthree smoke manifests mustcomplete beforeany formaltrain64. Formalsmokeoutput{arm}_smoke; formal{arm}/model. DevicecheckenforcesallocatedsingleGPUfree; resource/node/deadlinecheckedbeforeeachstage. GPU numerical/merge checks tofollow.
+
+Readcompact: python3 experiments/opd_update_20260911/progress.py. Stageorder devicecheck,smoke,waitallsmokes,train64,teacher64,OPD120seed10,teacher200,studentextra200,teacherextra200 asdeadlineallows. Ifteacher64greedy/ordinarysamplingdrop>6.25pp, candidate screened_out beforeOPD. This is earlyrejection only, notsuccess/noninferiority. No automaticseedrepeats. Outputsupdate_{arm}_s10_* underresults/internalize; ports30203full/30201control/30205rank. Oldrun_opd.py/.sh/sharedMiniLLM unchanged.
+
+Mathcheck check_shared.pyPASS onHopperCPU: extractedshared _get_advantages_and_returns and_pg_loss match newimplementation, exacttoyfirst-PPO+KLgradientalignment/mixedteacherderivative andindependentquestionTaylor-signPASS. Sharedlosshashaa0667583d0643ed94bb1a6ae0f3c6c4bb99f990517442a9a9c318fd84e425a6. GPUchecksnotyetconfirmedatqueuelaunch.
+
+Coreconstraints: onetrainingproxytrajectory/iteration, fullresponsePPOplusconditionalKL, oldstudent/rewardfixedforstudentgradient,teacheroutergradientthroughreward/returns/whitening; proxyLoRASGDnotfullweightAdam/8rolloutOPD. Q=numericanswerCEontwoOTHERtrainingquestionswithoutCoT; likelihoodsurrogate,notsampledaccuracy. hcentralFD±.05checkedhalfstep. Meta teachergrad4middlepositionschosenbycombinedsensitivity;ranktargetonlyoriginalteacher. Teacher last4LoRAr16a32 mergedordinaryFP16. SharedoutcomeRL+answerCE+fixedanchor1+currentownanchor1; currentownanchorsalternateoriginalquestionraw/ordinarysampling. All64updates,antiweight0first8ramp2by32,control0. Samplingpreservationunprovenuntilactualeval.
+
+Noefficacyresultsforthisnewpilotyet. Oldprimaryseed10completedbutfailedjointobjective; oldreportsremainhistorical. Both200questionslicespreviouslyused. Userprioritizesnewmechanismswhenfirstseedfails; repeatonlyafterworthwhilejointfirstseedresult. HeartbeatmustreadTHISstatus+design, notmistakeoldcompletedqueueforactivework.
+
+00:15 ET smoke firstupdate all3PASS:18.564GBpeak,finitegradientFDcos(c).9999994/reldiff.001118,cos(d).9999999/reldiff.000473. QindependenttwoquestionsCE3.05394 (nontrivial); fullupdatepredictedgain.00212639,actual.00212216. These verifylocalupdateidentity, NOTsuccessfulsuppression. Allstillstep2/mergepending,noerrors. Activecodehash28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf.
+
+00:16 ET ALL3SMOKES COMPLETE2steps+plainmerge. fullmaxlogitmerge.0390625/mean.006922;control.04296875/.006834;rank.048828125/.008514;argmaxsameall. FDchecksPASS,c/rankpartitionchecksPASS,18.564GBpeak. Step2fullactualQgain.0122123 vsTaylorpred.0122863 (~0.6%difference); checkonlynotdefenseevidence. Allthreequeues autoadvancedformaltrain64: fullsr3997102,control3996254,ranksr3997761, noerrors; modelinitialload/firstupdatespendingverification. Parents3977634/35/36same.
