@@ -27,3 +27,5 @@ CurrentonlyCPUpreflightandwaitingdriververified. ActualbaselineGPUtraininghasnot
 04:22ET：corrected完整SFT FKL240实验整条完成，val12057.8125/24059.375 vs64.0625；按验证选240，oldtest20045.5 vsSFT50.5（−5pp，20wrong→right/30reverse，paired95CI−12至2），未修改teacher本身导致退化，不能算防御成功。新gpu012两卡获批到12:12:15，总11GPU无pending。独立RKL/即时PG基础控制各lr5e-6/480真实更新，同完整SFT起点；无未来reward累加/无whitening/无复合loss，源自经典条件RKL及TML逐token机制，不宣称完全复刻整个trainer。解析梯度与padding检查PASS，新卡烟测待完成。另gpu001空卡接strongrank teacher与修正MiniLLM240的120/240配对，保持基线和防御参数严格相同。
 
 04:31ET弱SFT线索：checkpoint49起点同train12856.25%，旧OPD12057.03125、24064.84375。240增益8.59375pp，19纠正/8退化，paired95CI[.78125,16.40625]（探索选择后不作为确认显著性），按既定规则在test1000:1200确认中。不能转换成oldtest45→50，也不能与raw/full同片64.0625忽略比较。GPU029之后将用强排序teacher做同弱起点/同legacy240协议配对，并补BF16teacher自身200，脚本short_rank_defense.py parent793975等当前FP16pair整条结束。
+
+04:49ET新片确认seed10：test1000:1200初始shortSFT41%，OPD240后47%，+6pp，30纠正/18退化，paired95CI[−.5,12.5]，p=.1114。validation与新片同方向但稳定性未确认，已按预设启动short_lr1e6_s11。raw/fullSFT在此新片锚点待GPU019末段预算允许补测；不能假设短SFT41%仍优于raw。

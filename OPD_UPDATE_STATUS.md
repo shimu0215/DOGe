@@ -112,3 +112,5 @@ Full FKL240已完成：val12057.8125/24059.375 vs64.0625，无增益，正在sel
 
 04:47ET：弱SFT baseline在新test1000:1200从41→47，+6pp，30纠正/18退化，paired95CI[−.5,12.5]，p=.1114；第一种子在验证/新片同方向，但仍非稳定确认。GPU023已自动short_lr1e6_s11，只此预设确认，不是复活旧失败防御seed。direct_fkl actualFKL120old20045%，matchedclean12047.5%、SFT50.5，额外−2.5pp（CI−9至4），vsSFT−5.5（CI−12至1）；点估计达到半SFT增益抹除，但原clean自身退化且teacher200未完，不能称联合成功。direct_fkl和strongrank均teacher200中，其他卡busy。
 新增finish_evaluations.py接续gpu010/gpu019各原pipeline完整结束，按原剩余时限决定短评估，无新预约。GPU010优先raw_test600_reference200补扩展片raw锚点，再strongrank BF16teacher64 g/s/raw与已有originalBF16配对。GPU019优先同FKL120clean/defense extra600各200（成对需>=1200s），再raw_test1000_reference与full_sft_test1000_reference各200补新片SFT增益解释。所有输出在results/opd_update_20260911，新独立标签，不与其它pipeline写入冲突；等待/预检/skip均记录，待启动。
+
+04:49ET末段接续核实：finish_evaluations --node gpu010/gpu019 parents851266/851267，两个records分别waiting_direct_rank_strong/waiting_direct_fkl，尚不占卡，原截止保持。6cd995d推拉一致，heartbeat重写为精简当前ownership及结果，已ACTIVE。弱SFT新test41→47且baseline专卡种子11在跑；direct_fkl old45 vsmatched47.5的额外−2.5仍不确定，不能将原clean退化冒充防御效果。
