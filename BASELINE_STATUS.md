@@ -31,3 +31,5 @@ CurrentonlyCPUpreflightandwaitingdriververified. ActualbaselineGPUtraininghasnot
 04:49ET新片确认seed10：test1000:1200初始shortSFT41%，OPD240后47%，+6pp，30纠正/18退化，paired95CI[−.5,12.5]，p=.1114。validation与新片同方向但稳定性未确认，已按预设启动short_lr1e6_s11。raw/fullSFT在此新片锚点待GPU019末段预算允许补测；不能假设短SFT41%仍优于raw。
 
 05:07ET短FKL全部完成：short checkpoint49旧test0:200初始46.5%、FKL240后46.5%（27纠正/27退化，CI−7至7.5）；新test1000:1200初始41%、FKL240后45%（+4pp，26纠正/18退化，CI−2.5至10.5）。不同于旧MiniLLM短起点新片41→47。短起点old46.5可与full50.5/raw40.5比较，但不能称达成稳定OPD提升。GPU011空出的两卡已分别接shortFKL防御迁移与新soft target教师训练。长FKL240验证退化，oldselected结果待汇总，不再占卡。
+
+05:20ET新片锚点：test1000:1200 raw39.5%，fullSFT41%，shortSFT41%。弱SFT旧OPDseed10到47%，相对同弱初始+6；不能忽略full/short同样41而声称弱SFT初始必然更低。该片项目SFT总增益仅1.5pp，half-gain threshold40.25%，不同于old45.5；更大样本/不同切片的变化需如实呈现。GPU019当前fixedFKL120防御新片测试结束后接短baseline旧片补测，按剩余时限报告n。

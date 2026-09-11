@@ -127,3 +127,5 @@ short_fkl_defense parent891831已启动，待烟测核实；两GPU011任务相�
 重要新结果：direct_fkl actualFKL120额外600学生40.5 vsmatchedclean46.5，−6pp（15纠正/27退化，CI−12.5至.5）；与old45/clean47.5合并400 candidate42.75 vsclean47，−4.25pp，raw同两片42.75、SFT50.25。点估计回到项目SFT前，但single-seed/探索多次且clean自身退化，不称联合可靠成功。GPU019 finish整条complete并释放，原截止05:42尚约27min，准备fkl_newslice.py固定候选在test1000:1200比较同clean120/candidate120各200，配raw/fullSFT新片锚点；若有>=900sec再original/defense teacher新片64 g/s。该片已用于其它baseline，不冒充整个研究未触碰的holdout。待启动，raw/full新片参考分数待读取。
 
 05:18ET：fkl_newslice parent944207/worker230099已占gpu019（前finish确认完整结束且无active steps），phase clean_student。old+extra400严格配对vsclean −4.25pp，34纠正/51退化，CI[−8.75,.25625]、p=.08205；不是正式确认显著性。新片raw39.5/fullSFT41/shortSFT41；新片fullSFT半增益目标40.25，不用old45.5。准备short_old_followup.py等fkl_newslice整条结束后接同GPU019原05:42截止，补short legacy seed10 final240旧test，按余时200/64/32题并与同初始对应题配对，明确样本数不混用；无新训练/不抢现有pipeline，待排。
+
+05:20ET后继已启动：short_old_followup parent954121等待fkl_newslice完整结束，不另插GPU019。fkl_newslice parent944207/worker230099此前clean_student已核实，代码2dc799e推拉一致。heartbeat已更新为10GPU（GPU010正常到期且全部诊断保存完整）及direct_fkl pooled42.75点估计/宽区间；后续优先新片结果与训练中的dense/soften及其他配对。
