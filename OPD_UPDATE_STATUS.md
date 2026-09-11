@@ -66,3 +66,6 @@ Update02:48ET: 真GPU OPD审计完成，确有master与BF16权重更新；实际
 02:43左右direct_protect/direct_gentle旧实际OPD89/87标签，direct_rank40/64，dense学生old52/extra50%，在teacherextra；未达压制要求。02:47 dedicatedbaseline完整SFT240标签lr1e-6已171标签，原/full同train验证128皆64.0625%。账户仍7GPU运行+9796494/9800274两个双卡pending，剩余截止不变。新的OPD对照优先用于确定有效学习链路，再进行同协议的clean/防御比较。
 
 02:52ET：修正MiniLLM四次实际更新烟测PASS，teacher对象FP16、studentBF16、masterFP32且deltaRMS1.12e-6；已自动开始minillm_clean240_s10（worker350340/child350613）。PG标量在刚采样batch接近0是有效token中心化的正常现象，不等于其梯度为0。forwardKL仍独占排队等待旧BF16eval，尚未运行烟测，不提前报告通过。原始GPU审计两个JSON已同步保存。
+
+02:54ET：新增单变量teacher精度配对接续已排，fp16_pair.py parent460379，fp16_pair_queue.json等待dense完整pipeline，专用9817268/gpu029剩余到09:01:31。旧loss/计数/lr5e-7/120标签保留，唯一干预为teacherFP16；4标签烟测后原teacher和direct_protect各120标签119实际更新，同旧/extra200与精度匹配clean比较。避免把打包修正240的影响归因于精度。e54d02e推拉一致，活动共享代码未改。旧审计JSON远端内容等值确认后保留remote-original副本并跟踪保存。gpu029现在有此明确后继，勿另插任务。
+新MiniLLM正式14/240更新，无错误；FKL等待BF16评估最后gentle。已完成original/full/KL/protect BF16teacher64的g/s/raw分别92.1875/90.625/85.9375、92.1875/90.625/87.5、93.75/90.625/89.0625、92.1875/90.625/89.0625%。小样本仅粗筛。direct_rank已进teacher64；账户7GPU运行+2双卡pending不变。
