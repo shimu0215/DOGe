@@ -7,7 +7,7 @@ def read(path):
 def lines(path):
     return [json.loads(s) for s in path.read_text().splitlines() if s.strip()] if path.exists() else []
 report={'time':time.time(),'arms':{}}
-for arm in ['full_update_smoke','control_smoke','rank_live_smoke','full_update','control','rank_live']:
+for arm in ['full_update_smoke','control_smoke','rank_live_smoke','full_update','control','rank_live','kl_only_smoke','kl_only']:
     manifest=read(root/arm/'manifest.json');training=lines(root/arm/'training.jsonl')
     data={'manifest':{k:manifest[k] for k in ['start','end','complete','error','completed_steps','trainable_parameters',
         'proxy_trainable_parameters','merge_check','fd_check','permutation_check','code_sha256'] if k in manifest}}
