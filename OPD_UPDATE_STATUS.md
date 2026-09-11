@@ -107,3 +107,5 @@ Full FKL240已完成：val12057.8125/24059.375 vs64.0625，无增益，正在sel
 新gpu012 RKL/PG4更新烟测均PASS，正式22/24；rank_minillm22/240，highlr84/480，shortFKL232/long184，direct_fkl_dense59/128。FP16pair protectold20049.5=同精度clean49.5，pairedCI约−4.51至5，无压制；现extra600最后阶段。11卡busy，无pending/错误。
 
 04:31ET接续排队核实：short_rank_defense parent793975记录waiting_fp16_pair_complete，无错误，尚未占GPU029；原pair正在extra600末阶段，禁止另插接续。新基线short首次test1000初始模型仍评估中，无确认结论。a7c6997代码推拉一致，heartbeat已更新为11GPU ownership与此后继，所有卡busy无新故障。
+
+04:39ET：FP16safe pair整个完成，protect studentold49.5/extra47.5 vs同精度clean49.5/52；400合并48.5 vs50.75，−2.25pp，19wrong→right/28reverse，paired95CI[−5.75,1]，p=.24296。仅探索小幅差异，未满足目标/不足可靠压制证据。原始远端fp16_mask_pair_pooled.json，本地另名fp16_mask_pair_pooled_snapshot.json避免git未跟踪冲突。GPU029 short_rank_defense已自动接入phase short_rank_train，parent793975，不再waiting。strongrank legacyactualstudentold20051 vsclean49.5/SFT50.5，无压制，现teacher200，原05:11截止。direct_fkl仍opd120，dense仍teacher128训练。shortFKL240验证56.25→60.15625（+3.90625pp，CI[−3.90625,11.71875]）按规则转oldinitial/selected和newtest，完整pipeline未结束。baseline short旧OPD正在short_opd_s10_test1000，尚未确认新片结果。11GPU均busy无pending/新错误。

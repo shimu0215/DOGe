@@ -1,0 +1,16 @@
+{
+  "n": 400,
+  "clean": 0.5075,
+  "defense": 0.485,
+  "paired": {
+    "delta_pp": -2.25,
+    "wrong_to_right": 19,
+    "right_to_wrong": 28,
+    "mcnemar_exact_p": 0.24296021728332562,
+    "paired_bootstrap95_pp": [
+      -5.75,
+      1
+    ]
+  },
+  "caveat": "Exploratory reused test slices, single training seed; below requested suppression target."
+}

@@ -78,3 +78,5 @@ CPU数值检查通过：FKL解析梯度最大误差7.45e-9，自teacher梯度约
 原始诊断：[fp16_numerics](results/opd_corrected_20260911/fp16_numerics.json)。全部BF16teacher64评估已完成并保存：[BF16评估](results/opd_corrected_20260911/bf16_teacher64_complete.json)。这些仍是小样本诊断，不是防御联合成功。
 
 03:46ET首个精度配对端点：FP16teacher＋安全padding的原teacher OPD后student old200=49.5%，与legacyBF16clean=49.5相同点估计，但各13题相反变化、paired95CI−5至5pp；对SFT50.5为−1pp。小样本单种子尚未显示baseline改善，不能称精度完全无影响。对应防御teacher仍待同协议运行。
+
+04:39ET精度配对完成：FP16+safe pad protocol，direct_protect student old/extra49.5/47.5，matchedclean49.5/52；pooled40048.5 vs50.75（−2.25pp，paired95CI−5.75至1，p=.243）。这排除了“必须把teacher按FP16加载就能明显压制”的简单期待；不能据此证明精度毫无作用。相对SFT pooled50.25为−1.75pp，仍未达抹去半SFT增益的目标（该扩展片未测raw不能直接套45.5阈值）。
