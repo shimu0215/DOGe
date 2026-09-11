@@ -76,3 +76,5 @@ CPU数值检查通过：FKL解析梯度最大误差7.45e-9，自teacher梯度约
 独立恢复版fp16_mask_entry.py只将next_state_value乘mask替换为torch.where选择0，保留所有有效位置的旧FP16计算、旧padding whitening和119更新计数。CPU验证有效行逐值相同；新GPU四标签完成3次真实更新，已进入原teacher120标签正式训练。该配对准确名称是“FP16 teacher＋NaN安全padding屏蔽”，不是完全单变量；先原teacher后direct_protect，同起点/seed10/预算/评估片区。脚本fp16_mask_pair.py parent500024/worker2706962，gpu029完整持有，records fp16_mask_pair_r2_*.json，新的fp16_mask_r2_*标签。旧fp16_pair.py parent460379/worker2705998失败已处理，不可直接重启。
 
 原始诊断：[fp16_numerics](results/opd_corrected_20260911/fp16_numerics.json)。全部BF16teacher64评估已完成并保存：[BF16评估](results/opd_corrected_20260911/bf16_teacher64_complete.json)。这些仍是小样本诊断，不是防御联合成功。
+
+03:46ET首个精度配对端点：FP16teacher＋安全padding的原teacher OPD后student old200=49.5%，与legacyBF16clean=49.5相同点估计，但各13题相反变化、paired95CI−5至5pp；对SFT50.5为−1pp。小样本单种子尚未显示baseline改善，不能称精度完全无影响。对应防御teacher仍待同协议运行。

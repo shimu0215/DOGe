@@ -85,3 +85,5 @@ GPU019新增接续direct_fkl：run_direct_fkl.py parent564429等待direct_gentle
 corrected MiniLLM166/240、fullFKL120/240、shortFKL36/240、longFKL32/240；FP16safe pair仍在原teacher120阶段，baseline专卡短SFT旧OPD240持续。无新学生endpoint。GPU004弱rank仍旧OPD120，尚无student200结果。按现有队列继续，不重复排已经持卡的worker。
 
 03:39ET：弱direct_rank实际旧OPD后student old200=51%，vsclean49.5 +1.5pp（paired95CI−4至7），vsSFT50.5 +.5pp，未达压制，现teacher200继续扩展。新strongrank27/64、direct_fkl24/64（刚结束正确性warmup）；不能把个别proxy querygain负值或训练组正确率当最终效果。correctedMiniLLM192/fullFKL142/shortFKL56/longFKL48实际更新，FP16safe pair仍clean120阶段，baseline仍短SFT旧OPD240。9卡均busy，仅9800274双卡pending，无新错误。
+
+03:46ET：FP16teacher＋安全padding的clean旧OPD120已完成，student old20049.5%，与legacyBF16clean49.5相同点估计（13 wrong→right、13 right→wrong，pairedCI−5至5pp）；vsSFT50.5为−1pp。这不是精度无影响的证明，只是本小规模对照未改善。当前评clean extra600，随后自动direct_protect同协议。correctedMiniLLM220/fullFKL166/shortFKL80/longFKL66实际更新；strongrank49/64、direct_fkl46/64；baseline短SFT旧240与弱rank扩展teacher200继续。9GPU均busy，无故障，仅9800274pending。
