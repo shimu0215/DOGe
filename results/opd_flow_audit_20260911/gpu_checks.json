@@ -1,0 +1,166 @@
+{
+  "start": 1789108429.8318079,
+  "scope": "Production sampler/loss/DeepSpeed updates; four labelled steps, no accuracy claim",
+  "teacher_dtype": "torch.bfloat16",
+  "student_dtype": "torch.bfloat16",
+  "teacher_fp16_flag": true,
+  "gamma": 0.95,
+  "trainable_student_parameters": 494032768,
+  "optimizer_type": "DeepSpeedZeroOptimizer",
+  "updates": [
+    {
+      "micro_step_before": 0,
+      "optimizer_steps_before": 0,
+      "optimizer_steps_after": 0,
+      "fp32_master_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "watched_bf16_weight_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "lr": 0
+    },
+    {
+      "micro_step_before": 1,
+      "optimizer_steps_before": 0,
+      "optimizer_steps_after": 1,
+      "fp32_master_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "watched_bf16_weight_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "lr": 2.5e-07
+    },
+    {
+      "micro_step_before": 2,
+      "optimizer_steps_before": 1,
+      "optimizer_steps_after": 1,
+      "fp32_master_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "watched_bf16_weight_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "lr": 2.5e-07
+    },
+    {
+      "micro_step_before": 3,
+      "optimizer_steps_before": 1,
+      "optimizer_steps_after": 2,
+      "fp32_master_delta": {
+        "mean": 2.925804043485414e-10,
+        "rms": 1.510667999582438e-07,
+        "max_abs": 2.5331974029541016e-07
+      },
+      "watched_bf16_weight_delta": {
+        "mean": -1.1641532182693481e-10,
+        "rms": 1.5089149485447706e-08,
+        "max_abs": 4.76837158203125e-07
+      },
+      "lr": 5e-07
+    },
+    {
+      "micro_step_before": 4,
+      "optimizer_steps_before": 2,
+      "optimizer_steps_after": 2,
+      "fp32_master_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "watched_bf16_weight_delta": {
+        "mean": 0,
+        "rms": 0,
+        "max_abs": 0
+      },
+      "lr": 5e-07
+    },
+    {
+      "micro_step_before": 5,
+      "optimizer_steps_before": 2,
+      "optimizer_steps_after": 3,
+      "fp32_master_delta": {
+        "mean": -2.230834822425365e-10,
+        "rms": 2.538462808843178e-07,
+        "max_abs": 5.00120222568512e-07
+      },
+      "watched_bf16_weight_delta": {
+        "mean": -8.913048077374697e-10,
+        "rms": 5.171828476591145e-08,
+        "max_abs": 9.5367431640625e-07
+      },
+      "lr": 5e-07
+    }
+  ],
+  "rollouts": {
+    "n": 8,
+    "lengths": [
+      359,
+      384,
+      384,
+      312,
+      290,
+      194,
+      350,
+      196
+    ],
+    "hit_cap": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "max_response_tokens": 384
+  },
+  "scoring": {
+    "valid_tokens": 743,
+    "teacher_legacy_vs_fp32_aligned": {
+      "mean": 0.0038389049004763365,
+      "rms": 0.025329522788524628,
+      "max_abs": 0.14931082725524902
+    },
+    "student_legacy_vs_fp32": {
+      "mean": 1.559503834869247e-05,
+      "rms": 0.0007374061387963593,
+      "max_abs": 0.011047840118408203
+    },
+    "stored_reward_vs_fp32_ratio": {
+      "mean": 0.007468579802662134,
+      "rms": 0.05062338337302208,
+      "max_abs": 0.29678189754486084
+    },
+    "note": "Teacher difference includes native-versus-student-head normalization as well as arithmetic precision."
+  },
+  "signal_control": {
+    "conditional_reverse_kl": 0.11376169323921204,
+    "clean_gradient_norm": 4.786137104034424,
+    "synthetic_target_gradient_norm": 12.118355751037598,
+    "gradient_change_norm": 13.821013450622559,
+    "self_teacher_gradient_max": 0,
+    "limitation": "Analytic conditional-KL logit derivative, not full student parameter derivative or downstream degradation."
+  },
+  "optimizer_master_dtypes": [
+    "torch.float32"
+  ],
+  "optimizer_master_parameters": 494032768,
+  "complete": true,
+  "end": 1789108468.829486,
+  "actual_optimizer_steps": 3
+}

@@ -1,0 +1,189 @@
+{
+  "start": 1789108484.8662586,
+  "context_sha256": "b1090a896c5e69e5d06eb67218282a74bfc830b4b338861282bc75dd2c17d2a1",
+  "scope": "Same four fresh SFT-student rollouts, up to16 evenly spaced valid response positions each. No performance or full-OPD efficacy claim.",
+  "models": {
+    "original": {
+      "path": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+      "by_dtype": {
+        "torch.float16": {
+          "actual_dtype": "torch.float16",
+          "conditional_reverse_kl": 0.20814120769500732,
+          "probability_outside_student_head": 2.2351741790771484e-08,
+          "edit_observed_logprob_rms": 0,
+          "edit_student_weighted_logprob_rms": 0,
+          "sampled_weight_delta_norm": 0,
+          "sampled_changed_weight_fraction": 0
+        },
+        "torch.bfloat16": {
+          "actual_dtype": "torch.bfloat16",
+          "conditional_reverse_kl": 0.20621870458126068,
+          "probability_outside_student_head": 1.955777406692505e-08,
+          "edit_observed_logprob_rms": 0,
+          "edit_student_weighted_logprob_rms": 0,
+          "sampled_weight_delta_norm": 0,
+          "sampled_changed_weight_fraction": 0
+        }
+      },
+      "bf16_vs_fp16_edit_signal": {
+        "norm_a": 0,
+        "norm_b": 0,
+        "norm_ratio": null,
+        "cosine": null
+      },
+      "bf16_vs_fp16_weight_delta": {
+        "norm_a": 0,
+        "norm_b": 0,
+        "norm_ratio": null,
+        "cosine": null
+      }
+    },
+    "full_update": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/full_update/model",
+      "by_dtype": {
+        "torch.float16": {
+          "actual_dtype": "torch.float16",
+          "conditional_reverse_kl": 0.2068593055009842,
+          "probability_outside_student_head": 2.7939677238464355e-08,
+          "edit_observed_logprob_rms": 0.00741013465449214,
+          "edit_student_weighted_logprob_rms": 0.012626622803509235,
+          "sampled_weight_delta_norm": 0.00189167819917202,
+          "sampled_changed_weight_fraction": 0.51812744140625
+        },
+        "torch.bfloat16": {
+          "actual_dtype": "torch.bfloat16",
+          "conditional_reverse_kl": 0.20716999471187592,
+          "probability_outside_student_head": 1.4901161193847656e-08,
+          "edit_observed_logprob_rms": 0.0314846895635128,
+          "edit_student_weighted_logprob_rms": 0.03938549384474754,
+          "sampled_weight_delta_norm": 0.001220510108396411,
+          "sampled_changed_weight_fraction": 0.1016031876206398
+        }
+      },
+      "bf16_vs_fp16_edit_signal": {
+        "norm_a": 0.25187750748922905,
+        "norm_b": 0.059281075697098964,
+        "norm_ratio": 4.24886870771738,
+        "cosine": 0.4238267150685108
+      },
+      "bf16_vs_fp16_weight_delta": {
+        "norm_a": 0.001220510147894421,
+        "norm_b": 0.0018916784342165858,
+        "norm_ratio": 0.645199588797913,
+        "cosine": 0.48278724584412447
+      }
+    },
+    "kl_only": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/kl_only/model",
+      "by_dtype": {
+        "torch.float16": {
+          "actual_dtype": "torch.float16",
+          "conditional_reverse_kl": 0.20738723874092102,
+          "probability_outside_student_head": 2.60770320892334e-08,
+          "edit_observed_logprob_rms": 0.008840011432766914,
+          "edit_student_weighted_logprob_rms": 0.013350735418498516,
+          "sampled_weight_delta_norm": 0.0018836342496797442,
+          "sampled_changed_weight_fraction": 0.5172322392463684
+        },
+        "torch.bfloat16": {
+          "actual_dtype": "torch.bfloat16",
+          "conditional_reverse_kl": 0.2063789665699005,
+          "probability_outside_student_head": 2.1420419216156006e-08,
+          "edit_observed_logprob_rms": 0.02973923832178116,
+          "edit_student_weighted_logprob_rms": 0.03796553239226341,
+          "sampled_weight_delta_norm": 0.0012089874362573028,
+          "sampled_changed_weight_fraction": 0.1019083634018898
+        }
+      },
+      "bf16_vs_fp16_edit_signal": {
+        "norm_a": 0.23791389429756601,
+        "norm_b": 0.07072009930046202,
+        "norm_ratio": 3.36416233363535,
+        "cosine": 0.498235876358404
+      },
+      "bf16_vs_fp16_weight_delta": {
+        "norm_a": 0.0012089874268714973,
+        "norm_b": 0.0018836344584361375,
+        "norm_ratio": 0.6418376036055546,
+        "cosine": 0.4820762217800819
+      }
+    },
+    "direct_protect": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/direct_protect/model",
+      "by_dtype": {
+        "torch.float16": {
+          "actual_dtype": "torch.float16",
+          "conditional_reverse_kl": 0.2191605269908905,
+          "probability_outside_student_head": 2.421438694000244e-08,
+          "edit_observed_logprob_rms": 0.04660375788807869,
+          "edit_student_weighted_logprob_rms": 0.04691215977072716,
+          "sampled_weight_delta_norm": 0.001154749421402812,
+          "sampled_changed_weight_fraction": 0.1640421599149704
+        },
+        "torch.bfloat16": {
+          "actual_dtype": "torch.bfloat16",
+          "conditional_reverse_kl": 0.21035292744636536,
+          "probability_outside_student_head": 2.421438694000244e-08,
+          "edit_observed_logprob_rms": 0.03125274181365967,
+          "edit_student_weighted_logprob_rms": 0.037626635283231735,
+          "sampled_weight_delta_norm": 0.0007326211198233068,
+          "sampled_changed_weight_fraction": 0.0350545234978199
+        }
+      },
+      "bf16_vs_fp16_edit_signal": {
+        "norm_a": 0.2500219385330042,
+        "norm_b": 0.37283006418493503,
+        "norm_ratio": 0.670605625862258,
+        "cosine": 0.7845427505679095
+      },
+      "bf16_vs_fp16_weight_delta": {
+        "norm_a": 0.0007326211075808748,
+        "norm_b": 0.0011547494083686955,
+        "norm_ratio": 0.6344416392608005,
+        "cosine": 0.46910408063012043
+      }
+    },
+    "direct_gentle": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/direct_gentle/model",
+      "by_dtype": {
+        "torch.float16": {
+          "actual_dtype": "torch.float16",
+          "conditional_reverse_kl": 0.2142518162727356,
+          "probability_outside_student_head": 2.9802322387695312e-08,
+          "edit_observed_logprob_rms": 0.029825031757354736,
+          "edit_student_weighted_logprob_rms": 0.030446486547589302,
+          "sampled_weight_delta_norm": 0.0011522460263222456,
+          "sampled_changed_weight_fraction": 0.1637980192899704
+        },
+        "torch.bfloat16": {
+          "actual_dtype": "torch.bfloat16",
+          "conditional_reverse_kl": 0.20843178033828735,
+          "probability_outside_student_head": 2.1420419216156006e-08,
+          "edit_observed_logprob_rms": 0.027086462825536728,
+          "edit_student_weighted_logprob_rms": 0.03371729329228401,
+          "sampled_weight_delta_norm": 0.0007036232855170965,
+          "sampled_changed_weight_fraction": 0.0338541679084301
+        }
+      },
+      "bf16_vs_fp16_edit_signal": {
+        "norm_a": 0.21669171712218477,
+        "norm_b": 0.23860025056437462,
+        "norm_ratio": 0.9081789168688282,
+        "cosine": 0.6828053077707491
+      },
+      "bf16_vs_fp16_weight_delta": {
+        "norm_a": 0.0007036232410551443,
+        "norm_b": 0.0011522460723964324,
+        "norm_ratio": 0.6106536250470823,
+        "cosine": 0.4616443250177531
+      }
+    }
+  },
+  "skipped": [],
+  "original_precision_difference": {
+    "observed_logprob_rms": 0.04118912294507027,
+    "student_weighted_logprob_rms": 0.04337882995605469
+  },
+  "complete": true,
+  "end": 1789108702.4498417
+}

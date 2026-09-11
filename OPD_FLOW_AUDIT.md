@@ -56,3 +56,15 @@
 特别记录：新 baseline train7000:7128验证片区原始与完整SFT都为64.0625%，不同于旧test200的40.5→50.5。不能把该验证集的绝对45%当成“测试降到45%”的等价标准；后续弱SFT选择应看同片区相对增益或比较1/2epoch两个起点。
 
 Update02:31ET: 新双卡9800275/gpu001已获批到10:25:45ET，审计已从等待gpu029迁移到这里；旧等待338766停止并标记moved_to_gpu001，不是实验失败。原queue.py与标准库冲突造成首次新worker导入失败，已重命名audit_waiter.py并用gpu001_recovery.py独立r2标签恢复；原失败日志保留。并行另一张卡实际评估original/full/KL/direct两组teacher的BF16 greedy/普通/raw64题，与对应FP16及原始BF16配对。7卡现均分配给工作，启动校验见最新运行记录。
+
+## 02:48ET：真实 GPU 审计完成及基础对照接续
+
+生产入口四标签确实完成3次 DeepSpeed optimizer step：第一次 warmup 学习率0，随后 FP32 master 与被采样 BF16模型权重都有非零变化。因此排除“完全没训练”，但旧120标签实际119次调用、第一次零学习率的预算口径须保留。实际 teacher/student 均BF16，FP16标志无效已在真实对象上确认。
+
+首批8条 rollout 有2条达到384 token上限，长度194–384；样本太小，不能推断全训练截断率。前两条743个有效token中，teacher旧打分相对FP32对齐打分RMS .02533，student .000737，缩放后reward差RMS .05062。teacher额外词表质量在64个位置约2e-8，不能支持词表不对齐是主要原因。人工错误teacher分布确实显著改变conditional-KL logit梯度；这是信号链路检查，不是学生退化结果。
+
+同四条context/64位置精度探针：full_update的FP16修改logp RMS .00741，BF16 .03148，方向cos .424；KL-only .00884/.02974，cos .498；direct_protect .04660/.03125，cos .785；direct_gentle .02983/.02709，cos .683。BF16改变方向，也可能放大信号，不能说它单纯抹掉防御。模型自身原始FP16/BF16 logp差RMS .04119。所有数字仅对应这批context与采样位置。
+
+独立新代码 `experiments/opd_corrected_20260911`（d8a4c7d）包含两路：修正MiniLLM（显式FP16teacher、FP32概率、有效token whitening、真实更新计数）；基本on-policy forward KL，同teacher精度与计数，没有PPO loss。学生仍BF16+FP32 master Adam，T1/p1/k0、相同prompt/rollout/batch、lr1e-6。两路各先4次真实更新验证，再240次、120/240在同train验证集选，随后旧test200探索，有>=3pp验证增益才进新test片区。与旧baseline属于一揽子修正比较，不能归因于某个单项。
+
+CPU数值检查通过：FKL解析梯度最大误差7.45e-9，自teacher梯度约3.50e-9，额外31padding不改变有效advantage，logp输出FP32。GPU烟测待完成。GPU001双卡独占步骤排队，parents440875/440876，records `results/opd_corrected_20260911/{minillm,forward_kl}_{queue,worker}.json`。它们接续已有诊断，没有修改任何活动/共享旧训练代码。
