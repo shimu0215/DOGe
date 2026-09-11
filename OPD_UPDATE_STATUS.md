@@ -83,3 +83,5 @@ GPU019新增接续direct_fkl：run_direct_fkl.py parent564429等待direct_gentle
 
 03:33ET：9GPU全部有活动工作，无新卡、仅9800274双卡pending。direct_protect与direct_gentle完整pipeline均结束，其接续strongrank/FKL分别自动接gpu010/gpu019。strongrank、direct_fkl两步GPU烟测都PASS，普通架构重建logits完全相同/权重导出验证通过，无teacherLoRA；均已进入正式64步。FKL方向v的epsilon/half-epsilon cosine .9999997、relative .00062164，验证局部差分稳定，不代表下游压制。strongrank早期正式训练开始，FKL正式加载完成。
 corrected MiniLLM166/240、fullFKL120/240、shortFKL36/240、longFKL32/240；FP16safe pair仍在原teacher120阶段，baseline专卡短SFT旧OPD240持续。无新学生endpoint。GPU004弱rank仍旧OPD120，尚无student200结果。按现有队列继续，不重复排已经持卡的worker。
+
+03:39ET：弱direct_rank实际旧OPD后student old200=51%，vsclean49.5 +1.5pp（paired95CI−4至7），vsSFT50.5 +.5pp，未达压制，现teacher200继续扩展。新strongrank27/64、direct_fkl24/64（刚结束正确性warmup）；不能把个别proxy querygain负值或训练组正确率当最终效果。correctedMiniLLM192/fullFKL142/shortFKL56/longFKL48实际更新，FP16safe pair仍clean120阶段，baseline仍短SFT旧OPD240。9卡均busy，仅9800274双卡pending，无新错误。
