@@ -1,5 +1,5 @@
 {
-  "time": 1789102456.0213785,
+  "time": 1789103900.849263,
   "arms": {
     "full_update_smoke": {
       "manifest": {
@@ -456,7 +456,7 @@
         }
       },
       "log_errors": [],
-      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     41/   120| tot_loss: 0.1210 | rl_loss: 0.1210 | pt_loss: 0.0000 | pg_loss: 0.0373 | reg_loss: 0.0837 | reward: -0.0269 | rev_kl: 0.0640 | stu_lens: 326.0000 | mixed_lens: 326.0000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.000"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   1/  4 | ppo epoch:  0/ 1 | global iter:    120/   120| tot_loss: 0.4539 | rl_loss: 0.4539 | pt_loss: 0.0000 | pg_loss: 0.2559 | reg_loss: 0.1981 | reward: -0.0471 | rev_kl: 0.2258 | stu_lens: 255.7000 | mixed_lens: 255.7000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.505"
     },
     "control": {
       "manifest": {
@@ -646,10 +646,13 @@
               }
             }
           }
-        }
+        },
+        "complete": false,
+        "error": "RuntimeError('Phase failed: opd120 exit=143')",
+        "end": 1789102861.748173
       },
       "log_errors": [],
-      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     35/   120| tot_loss: 0.3283 | rl_loss: 0.3283 | pt_loss: 0.0000 | pg_loss: 0.1325 | reg_loss: 0.1958 | reward: -0.0378 | rev_kl: 0.2195 | stu_lens: 304.9000 | mixed_lens: 304.9000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.263 | step time: 0.473"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     59/   120| tot_loss: 0.3379 | rl_loss: 0.3379 | pt_loss: 0.0000 | pg_loss: 0.1883 | reg_loss: 0.1496 | reward: -0.0332 | rev_kl: 0.1722 | stu_lens: 289.5000 | mixed_lens: 289.5000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.262 | step time: 0.000"
     },
     "rank_live": {
       "manifest": {
@@ -842,7 +845,7 @@
         }
       },
       "log_errors": [],
-      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     39/   120| tot_loss: 0.3110 | rl_loss: 0.3110 | pt_loss: 0.0000 | pg_loss: 0.1498 | reg_loss: 0.1611 | reward: -0.0342 | rev_kl: 0.1189 | stu_lens: 281.0000 | mixed_lens: 281.0000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.000"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   1/  4 | ppo epoch:  0/ 1 | global iter:    120/   120| tot_loss: 0.4739 | rl_loss: 0.4739 | pt_loss: 0.0000 | pg_loss: 0.2987 | reg_loss: 0.1752 | reward: -0.0367 | rev_kl: 0.2413 | stu_lens: 246.0500 | mixed_lens: 246.0500 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.467"
     },
     "kl_only_smoke": {
       "manifest": {
@@ -1123,7 +1126,384 @@
         }
       },
       "log_errors": [],
-      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     17/   120| tot_loss: 0.5546 | rl_loss: 0.5546 | pt_loss: 0.0000 | pg_loss: 0.4685 | reg_loss: 0.0862 | reward: -0.0471 | rev_kl: 0.0363 | stu_lens: 194.5000 | mixed_lens: 194.5000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.000"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:    111/   120| tot_loss: 0.4657 | rl_loss: 0.4657 | pt_loss: 0.0000 | pg_loss: 0.3613 | reg_loss: 0.1044 | reward: -0.0267 | rev_kl: 0.0753 | stu_lens: 229.5000 | mixed_lens: 229.5000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.260 | step time: 0.000"
+    },
+    "dense_update_smoke": {
+      "manifest": {
+        "start": 1789103837.9324403,
+        "completed_steps": 1,
+        "trainable_parameters": 5767168,
+        "proxy_trainable_parameters": 733184,
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999994039535522,
+            "relative_error": 0.0011180483270436525
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.00047308497596532106
+          }
+        },
+        "code_sha256": "b98b5f686ba091cd068e387e6ab47713268ab3d5604099b4658821ccd5ed2184"
+      },
+      "last_update": {
+        "step": 1,
+        "anti_weight": 2,
+        "answer_ce": 0.19269351661205292,
+        "own_answer_ce": 0.001256024232134223,
+        "live_answer_ce": 0.3841310143470764,
+        "own_anchor_kl": 0,
+        "fixed_anchor_kl": 0,
+        "live_anchor_kl": 0,
+        "alignment_total": 0.3356670141220093,
+        "alignment_pg": 0.05857114493846893,
+        "alignment_kl": 0.27709588408470154,
+        "chosen_offsets": [
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127,
+          128,
+          129,
+          130,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          137,
+          138,
+          139,
+          140,
+          141,
+          142,
+          143,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          152,
+          153,
+          154,
+          155,
+          156,
+          157,
+          158,
+          159
+        ],
+        "direction_scale": 0.03294919431209564,
+        "query_grad_norm": 9.616170883178711,
+        "alignment_after": 0.33571678400039673,
+        "pg_after": 0.05887284874916077,
+        "kl_after": 0.27684393525123596,
+        "proxy_opd_loss": 0.1099129468202591,
+        "proxy_grad_norm": 0.6728041768074036,
+        "query_before": 3.0539422035217285,
+        "query_after": 3.051821231842041,
+        "query_gain": 0.0021209716796875,
+        "query_example_ids": [
+          0,
+          230
+        ],
+        "proxy_predicted_gain": 0.002127404258228438,
+        "elapsed": 53.180602073669434,
+        "source": "question",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 0,
+        "process_kl": 0.35566702485084534,
+        "grad_norm": 1.4944236278533936,
+        "max_gpu_gb": 18.563785216
+      },
+      "means": {
+        "query_gain": 0.0021209716796875,
+        "proxy_predicted_gain": 0.002127404258228438,
+        "query_before": 3.0539422035217285,
+        "query_grad_norm": 9.616170883178711,
+        "alignment_after": 0.33571678400039673,
+        "pg_after": 0.05887284874916077,
+        "kl_after": 0.27684393525123596,
+        "fixed_anchor_kl": 0,
+        "live_anchor_kl": 0,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 1,
+      "log_errors": [],
+      "last_log_progress": "5, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159], \"direction_scale\": 0.03294919431209564, \"query_grad_norm\": 9.616170883178711, \"alignment_after\": 0.33571678400039673, \"pg_after\": 0.05887284874916077, \"kl_after\": 0.27684393525123596, \"proxy_opd_loss\": 0.1099129468202591, \"proxy_grad_norm\": 0.6728041768074036, \"query_before\": 3.0539422035217285, \"query_after\": 3.051821231842041, \"query_gain\": 0.0021209716796875, \"query_example_ids\": [0, 230], \"proxy_predicted_gain\": 0.002127404258228438, \"elapsed\": 53.180602073669434, \"source\": \"question\", \"mean_reward\": -0.10000000149011612, \"correct\": 0.0, \"cap_rate\": 1.0, \"reward_std\": 0.0, \"policy_loss\": 0.0, \"reference_kl\": 0.0, \"process_kl\": 0.35566702485084534, \"grad_norm\": 1.4944236278533936, \"max_gpu_gb\": 18.563785216}"
+    },
+    "dense_update": {
+      "manifest": {},
+      "queue": {
+        "start": 1789103794.3975337,
+        "driver_pid": 112416,
+        "job": "9817268",
+        "node": "gpu029",
+        "deadline": 1789131691,
+        "arm": "dense_update",
+        "steps": 64,
+        "completed_phases": [
+          "device_check"
+        ],
+        "allocation_check": {
+          "time": 1789103812.1948051,
+          "info": "JobId=9817268 JobName=hold-1gpu-8h-c4m32-g25-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:15:21 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T00:09:08 EligibleTime=2026-09-11T00:09:08 AccrueTime=2026-09-11T00:09:08 StartTime=2026-09-11T01:01:31 EndTime=2026-09-11T09:01:31 Deadline=N/A PreemptEligibleTime=2026-09-11T01:02:31 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T01:01:31 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3950872 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu029 BatchHost=gpu029 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g25.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-cq-9817268.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-cq-9817268.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "phase": "smoke",
+        "command": [
+          "srun",
+          "--jobid=9817268",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_dense.py",
+          "--arm",
+          "dense_update",
+          "--teacher",
+          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+          "--proxy",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+          "--context",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/dense_update_smoke",
+          "--steps",
+          "2",
+          "--group",
+          "2",
+          "--max-new-tokens",
+          "256",
+          "--proxy-max-tokens",
+          "192",
+          "--anti-warmup",
+          "0",
+          "--anti-ramp-end",
+          "1",
+          "--max-seconds",
+          "600"
+        ],
+        "process_pid": 113531
+      },
+      "log_errors": [],
+      "last_log_progress": "5, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159], \"direction_scale\": 0.03294919431209564, \"query_grad_norm\": 9.616170883178711, \"alignment_after\": 0.33571678400039673, \"pg_after\": 0.05887284874916077, \"kl_after\": 0.27684393525123596, \"proxy_opd_loss\": 0.1099129468202591, \"proxy_grad_norm\": 0.6728041768074036, \"query_before\": 3.0539422035217285, \"query_after\": 3.051821231842041, \"query_gain\": 0.0021209716796875, \"query_example_ids\": [0, 230], \"proxy_predicted_gain\": 0.002127404258228438, \"elapsed\": 53.180602073669434, \"source\": \"question\", \"mean_reward\": -0.10000000149011612, \"correct\": 0.0, \"cap_rate\": 1.0, \"reward_std\": 0.0, \"policy_loss\": 0.0, \"reference_kl\": 0.0, \"process_kl\": 0.35566702485084534, \"grad_norm\": 1.4944236278533936, \"max_gpu_gb\": 18.563785216}"
+    },
+    "control_recovery": {
+      "manifest": {},
+      "queue": {
+        "start": 1789103794.3955,
+        "driver_pid": 112415,
+        "job": "9795227",
+        "node": "gpu004",
+        "deadline": 1789131998,
+        "arm": "control_recovery",
+        "steps": 64,
+        "completed_phases": [
+          "device_check"
+        ],
+        "allocation_check": {
+          "time": 1789103812.5024788,
+          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=1 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:10:14 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T01:01:22 EligibleTime=2026-09-11T01:03:23 AccrueTime=2026-09-11T01:01:22 StartTime=2026-09-11T01:06:38 EndTime=2026-09-11T09:06:38 Deadline=N/A PreemptEligibleTime=2026-09-11T01:07:38 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T01:06:38 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu004 BatchHost=gpu004 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "phase": "opd120",
+        "command": [
+          "srun",
+          "--jobid=9795227",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
+          "--teacher",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control/model",
+          "--label",
+          "update_control_recovery_s10",
+          "--seed",
+          "10"
+        ],
+        "process_pid": 113543,
+        "recovery": {
+          "original_queue": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control_queue.json",
+          "original_opd_manifest": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/update_control_s10_opd_manifest.json",
+          "reason": "Slurm preempted step9795227.29 on gpu008 at01:01; allocation requeued on gpu004",
+          "restart": "Original SFT fullweight student, same seed10 and exact unchanged OPD120; no optimizer/RNG-resume claim; original partial artifacts preserved"
+        },
+        "training_result": {
+          "completed_steps": 64,
+          "merge_check": {
+            "max_abs_logit_error": 0.04345703125,
+            "mean_abs_logit_error": 0.010158201679587364,
+            "argmax_equal": true
+          },
+          "fd_check": {
+            "c": {
+              "cosine": 0.9999994039535522,
+              "relative_error": 0.0011288452660664916
+            },
+            "d": {
+              "cosine": 0.9999998807907104,
+              "relative_error": 0.0006074329721741378
+            }
+          },
+          "trainable_parameters": 5767168
+        },
+        "teacher_results": {
+          "old64": {
+            "greedy": {
+              "candidate": 0.90625,
+              "original": 0.90625,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.921875,
+              "original": 0.921875,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.828125,
+              "original": 0.828125,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      },
+      "log_errors": []
     }
   }
 }
