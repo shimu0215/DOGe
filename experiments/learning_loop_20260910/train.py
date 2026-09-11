@@ -110,7 +110,11 @@ def main():
     manifest.update(trainable_parameters=sum(v.numel() for v in params),trainable_names=names)
     dump(out/'manifest.json',manifest)
     optimizer=torch.optim.AdamW(params,lr=a.lr,weight_decay=0.,foreach=False)
-    scaler=torch.amp.GradScaler('cuda')
+    # The stronger alignment/answer losses overflowed FP16 intermediates at the
+    # default65536 scale before the first update. Keep a conservative fixed scale.
+    scaler=torch.amp.GradScaler('cuda',init_scale=128.,growth_interval=100000)
+    manifest['gradient_scaling']=dict(init_scale=128.,growth_interval=100000,nonfinite_gradients_fatal=True)
+    dump(out/'manifest.json',manifest)
     eos=base.generation_config.eos_token_id
     stops=sorted(set((eos if isinstance(eos,list) else [eos])+[tok.eos_token_id,tok.pad_token_id])-{None})
 
