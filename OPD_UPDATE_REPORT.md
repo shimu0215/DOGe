@@ -19,3 +19,6 @@
 | KL-only抗学习消融 | 90.625% | 90.625% | 84.375% |
 
 强重排普通sampling低3.125pp，配对95%区间[-7.8125,0]；两个方向方案低1.5625pp，区间[-4.6875,0]。未触发预设的粗筛淘汰门槛，但不能确认teacher无损。四组均已合并并进入实际OPD120seed10，当前进度41/35/39/17步。没有完整学生效果结果，不据辅助训练指标判成功。仍有4张已分配卡，全部在用。
+
+## Sep11 01:30 ET interim actual OPD endpoints
+On previously explored old200, seed10, unchanged120stepOPD: full_update52.0%, rank_live51.0%, kl_only48.5%; originalteacher clean49.5%, SFT50.5%. Paired candidate-minus-clean95% intervals respectively[-2,7],[-3.5,6.5],[-6,4] percentagepoints. These are completed student endpoints but not yet completed joint teacher/student evaluations. Recovered preservation control and extra200 pending. No established suppression or teacher preservation claim. KL-only is prioritized for a gentle schedule/direct-last-layer follow-up because of the point estimate and latest user preference, with selection caveat.
