@@ -35,3 +35,5 @@ proxy为FP32最后4层LoRA的小模型，SGD一步forward KL，clip1，学习率
 CPU双精度玩具模型直接计算真实混合导数，与中央差分表达式对照：alignment误差5.37e-11，teacher混合梯度最大误差6.30e-14；独立query一步Taylor符号检查通过。实际GPU烟测会再比较ε与ε/2的一致性并验证普通权重导出。
 
 上述理论只覆盖固定context、固定proxy方向、小步SGD的一阶变化。它没有证明新学生、全参数Adam、多步分布漂移或最终准确率下降；正确性保护也是软约束，必须用greedy/sampling实际评估。当前尚无此候选的GPU效果结果。
+
+03:33ET：实际2步GPU烟测通过；方向v在epsilon与epsilon/2下cosine .9999997、相对差.00062164。独立普通teacher架构重建最大logit差0，保存权重校验通过。已经进入64步正式训练，尚无teacher准确率/实际studentOPD端点，不改变上述局限。
