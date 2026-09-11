@@ -49,12 +49,23 @@ try:
     fields = dict(x.split('=', 1) for x in info.split() if '=' in x)
     assert fields['JobState'] == 'RUNNING'
     assert datetime.datetime.fromisoformat(fields['EndTime']).timestamp()-time.time() >= 9000
-    assert not subprocess.check_output(['nvidia-smi', '--query-compute-apps=pid', '--format=csv,noheader'], text=True).strip()
     import torch
     assert torch.cuda.device_count() == 1
+    devices = [line.strip().split(', ') for line in subprocess.check_output(
+        ['nvidia-smi', '--query-gpu=index,uuid', '--format=csv,noheader'], text=True).strip().splitlines()]
+    visible = os.environ['CUDA_VISIBLE_DEVICES']
+    assert ',' not in visible
+    if len(devices) == 1:
+        device_uuid = devices[0][1]
+    else:
+        matched = [uuid for index, uuid in devices if index == visible or uuid == visible]
+        assert len(matched) == 1, (visible, devices)
+        device_uuid = matched[0]
+    assert not subprocess.check_output(['nvidia-smi', '-i', device_uuid,
+        '--query-compute-apps=pid', '--format=csv,noheader'], text=True).strip()
     state['allocation'] = info
     state['device'] = dict(visible=os.environ['CUDA_VISIBLE_DEVICES'], step=os.environ['SLURM_STEP_ID'],
-                          uuid=subprocess.check_output(['nvidia-smi', '--query-gpu=uuid', '--format=csv,noheader'], text=True).strip())
+                          uuid=device_uuid)
     save()
     teacher_env = {k: v for k, v in os.environ.items() if k != 'PROXY' and not k.startswith('INTERNAL_')}
     trainer = Path(__file__).with_name('train_static_bounded_top2.py')
