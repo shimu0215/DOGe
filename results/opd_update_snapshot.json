@@ -1,5 +1,5 @@
 {
-  "time": 1789100476.4842143,
+  "time": 1789102456.0213785,
   "arms": {
     "full_update_smoke": {
       "manifest": {
@@ -268,9 +268,16 @@
     "full_update": {
       "manifest": {
         "start": 1789100181.8539324,
-        "completed_steps": 15,
+        "end": 1789101448.6484342,
+        "complete": true,
+        "completed_steps": 64,
         "trainable_parameters": 5767168,
         "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.0390625,
+          "mean_abs_logit_error": 0.0054995156824588776,
+          "argmax_equal": true
+        },
         "fd_check": {
           "c": {
             "cosine": 0.9999994039535522,
@@ -284,65 +291,65 @@
         "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
       },
       "last_update": {
-        "step": 15,
-        "anti_weight": 0.5833333333333334,
-        "answer_ce": 0.0013933239970356226,
-        "own_answer_ce": 0.00278658838942647,
-        "live_answer_ce": 5.9604641222676946e-08,
-        "own_anchor_kl": 7.896386705397163e-06,
-        "fixed_anchor_kl": 1.668958475420368e-06,
-        "live_anchor_kl": 6.227428002603119e-06,
-        "alignment_total": -0.1003643125295639,
-        "alignment_pg": 0.046380747109651566,
-        "alignment_kl": -0.14674507081508636,
+        "step": 64,
+        "anti_weight": 2,
+        "answer_ce": 0.0005734731676056981,
+        "own_answer_ce": 0.0011455158237367868,
+        "live_answer_ce": 1.430509428246296e-06,
+        "own_anchor_kl": 6.02455111220479e-05,
+        "fixed_anchor_kl": 2.542257061577402e-05,
+        "live_anchor_kl": 3.482294050627388e-05,
+        "alignment_total": -0.21287992596626282,
+        "alignment_pg": 0.038941703736782074,
+        "alignment_kl": -0.2518216371536255,
         "chosen_offsets": [
-          69,
+          151,
+          84,
           137,
-          44,
-          58
+          35
         ],
-        "direction_scale": 0.04330716282129288,
-        "query_grad_norm": 7.467463970184326,
-        "alignment_after": -0.10043557733297348,
-        "pg_after": 0.04602912813425064,
-        "kl_after": -0.14646472036838531,
-        "proxy_opd_loss": 0.189162939786911,
-        "proxy_grad_norm": 1.2157305479049683,
-        "query_before": 2.123194694519043,
-        "query_after": 2.1237268447875977,
-        "query_gain": -0.0005321502685546875,
+        "direction_scale": 0.05626677721738815,
+        "query_grad_norm": 8.988435745239258,
+        "alignment_after": -0.21289817988872528,
+        "pg_after": 0.03859308734536171,
+        "kl_after": -0.2514912784099579,
+        "proxy_opd_loss": 0.2409183382987976,
+        "proxy_grad_norm": 1.1745753288269043,
+        "query_before": 1.160362958908081,
+        "query_after": 1.1621708869934082,
+        "query_gain": -0.0018079280853271484,
         "query_example_ids": [
-          284,
-          24
+          31,
+          283
         ],
-        "proxy_predicted_gain": -0.0005343343925984684,
-        "elapsed": 282.5517439842224,
-        "source": "question",
+        "proxy_predicted_gain": -0.0018334000453224324,
+        "elapsed": 1217.8381886482239,
+        "source": "proxy_prefix",
         "mean_reward": 1,
         "correct": 1,
         "cap_rate": 0,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 0.00013083599588981087,
+        "reference_kl": 6.792027306801174e-06,
         "process_kl": 0,
-        "grad_norm": 0.019093574956059456,
+        "grad_norm": 0.015108923427760601,
         "max_gpu_gb": 19.734096896
       },
       "means": {
-        "query_gain": 0.0008764505386352539,
-        "proxy_predicted_gain": 0.0008871665514751504,
-        "query_before": 3.1090284824371337,
-        "query_grad_norm": 12.833128929138184,
-        "alignment_after": 0.06208797954022884,
-        "pg_after": 0.04429864004875223,
-        "kl_after": 0.017789333313703536,
-        "fixed_anchor_kl": 3.4779486632767015e-05,
-        "live_anchor_kl": 9.996131379163368e-05,
-        "correct": 0.9166666666666666,
+        "query_gain": 0.0005242619663476944,
+        "proxy_predicted_gain": 0.0005300027556377348,
+        "query_before": 2.933150066062808,
+        "query_grad_norm": 13.31176994740963,
+        "alignment_after": 0.014513710064420593,
+        "pg_after": -0.028426557815691922,
+        "kl_after": 0.042940268642269075,
+        "fixed_anchor_kl": 1.6521356428128575e-05,
+        "live_anchor_kl": 5.080270156954114e-05,
+        "correct": 0.9296875,
         "cap_rate": 0
       },
-      "teacher_reward_varying_groups": 1,
-      "active_anti_updates": 7,
+      "teacher_reward_varying_groups": 8,
+      "active_anti_updates": 56,
       "queue": {
         "start": 1789100000.6102502,
         "driver_pid": 3977634,
@@ -353,13 +360,15 @@
         "steps": 64,
         "completed_phases": [
           "device_check",
-          "smoke"
+          "smoke",
+          "train",
+          "teacher64"
         ],
         "allocation_check": {
-          "time": 1789100162.886112,
-          "info": "JobId=9801342 JobName=hold-1gpu-8h-c4m32-g24-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:04:49 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:11:13 EndTime=2026-09-11T05:11:13 Deadline=N/A PreemptEligibleTime=2026-09-10T21:12:13 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:11:13 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+          "time": 1789101781.0397663,
+          "info": "JobId=9801342 JobName=hold-1gpu-8h-c4m32-g24-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:31:48 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:11:13 EndTime=2026-09-11T05:11:13 Deadline=N/A PreemptEligibleTime=2026-09-10T21:12:13 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:11:13 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
         },
-        "phase": "train",
+        "phase": "opd120",
         "command": [
           "srun",
           "--jobid=9801342",
@@ -371,35 +380,97 @@
           "-c4",
           "--gres=gpu:1",
           "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train.py",
-          "--arm",
-          "full_update",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
           "--teacher",
-          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
-          "--proxy",
-          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
-          "--context",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
-          "--output",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/full_update",
-          "--steps",
-          "64",
-          "--process-weight",
-          "2",
-          "--max-seconds",
-          "3600"
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/full_update/model",
+          "--label",
+          "update_full_update_s10",
+          "--seed",
+          "10"
         ],
-        "process_pid": 3997102
+        "process_pid": 4163010,
+        "training_result": {
+          "completed_steps": 64,
+          "merge_check": {
+            "max_abs_logit_error": 0.0390625,
+            "mean_abs_logit_error": 0.0054995156824588776,
+            "argmax_equal": true
+          },
+          "fd_check": {
+            "c": {
+              "cosine": 0.9999994039535522,
+              "relative_error": 0.0011288452660664916
+            },
+            "d": {
+              "cosine": 0.9999998807907104,
+              "relative_error": 0.0006074329721741378
+            }
+          },
+          "trainable_parameters": 5767168
+        },
+        "teacher_results": {
+          "old64": {
+            "greedy": {
+              "candidate": 0.921875,
+              "original": 0.90625,
+              "comparison": {
+                "delta_pp": 1.5625,
+                "wrong_to_right": 1,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  4.6875
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.90625,
+              "original": 0.921875,
+              "comparison": {
+                "delta_pp": -1.5625,
+                "wrong_to_right": 0,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -4.6875,
+                  0
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.84375,
+              "original": 0.828125,
+              "comparison": {
+                "delta_pp": 1.5625,
+                "wrong_to_right": 1,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  4.6875
+                ]
+              }
+            }
+          }
+        }
       },
       "log_errors": [],
-      "last_log_progress": "TRAIN {\"step\": 15, \"anti_weight\": 0.5833333333333334, \"answer_ce\": 0.0013933239970356226, \"own_answer_ce\": 0.00278658838942647, \"live_answer_ce\": 5.9604641222676946e-08, \"own_anchor_kl\": 7.896386705397163e-06, \"fixed_anchor_kl\": 1.668958475420368e-06, \"live_anchor_kl\": 6.227428002603119e-06, \"alignment_total\": -0.1003643125295639, \"alignment_pg\": 0.046380747109651566, \"alignment_kl\": -0.14674507081508636, \"chosen_offsets\": [69, 137, 44, 58], \"direction_scale\": 0.04330716282129288, \"query_grad_norm\": 7.467463970184326, \"alignment_after\": -0.10043557733297348, \"pg_after\": 0.04602912813425064, \"kl_after\": -0.14646472036838531, \"proxy_opd_loss\": 0.189162939786911, \"proxy_grad_norm\": 1.2157305479049683, \"query_before\": 2.123194694519043, \"query_after\": 2.1237268447875977, \"query_gain\": -0.0005321502685546875, \"query_example_ids\": [284, 24], \"proxy_predicted_gain\": -0.0005343343925984684, \"elapsed\": 282.5517439842224, \"source\": \"question\", \"mean_reward\": 1.0, \"correct\": 1.0, \"cap_rate\": 0.0, \"reward_std\": 0.0, \"policy_loss\": 0.0, \"reference_kl\": 0.00013083599588981087, \"process_kl\": 0.0, \"grad_norm\": 0.019093574956059456, \"max_gpu_gb\": 19.734096896}"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     41/   120| tot_loss: 0.1210 | rl_loss: 0.1210 | pt_loss: 0.0000 | pg_loss: 0.0373 | reg_loss: 0.0837 | reward: -0.0269 | rev_kl: 0.0640 | stu_lens: 326.0000 | mixed_lens: 326.0000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.000"
     },
     "control": {
       "manifest": {
         "start": 1789100163.7599359,
-        "completed_steps": 14,
+        "end": 1789101513.9524975,
+        "complete": true,
+        "completed_steps": 64,
         "trainable_parameters": 5767168,
         "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.04345703125,
+          "mean_abs_logit_error": 0.010158201679587364,
+          "argmax_equal": true
+        },
         "fd_check": {
           "c": {
             "cosine": 0.9999994039535522,
@@ -413,64 +484,64 @@
         "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
       },
       "last_update": {
-        "step": 14,
+        "step": 64,
         "anti_weight": 0,
-        "answer_ce": 0.015305121429264545,
-        "own_answer_ce": 0.030610162764787674,
-        "live_answer_ce": 7.947285496356926e-08,
-        "own_anchor_kl": 0.0011461061658337712,
-        "fixed_anchor_kl": 5.574118404183537e-05,
-        "live_anchor_kl": 0.001090364996343851,
-        "alignment_total": 0.01509828306734562,
-        "alignment_pg": -0.010615327395498753,
-        "alignment_kl": 0.025713611394166946,
+        "answer_ce": 0.0005786176770925522,
+        "own_answer_ce": 0.0011558644473552704,
+        "live_answer_ce": 1.3709048971577431e-06,
+        "own_anchor_kl": 3.265376653871499e-05,
+        "fixed_anchor_kl": 9.628004590922501e-06,
+        "live_anchor_kl": 2.3025761038297787e-05,
+        "alignment_total": -0.21211925148963928,
+        "alignment_pg": 0.04077864810824394,
+        "alignment_kl": -0.25289788842201233,
         "chosen_offsets": [
-          61,
-          72,
-          102,
-          129
+          151,
+          137,
+          84,
+          35
         ],
-        "direction_scale": 0.039657846093177795,
-        "query_grad_norm": 6.094204902648926,
-        "alignment_after": 0.015627427026629448,
-        "pg_after": -0.010308743454515934,
-        "kl_after": 0.025936171412467957,
-        "proxy_opd_loss": 0.2771305441856384,
-        "proxy_grad_norm": 0.9777613878250122,
-        "query_before": 1.8585455417633057,
-        "query_after": 1.8584721088409424,
-        "query_gain": 7.343292236328125e-05,
+        "direction_scale": 0.05723504722118378,
+        "query_grad_norm": 8.98886489868164,
+        "alignment_after": -0.21128961443901062,
+        "pg_after": 0.04083987697958946,
+        "kl_after": -0.2521294951438904,
+        "proxy_opd_loss": 0.24150843918323517,
+        "proxy_grad_norm": 1.1817524433135986,
+        "query_before": 1.159800410270691,
+        "query_after": 1.161616563796997,
+        "query_gain": -0.0018161535263061523,
         "query_example_ids": [
-          7,
-          305
+          31,
+          283
         ],
-        "proxy_predicted_gain": 7.553768447694731e-05,
-        "elapsed": 309.8993582725525,
+        "proxy_predicted_gain": -0.0018397065344988432,
+        "elapsed": 1306.139848947525,
         "source": "proxy_prefix",
-        "mean_reward": 0.75,
-        "correct": 0.75,
+        "mean_reward": 1,
+        "correct": 1,
         "cap_rate": 0,
-        "reward_std": 0.4330126941204071,
-        "policy_loss": 2.9802322387695312e-08,
-        "reference_kl": 2.7251550363871502e-05,
-        "process_kl": 0.03509828448295593,
-        "grad_norm": 0.17819835245609283,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 3.533750884798792e-06,
+        "process_kl": 0,
+        "grad_norm": 0.012103299610316753,
         "max_gpu_gb": 19.736060928
       },
       "means": {
-        "query_gain": 0.0009785379682268416,
-        "proxy_predicted_gain": 0.0009898248038241275,
-        "query_before": 3.1794486897332326,
-        "query_grad_norm": 13.216396399906703,
-        "alignment_after": 0.073773083809231,
-        "pg_after": 0.04426607507879713,
-        "kl_after": 0.029507003458482877,
-        "fixed_anchor_kl": 3.813835361286623e-05,
-        "live_anchor_kl": 0.00010349279565551634,
-        "correct": 0.9107142857142857,
+        "query_gain": 0.0005284156650304794,
+        "proxy_predicted_gain": 0.000534324371220733,
+        "query_before": 2.93314475286752,
+        "query_grad_norm": 13.312262300401926,
+        "alignment_after": 0.014277269094236544,
+        "pg_after": -0.028475516544858692,
+        "kl_after": 0.04275278470595367,
+        "fixed_anchor_kl": 1.45894607320729e-05,
+        "live_anchor_kl": 4.983737665387178e-05,
+        "correct": 0.93359375,
         "cap_rate": 0
       },
-      "teacher_reward_varying_groups": 1,
+      "teacher_reward_varying_groups": 7,
       "active_anti_updates": 0,
       "queue": {
         "start": 1789100000.6091425,
@@ -482,13 +553,15 @@
         "steps": 64,
         "completed_phases": [
           "device_check",
-          "smoke"
+          "smoke",
+          "train",
+          "teacher64"
         ],
         "allocation_check": {
-          "time": 1789100144.3882442,
-          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:12:44 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T18:01:31 EligibleTime=2026-09-10T18:01:31 AccrueTime=2026-09-10T18:01:31 StartTime=2026-09-10T18:03:00 EndTime=2026-09-11T02:03:00 Deadline=N/A PreemptEligibleTime=2026-09-10T18:04:00 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T18:03:00 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+          "time": 1789101859.4969275,
+          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:41:19 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T18:01:31 EligibleTime=2026-09-10T18:01:31 AccrueTime=2026-09-10T18:01:31 StartTime=2026-09-10T18:03:00 EndTime=2026-09-11T02:03:00 Deadline=N/A PreemptEligibleTime=2026-09-10T18:04:00 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T18:03:00 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
         },
-        "phase": "train",
+        "phase": "opd120",
         "command": [
           "srun",
           "--jobid=9795227",
@@ -500,35 +573,97 @@
           "-c4",
           "--gres=gpu:1",
           "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train.py",
-          "--arm",
-          "control",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
           "--teacher",
-          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
-          "--proxy",
-          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
-          "--context",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
-          "--output",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control",
-          "--steps",
-          "64",
-          "--process-weight",
-          "0",
-          "--max-seconds",
-          "3600"
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control/model",
+          "--label",
+          "update_control_s10",
+          "--seed",
+          "10"
         ],
-        "process_pid": 3996254
+        "process_pid": 4170835,
+        "training_result": {
+          "completed_steps": 64,
+          "merge_check": {
+            "max_abs_logit_error": 0.04345703125,
+            "mean_abs_logit_error": 0.010158201679587364,
+            "argmax_equal": true
+          },
+          "fd_check": {
+            "c": {
+              "cosine": 0.9999994039535522,
+              "relative_error": 0.0011288452660664916
+            },
+            "d": {
+              "cosine": 0.9999998807907104,
+              "relative_error": 0.0006074329721741378
+            }
+          },
+          "trainable_parameters": 5767168
+        },
+        "teacher_results": {
+          "old64": {
+            "greedy": {
+              "candidate": 0.90625,
+              "original": 0.90625,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.921875,
+              "original": 0.921875,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.828125,
+              "original": 0.828125,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            }
+          }
+        }
       },
       "log_errors": [],
-      "last_log_progress": "IN {\"step\": 14, \"anti_weight\": 0.0, \"answer_ce\": 0.015305121429264545, \"own_answer_ce\": 0.030610162764787674, \"live_answer_ce\": 7.947285496356926e-08, \"own_anchor_kl\": 0.0011461061658337712, \"fixed_anchor_kl\": 5.574118404183537e-05, \"live_anchor_kl\": 0.001090364996343851, \"alignment_total\": 0.01509828306734562, \"alignment_pg\": -0.010615327395498753, \"alignment_kl\": 0.025713611394166946, \"chosen_offsets\": [61, 72, 102, 129], \"direction_scale\": 0.039657846093177795, \"query_grad_norm\": 6.094204902648926, \"alignment_after\": 0.015627427026629448, \"pg_after\": -0.010308743454515934, \"kl_after\": 0.025936171412467957, \"proxy_opd_loss\": 0.2771305441856384, \"proxy_grad_norm\": 0.9777613878250122, \"query_before\": 1.8585455417633057, \"query_after\": 1.8584721088409424, \"query_gain\": 7.343292236328125e-05, \"query_example_ids\": [7, 305], \"proxy_predicted_gain\": 7.553768447694731e-05, \"elapsed\": 309.8993582725525, \"source\": \"proxy_prefix\", \"mean_reward\": 0.75, \"correct\": 0.75, \"cap_rate\": 0.0, \"reward_std\": 0.4330126941204071, \"policy_loss\": 2.9802322387695312e-08, \"reference_kl\": 2.7251550363871502e-05, \"process_kl\": 0.03509828448295593, \"grad_norm\": 0.17819835245609283, \"max_gpu_gb\": 19.736060928}"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     35/   120| tot_loss: 0.3283 | rl_loss: 0.3283 | pt_loss: 0.0000 | pg_loss: 0.1325 | reg_loss: 0.1958 | reward: -0.0378 | rev_kl: 0.2195 | stu_lens: 304.9000 | mixed_lens: 304.9000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.263 | step time: 0.473"
     },
     "rank_live": {
       "manifest": {
         "start": 1789100182.9312775,
-        "completed_steps": 14,
+        "end": 1789101454.4304333,
+        "complete": true,
+        "completed_steps": 64,
         "trainable_parameters": 5767168,
         "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.0341796875,
+          "mean_abs_logit_error": 0.004757169634103775,
+          "argmax_equal": true
+        },
         "fd_check": {
           "c": {
             "cosine": 0.9999994039535522,
@@ -547,60 +682,60 @@
         "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
       },
       "last_update": {
-        "step": 14,
-        "anti_weight": 0.5,
-        "answer_ce": 0.015344323590397835,
-        "own_answer_ce": 0.03068852797150612,
-        "live_answer_ce": 1.1920927533992653e-07,
-        "own_anchor_kl": 0.0008774409070611,
-        "fixed_anchor_kl": 4.1368311940459535e-05,
-        "live_anchor_kl": 0.0008360726060345769,
-        "target_kl": 30.341796875,
+        "step": 64,
+        "anti_weight": 2,
+        "answer_ce": 1.3224984407424927,
+        "own_answer_ce": 0.0011924158316105604,
+        "live_answer_ce": 2.6438045501708984,
+        "own_anchor_kl": 0.0027608140371739864,
+        "fixed_anchor_kl": 0.0007228526519611478,
+        "live_anchor_kl": 0.0020379615016281605,
+        "target_kl": 22.174095153808594,
         "chosen_offsets": [
-          54,
-          92,
-          169,
-          97
+          117,
+          166,
+          66,
+          121
         ],
-        "alignment_after": 0.015597924590110779,
-        "pg_after": -0.010264256969094276,
-        "kl_after": 0.025862181559205055,
-        "proxy_opd_loss": 0.276878297328949,
-        "proxy_grad_norm": 0.9763516783714294,
-        "query_before": 1.8585373163223267,
-        "query_after": 1.8584665060043335,
-        "query_gain": 7.081031799316406e-05,
+        "alignment_after": -0.069670669734478,
+        "pg_after": -0.07825265824794769,
+        "kl_after": 0.008581985719501972,
+        "proxy_opd_loss": 0.43352434039115906,
+        "proxy_grad_norm": 0.9308086633682251,
+        "query_before": 1.172992467880249,
+        "query_after": 1.1738481521606445,
+        "query_gain": -0.0008556842803955078,
         "query_example_ids": [
-          7,
-          305
+          31,
+          283
         ],
-        "proxy_predicted_gain": 7.540881329329951e-05,
-        "elapsed": 293.441694021225,
+        "proxy_predicted_gain": -0.000856968572974397,
+        "elapsed": 1228.2180099487305,
         "source": "proxy_prefix",
-        "mean_reward": 0.75,
-        "correct": 0.75,
+        "mean_reward": 0.25,
+        "correct": 0.25,
         "cap_rate": 0,
         "reward_std": 0.4330126941204071,
-        "policy_loss": 2.9802322387695312e-08,
-        "reference_kl": 2.1948748781142058e-05,
-        "process_kl": 30.341796875,
-        "grad_norm": 13.00114631652832,
+        "policy_loss": -2.9802322387695312e-08,
+        "reference_kl": 0.00201736234157579,
+        "process_kl": 22.174095153808594,
+        "grad_norm": 61.97623825073242,
         "max_gpu_gb": 19.734096896
       },
       "means": {
-        "query_gain": 0.0009779759815761022,
-        "proxy_predicted_gain": 0.0009894999619370962,
-        "query_before": 3.179442363125937,
-        "alignment_after": 0.0735887922346592,
-        "pg_after": 0.043743472579600554,
-        "kl_after": 0.029845315164753368,
-        "fixed_anchor_kl": 3.6687832004262635e-05,
-        "live_anchor_kl": 7.996505755565002e-05,
-        "correct": 0.9107142857142857,
+        "query_gain": 0.00046999379992485046,
+        "proxy_predicted_gain": 0.0004726934317297901,
+        "query_before": 2.9328369460999966,
+        "alignment_after": 0.02135360192914959,
+        "pg_after": -0.019527359239873476,
+        "kl_after": 0.040880959466448985,
+        "fixed_anchor_kl": 0.0002378085150006315,
+        "live_anchor_kl": 0.0002833952206113821,
+        "correct": 0.92578125,
         "cap_rate": 0
       },
-      "teacher_reward_varying_groups": 1,
-      "active_anti_updates": 6,
+      "teacher_reward_varying_groups": 7,
+      "active_anti_updates": 56,
       "queue": {
         "start": 1789100000.6042442,
         "driver_pid": 3977636,
@@ -611,13 +746,15 @@
         "steps": 64,
         "completed_phases": [
           "device_check",
-          "smoke"
+          "smoke",
+          "train",
+          "teacher64"
         ],
         "allocation_check": {
-          "time": 1789100169.4695573,
-          "info": "JobId=9801341 JobName=hold-1gpu-8h-c4m32-g24-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3600 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=02:33:50 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:42:19 EndTime=2026-09-11T05:42:19 Deadline=N/A PreemptEligibleTime=2026-09-10T21:43:19 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:42:19 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu019 BatchHost=gpu019 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+          "time": 1789101794.2500055,
+          "info": "JobId=9801341 JobName=hold-1gpu-8h-c4m32-g24-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3600 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:00:55 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:42:19 EndTime=2026-09-11T05:42:19 Deadline=N/A PreemptEligibleTime=2026-09-10T21:43:19 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:42:19 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu019 BatchHost=gpu019 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
         },
-        "phase": "train",
+        "phase": "opd120",
         "command": [
           "srun",
           "--jobid=9801341",
@@ -629,38 +766,257 @@
           "-c4",
           "--gres=gpu:1",
           "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train.py",
-          "--arm",
-          "rank_live",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
           "--teacher",
-          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
-          "--proxy",
-          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
-          "--context",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
-          "--output",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/rank_live",
-          "--steps",
-          "64",
-          "--process-weight",
-          "2",
-          "--max-seconds",
-          "3600"
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/rank_live/model",
+          "--label",
+          "update_rank_live_s10",
+          "--seed",
+          "10"
         ],
-        "process_pid": 3997761
+        "process_pid": 4164201,
+        "training_result": {
+          "completed_steps": 64,
+          "merge_check": {
+            "max_abs_logit_error": 0.0341796875,
+            "mean_abs_logit_error": 0.004757169634103775,
+            "argmax_equal": true
+          },
+          "fd_check": {
+            "c": {
+              "cosine": 0.9999994039535522,
+              "relative_error": 0.0011288452660664916
+            },
+            "d": {
+              "cosine": 0.9999998807907104,
+              "relative_error": 0.0006074329721741378
+            }
+          },
+          "trainable_parameters": 5767168
+        },
+        "teacher_results": {
+          "old64": {
+            "greedy": {
+              "candidate": 0.921875,
+              "original": 0.90625,
+              "comparison": {
+                "delta_pp": 1.5625,
+                "wrong_to_right": 2,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -3.125,
+                  6.25
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.890625,
+              "original": 0.921875,
+              "comparison": {
+                "delta_pp": -3.125,
+                "wrong_to_right": 0,
+                "right_to_wrong": 2,
+                "mcnemar_exact_p": 0.5,
+                "paired_bootstrap95_pp": [
+                  -7.8125,
+                  0
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.859375,
+              "original": 0.828125,
+              "comparison": {
+                "delta_pp": 3.125,
+                "wrong_to_right": 3,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 0.625,
+                "paired_bootstrap95_pp": [
+                  -3.125,
+                  9.375
+                ]
+              }
+            }
+          }
+        }
       },
       "log_errors": [],
-      "last_log_progress": "TRAIN {\"step\": 14, \"anti_weight\": 0.5, \"answer_ce\": 0.015344323590397835, \"own_answer_ce\": 0.03068852797150612, \"live_answer_ce\": 1.1920927533992653e-07, \"own_anchor_kl\": 0.0008774409070611, \"fixed_anchor_kl\": 4.1368311940459535e-05, \"live_anchor_kl\": 0.0008360726060345769, \"target_kl\": 30.341796875, \"chosen_offsets\": [54, 92, 169, 97], \"alignment_after\": 0.015597924590110779, \"pg_after\": -0.010264256969094276, \"kl_after\": 0.025862181559205055, \"proxy_opd_loss\": 0.276878297328949, \"proxy_grad_norm\": 0.9763516783714294, \"query_before\": 1.8585373163223267, \"query_after\": 1.8584665060043335, \"query_gain\": 7.081031799316406e-05, \"query_example_ids\": [7, 305], \"proxy_predicted_gain\": 7.540881329329951e-05, \"elapsed\": 293.441694021225, \"source\": \"proxy_prefix\", \"mean_reward\": 0.75, \"correct\": 0.75, \"cap_rate\": 0.0, \"reward_std\": 0.4330126941204071, \"policy_loss\": 2.9802322387695312e-08, \"reference_kl\": 2.1948748781142058e-05, \"process_kl\": 30.341796875, \"grad_norm\": 13.00114631652832, \"max_gpu_gb\": 19.734096896}"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     39/   120| tot_loss: 0.3110 | rl_loss: 0.3110 | pt_loss: 0.0000 | pg_loss: 0.1498 | reg_loss: 0.1611 | reward: -0.0342 | rev_kl: 0.1189 | stu_lens: 281.0000 | mixed_lens: 281.0000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.000"
     },
     "kl_only_smoke": {
       "manifest": {
         "start": 1789100454.1661158,
+        "end": 1789100556.7110746,
+        "complete": true,
+        "completed_steps": 2,
+        "trainable_parameters": 5767168,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.05859375,
+          "mean_abs_logit_error": 0.016856584697961807,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999994039535522,
+            "relative_error": 0.0011180483270436525
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.00047308497596532106
+          }
+        },
         "code_sha256": "19caf489ce940bad9f7829214978dd451a73f29dbf3be9121699753a6f67c235"
       },
-      "log_errors": []
+      "last_update": {
+        "step": 2,
+        "anti_weight": 2,
+        "answer_ce": 1.604665756225586,
+        "own_answer_ce": 0.0003302220720797777,
+        "live_answer_ce": 3.209001302719116,
+        "own_anchor_kl": 9.929174666467588e-06,
+        "fixed_anchor_kl": 2.2536701393960357e-08,
+        "live_anchor_kl": 9.906638297252357e-06,
+        "alignment_total": 0.5154680013656616,
+        "alignment_pg": 0,
+        "alignment_kl": 0.5154680013656616,
+        "chosen_offsets": [
+          36,
+          123,
+          118,
+          93
+        ],
+        "direction_scale": 0.03479614853858948,
+        "query_grad_norm": 21.97673797607422,
+        "alignment_after": 0.8021972179412842,
+        "pg_after": 0.2891908288002014,
+        "kl_after": 0.513006329536438,
+        "proxy_opd_loss": 0.12218412756919861,
+        "proxy_grad_norm": 0.9515420198440552,
+        "query_before": 6.89545202255249,
+        "query_after": 6.883254051208496,
+        "query_gain": 0.01219797134399414,
+        "query_example_ids": [
+          54,
+          310
+        ],
+        "proxy_predicted_gain": 0.012268897673018843,
+        "elapsed": 66.36734676361084,
+        "source": "proxy_prefix",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 1.896522007882595e-06,
+        "process_kl": 0.5354679822921753,
+        "grad_norm": 3.4448366165161133,
+        "max_gpu_gb": 18.563785216
+      },
+      "means": {
+        "query_gain": 0.007158041000366211,
+        "proxy_predicted_gain": 0.007196704163076274,
+        "query_before": 4.974697113037109,
+        "query_grad_norm": 15.796454429626465,
+        "alignment_after": 0.5687286853790283,
+        "pg_after": 0.17387543432414532,
+        "kl_after": 0.39485323429107666,
+        "fixed_anchor_kl": 1.1268350696980178e-08,
+        "live_anchor_kl": 4.9533191486261785e-06,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 2,
+      "log_errors": [],
+      "last_log_progress": "7.self_attn.v_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.self_attn.o_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.self_attn.o_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.gate_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.up_proj.lora_B.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_A.default.weight\", \"base_model.model.model.layers.27.mlp.down_proj.lora_B.default.weight\"], \"gradient_scaling\": {\"init_scale\": 128.0, \"growth_interval\": 100000, \"nonfinite_gradients_fatal\": true}, \"fd_check\": {\"c\": {\"cosine\": 0.9999994039535522, \"relative_error\": 0.0011180483270436525}, \"d\": {\"cosine\": 0.9999998807907104, \"relative_error\": 0.00047308497596532106}}, \"completed_steps\": 2, \"merge_check\": {\"max_abs_logit_error\": 0.05859375, \"mean_abs_logit_error\": 0.016856584697961807, \"argmax_equal\": true}, \"complete\": true, \"end\": 1789100556.7110746, \"plain_model_path\": \"/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/kl_only_smoke/model\"}"
     },
     "kl_only": {
-      "manifest": {},
+      "manifest": {
+        "start": 1789100573.4969597,
+        "end": 1789101844.2877197,
+        "complete": true,
+        "completed_steps": 64,
+        "trainable_parameters": 5767168,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "max_abs_logit_error": 0.046875,
+          "mean_abs_logit_error": 0.005328865256160498,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999994039535522,
+            "relative_error": 0.0011288452660664916
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.0006074329721741378
+          }
+        },
+        "code_sha256": "19caf489ce940bad9f7829214978dd451a73f29dbf3be9121699753a6f67c235"
+      },
+      "last_update": {
+        "step": 64,
+        "anti_weight": 2,
+        "answer_ce": 0.0005650443490594625,
+        "own_answer_ce": 0.0011286581866443157,
+        "live_answer_ce": 1.430509428246296e-06,
+        "own_anchor_kl": 7.110840670065954e-05,
+        "fixed_anchor_kl": 1.8644348529051058e-05,
+        "live_anchor_kl": 5.246405999059789e-05,
+        "alignment_total": -0.25255465507507324,
+        "alignment_pg": 0,
+        "alignment_kl": -0.25255465507507324,
+        "chosen_offsets": [
+          48,
+          102,
+          35,
+          116
+        ],
+        "direction_scale": 0.05606301873922348,
+        "query_grad_norm": 8.988636016845703,
+        "alignment_after": -0.21298910677433014,
+        "pg_after": 0.039203934371471405,
+        "kl_after": -0.25219303369522095,
+        "proxy_opd_loss": 0.24124915897846222,
+        "proxy_grad_norm": 1.1766810417175293,
+        "query_before": 1.160488486289978,
+        "query_after": 1.162286400794983,
+        "query_gain": -0.0017979145050048828,
+        "query_example_ids": [
+          31,
+          283
+        ],
+        "proxy_predicted_gain": -0.0018243111808357016,
+        "elapsed": 1233.601116657257,
+        "source": "proxy_prefix",
+        "mean_reward": 1,
+        "correct": 1,
+        "cap_rate": 0,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 8.485260138968442e-06,
+        "process_kl": 0,
+        "grad_norm": 0.018320566043257713,
+        "max_gpu_gb": 19.734096896
+      },
+      "means": {
+        "query_gain": 0.0005231890827417374,
+        "proxy_predicted_gain": 0.0005285470196483402,
+        "query_before": 2.933179846033454,
+        "query_grad_norm": 13.31198374927044,
+        "alignment_after": 0.014438647793213022,
+        "pg_after": -0.028433971747290343,
+        "kl_after": 0.042872620804701,
+        "fixed_anchor_kl": 1.7527798567035235e-05,
+        "live_anchor_kl": 5.0388797237177485e-05,
+        "correct": 0.9296875,
+        "cap_rate": 0
+      },
+      "teacher_reward_varying_groups": 8,
+      "active_anti_updates": 56,
       "queue": {
         "start": 1789100419.955727,
         "driver_pid": 4021652,
@@ -670,13 +1026,16 @@
         "arm": "kl_only",
         "steps": 64,
         "completed_phases": [
-          "device_check"
+          "device_check",
+          "smoke",
+          "train",
+          "teacher64"
         ],
         "allocation_check": {
-          "time": 1789100435.6527967,
-          "info": "JobId=9817267 JobName=hold-1gpu-8h-c4m32-g25-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:11:08 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T00:09:08 EligibleTime=2026-09-11T00:09:08 AccrueTime=2026-09-11T00:09:08 StartTime=2026-09-11T00:09:27 EndTime=2026-09-11T08:09:27 Deadline=N/A PreemptEligibleTime=2026-09-11T00:10:27 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T00:09:27 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3950872 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g25.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-gq-9817267.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-gq-9817267.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+          "time": 1789102146.7026162,
+          "info": "JobId=9817267 JobName=hold-1gpu-8h-c4m32-g25-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:39:39 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T00:09:08 EligibleTime=2026-09-11T00:09:08 AccrueTime=2026-09-11T00:09:08 StartTime=2026-09-11T00:09:27 EndTime=2026-09-11T08:09:27 Deadline=N/A PreemptEligibleTime=2026-09-11T00:10:27 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T00:09:27 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3950872 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g25.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-gq-9817267.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-gq-9817267.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
         },
-        "phase": "smoke",
+        "phase": "opd120",
         "command": [
           "srun",
           "--jobid=9817267",
@@ -688,35 +1047,83 @@
           "-c4",
           "--gres=gpu:1",
           "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_kl_ablation.py",
-          "--arm",
-          "kl_only",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
           "--teacher",
-          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
-          "--proxy",
-          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
-          "--context",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
-          "--output",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/kl_only_smoke",
-          "--steps",
-          "2",
-          "--group",
-          "2",
-          "--max-new-tokens",
-          "256",
-          "--proxy-max-tokens",
-          "192",
-          "--anti-warmup",
-          "0",
-          "--anti-ramp-end",
-          "1",
-          "--max-seconds",
-          "600"
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/kl_only/model",
+          "--label",
+          "update_kl_only_s10",
+          "--seed",
+          "10"
         ],
-        "process_pid": 4024318
+        "process_pid": 10059,
+        "training_result": {
+          "completed_steps": 64,
+          "merge_check": {
+            "max_abs_logit_error": 0.046875,
+            "mean_abs_logit_error": 0.005328865256160498,
+            "argmax_equal": true
+          },
+          "fd_check": {
+            "c": {
+              "cosine": 0.9999994039535522,
+              "relative_error": 0.0011288452660664916
+            },
+            "d": {
+              "cosine": 0.9999998807907104,
+              "relative_error": 0.0006074329721741378
+            }
+          },
+          "trainable_parameters": 5767168
+        },
+        "teacher_results": {
+          "old64": {
+            "greedy": {
+              "candidate": 0.90625,
+              "original": 0.90625,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.90625,
+              "original": 0.921875,
+              "comparison": {
+                "delta_pp": -1.5625,
+                "wrong_to_right": 0,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -4.6875,
+                  0
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.84375,
+              "original": 0.828125,
+              "comparison": {
+                "delta_pp": 1.5625,
+                "wrong_to_right": 1,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  4.6875
+                ]
+              }
+            }
+          }
+        }
       },
-      "log_errors": []
+      "log_errors": [],
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     17/   120| tot_loss: 0.5546 | rl_loss: 0.5546 | pt_loss: 0.0000 | pg_loss: 0.4685 | reg_loss: 0.0862 | reward: -0.0471 | rev_kl: 0.0363 | stu_lens: 194.5000 | mixed_lens: 194.5000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.259 | step time: 0.000"
     }
   }
 }
