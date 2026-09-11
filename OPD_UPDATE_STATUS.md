@@ -100,3 +100,5 @@ corrected MiniLLM166/240、fullFKL120/240、shortFKL36/240、longFKL32/240；FP1
 Full FKL240已完成：val12057.8125/24059.375 vs64.0625，无增益，正在selectedold200；故优先拆分检查其他基础目标。新direct_fkl_dense smoke已通过，进入正式128训练；highlrMiniLLM32/480，shortFKL184/long146，其他防御OPD继续，无端点更新。
 
 04:20ET：新gpu012双路CPU解析RKL/PG梯度、padding和符号检查PASS；reverse_kl/immediate_pg parents757545/757546已启动，待核实物理GPU和烟测。fullFKL整条完成释放gpu001一张，计划rank_minillm_driver.py --mode rank_minillm：strongrank普通teacherFP16+修正MiniLLM240 lr1e-6，同原MiniLLM clean240起点/seed10/数据/预算，120和240各自匹配clean端点old200，无最差student挑选；随后独立teacher200 g/s/raw。补上旧BF16teacher/legacyOPD协议差异；结果为独立探索，不能因此回溯改变旧结果。无新teacher训练/外挂/LoRA。独立record与评估目录避免GPU010仍在strongrank旧OPD的写入碰撞，待启动。
+
+04:22ET接续设备核实：gpu012 reverse_kl worker1356227 step9800274.1 UUID920c68ed…，immediate_pg worker1356226 step.0 UUID40f94ca1…，不同物理卡，均smoke4。gpu001 rank_minillm parent759183/worker359618 step9800275.7 UUID4dd9d50d…，也smoke4，与highlr不同GPU。所有新检查通过到模型加载，无错误，尚未报告smoke完成。fullFKL旧20045.5为原teacher无防御退化，见BASELINE_STATUS与full_fkl_endpoint_summary，不能算目标达成。代码136105d推拉一致。

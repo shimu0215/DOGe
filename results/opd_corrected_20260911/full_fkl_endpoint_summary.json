@@ -1,0 +1,23 @@
+{
+  "source": "results/opd_corrected_20260911/forward_kl_selected_test0/gsm8k-results.json",
+  "selection": "Heldout train128 selected240 over120; not selected on test",
+  "old_test_n": 200,
+  "sft_accuracy": 0.505,
+  "fkl_accuracy": 0.455,
+  "vs_sft": {
+    "delta_pp": -5.0,
+    "wrong_to_right": 20,
+    "right_to_wrong": 30,
+    "mcnemar_exact_p": 0.20263875106454066,
+    "paired_bootstrap95_pp": [
+      -12.0,
+      2.0
+    ]
+  },
+  "validation": {
+    "initial": 0.640625,
+    "120": 0.578125,
+    "240": 0.59375
+  },
+  "interpretation": "Unmodified original teacher. This is a weak/degrading clean baseline, not a defense success."
+}
