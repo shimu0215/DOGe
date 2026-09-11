@@ -22,3 +22,5 @@
 
 ## Sep11 01:30 ET interim actual OPD endpoints
 On previously explored old200, seed10, unchanged120stepOPD: full_update52.0%, rank_live51.0%, kl_only48.5%; originalteacher clean49.5%, SFT50.5%. Paired candidate-minus-clean95% intervals respectively[-2,7],[-3.5,6.5],[-6,4] percentagepoints. These are completed student endpoints but not yet completed joint teacher/student evaluations. Recovered preservation control and extra200 pending. No established suppression or teacher preservation claim. KL-only is prioritized for a gentle schedule/direct-last-layer follow-up because of the point estimate and latest user preference, with selection caveat.
+
+Teacher old200 evaluation subsequently completed for full_update:90.5/90.5/88.5% (greedy/ordinary/raw), and rank_live:90/90.5/86.5%; original90/90.5/88%. Their student52/51% endpoints do not demonstrate suppression. KL-only teacher200 and all extra200 slices still pending at 2026-09-11T01:35:50.272780-04:00.
