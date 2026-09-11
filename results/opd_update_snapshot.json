@@ -1,5 +1,5 @@
 {
-  "time": 1789105571.0182455,
+  "time": 1789106457.8804748,
   "arms": {
     "full_update_smoke": {
       "manifest": {
@@ -32,9 +32,9 @@
         "answer_ce": 1.6046861410140991,
         "own_answer_ce": 0.00033023697324097157,
         "live_answer_ce": 3.2090420722961426,
-        "own_anchor_kl": 9.028130079968832e-06,
-        "fixed_anchor_kl": 1.3431427525745221e-08,
-        "live_anchor_kl": 9.01469866221305e-06,
+        "own_anchor_kl": 0.000009028130079968832,
+        "fixed_anchor_kl": 1.3431427525745221e-8,
+        "live_anchor_kl": 0.00000901469866221305,
         "alignment_total": 0.8054131865501404,
         "alignment_pg": 0.29016193747520447,
         "alignment_kl": 0.5152512788772583,
@@ -66,7 +66,7 @@
         "cap_rate": 1,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 3.2652169466018677e-06,
+        "reference_kl": 0.0000032652169466018677,
         "process_kl": 0.825413167476654,
         "grad_norm": 4.019375324249268,
         "max_gpu_gb": 18.563785216
@@ -79,8 +79,8 @@
         "alignment_after": 0.569463923573494,
         "pg_after": 0.17395242117345333,
         "kl_after": 0.3955114781856537,
-        "fixed_anchor_kl": 6.7157137628726105e-09,
-        "live_anchor_kl": 4.507349331106525e-06,
+        "fixed_anchor_kl": 6.7157137628726105e-9,
+        "live_anchor_kl": 0.000004507349331106525,
         "correct": 0,
         "cap_rate": 1
       },
@@ -120,9 +120,9 @@
         "answer_ce": 1.604961633682251,
         "own_answer_ce": 0.0003302220720797777,
         "live_answer_ce": 3.2095930576324463,
-        "own_anchor_kl": 4.657426870835479e-06,
-        "fixed_anchor_kl": 5.380142109601138e-09,
-        "live_anchor_kl": 4.652046754927142e-06,
+        "own_anchor_kl": 0.000004657426870835479,
+        "fixed_anchor_kl": 5.380142109601138e-9,
+        "live_anchor_kl": 0.000004652046754927142,
         "alignment_total": 0.8055688142776489,
         "alignment_pg": 0.2899406850337982,
         "alignment_kl": 0.5156281590461731,
@@ -154,7 +154,7 @@
         "cap_rate": 1,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 1.316075213253498e-06,
+        "reference_kl": 0.000001316075213253498,
         "process_kl": 0.8255687952041626,
         "grad_norm": 2.022087812423706,
         "max_gpu_gb": 18.563785216
@@ -167,8 +167,8 @@
         "alignment_after": 0.5701275914907455,
         "pg_after": 0.1739121712744236,
         "kl_after": 0.39621545374393463,
-        "fixed_anchor_kl": 2.690071054800569e-09,
-        "live_anchor_kl": 2.326023377463571e-06,
+        "fixed_anchor_kl": 2.690071054800569e-9,
+        "live_anchor_kl": 0.000002326023377463571,
         "correct": 0,
         "cap_rate": 1
       },
@@ -201,8 +201,8 @@
           }
         },
         "permutation_check": {
-          "partition_error": 1.9073486328125e-06,
-          "entropy_error": 2.2351741790771484e-07,
+          "partition_error": 0.0000019073486328125,
+          "entropy_error": 2.2351741790771484e-7,
           "protected_error": 0
         },
         "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
@@ -213,9 +213,9 @@
         "answer_ce": 1.6007888317108154,
         "own_answer_ce": 0.00033023697324097157,
         "live_answer_ce": 3.201247453689575,
-        "own_anchor_kl": 5.941176823398564e-06,
-        "fixed_anchor_kl": 1.089974034584884e-06,
-        "live_anchor_kl": 4.851202902500518e-06,
+        "own_anchor_kl": 0.000005941176823398564,
+        "fixed_anchor_kl": 0.000001089974034584884,
+        "live_anchor_kl": 0.000004851202902500518,
         "target_kl": 28.736328125,
         "chosen_offsets": [
           62,
@@ -243,7 +243,7 @@
         "cap_rate": 1,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 2.129119820892811e-06,
+        "reference_kl": 0.000002129119820892811,
         "process_kl": 28.736328125,
         "grad_norm": 45.573753356933594,
         "max_gpu_gb": 18.563785216
@@ -255,8 +255,8 @@
         "alignment_after": 0.5707886815071106,
         "pg_after": 0.1739794872701168,
         "kl_after": 0.3968091905117035,
-        "fixed_anchor_kl": 5.44987017292442e-07,
-        "live_anchor_kl": 2.425601451250259e-06,
+        "fixed_anchor_kl": 5.44987017292442e-7,
+        "live_anchor_kl": 0.000002425601451250259,
         "correct": 0,
         "cap_rate": 1
       },
@@ -295,10 +295,10 @@
         "anti_weight": 2,
         "answer_ce": 0.0005734731676056981,
         "own_answer_ce": 0.0011455158237367868,
-        "live_answer_ce": 1.430509428246296e-06,
-        "own_anchor_kl": 6.02455111220479e-05,
-        "fixed_anchor_kl": 2.542257061577402e-05,
-        "live_anchor_kl": 3.482294050627388e-05,
+        "live_answer_ce": 0.000001430509428246296,
+        "own_anchor_kl": 0.0000602455111220479,
+        "fixed_anchor_kl": 0.00002542257061577402,
+        "live_anchor_kl": 0.00003482294050627388,
         "alignment_total": -0.21287992596626282,
         "alignment_pg": 0.038941703736782074,
         "alignment_kl": -0.2518216371536255,
@@ -330,7 +330,7 @@
         "cap_rate": 0,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 6.792027306801174e-06,
+        "reference_kl": 0.000006792027306801174,
         "process_kl": 0,
         "grad_norm": 0.015108923427760601,
         "max_gpu_gb": 19.734096896
@@ -343,8 +343,8 @@
         "alignment_after": 0.014513710064420593,
         "pg_after": -0.028426557815691922,
         "kl_after": 0.042940268642269075,
-        "fixed_anchor_kl": 1.6521356428128575e-05,
-        "live_anchor_kl": 5.080270156954114e-05,
+        "fixed_anchor_kl": 0.000016521356428128575,
+        "live_anchor_kl": 0.00005080270156954114,
         "correct": 0.9296875,
         "cap_rate": 0
       },
@@ -365,7 +365,8 @@
           "teacher64",
           "opd120",
           "teacher200",
-          "student_fresh600"
+          "student_fresh600",
+          "teacher_fresh600"
         ],
         "allocation_check": {
           "time": 1789105129.0662243,
@@ -505,6 +506,50 @@
                 ]
               }
             }
+          },
+          "extra200": {
+            "greedy": {
+              "candidate": 0.915,
+              "original": 0.915,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.925,
+              "original": 0.915,
+              "comparison": {
+                "delta_pp": 1,
+                "wrong_to_right": 2,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 0.5,
+                "paired_bootstrap95_pp": [
+                  0,
+                  2.5
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.91,
+              "original": 0.91,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 1,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -1.5,
+                  1.5
+                ]
+              }
+            }
           }
         },
         "student_results": {
@@ -564,10 +609,13 @@
               ]
             }
           }
-        }
+        },
+        "complete": true,
+        "all_planned_phases_complete": true,
+        "end": 1789105872.4704602
       },
       "log_errors": [],
-      "last_log_progress": "sampling 144 / 200"
+      "last_log_progress": "raw 200 / 200"
     },
     "control": {
       "manifest": {
@@ -599,10 +647,10 @@
         "anti_weight": 0,
         "answer_ce": 0.0005786176770925522,
         "own_answer_ce": 0.0011558644473552704,
-        "live_answer_ce": 1.3709048971577431e-06,
-        "own_anchor_kl": 3.265376653871499e-05,
-        "fixed_anchor_kl": 9.628004590922501e-06,
-        "live_anchor_kl": 2.3025761038297787e-05,
+        "live_answer_ce": 0.0000013709048971577431,
+        "own_anchor_kl": 0.00003265376653871499,
+        "fixed_anchor_kl": 0.000009628004590922501,
+        "live_anchor_kl": 0.000023025761038297787,
         "alignment_total": -0.21211925148963928,
         "alignment_pg": 0.04077864810824394,
         "alignment_kl": -0.25289788842201233,
@@ -634,7 +682,7 @@
         "cap_rate": 0,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 3.533750884798792e-06,
+        "reference_kl": 0.000003533750884798792,
         "process_kl": 0,
         "grad_norm": 0.012103299610316753,
         "max_gpu_gb": 19.736060928
@@ -647,8 +695,8 @@
         "alignment_after": 0.014277269094236544,
         "pg_after": -0.028475516544858692,
         "kl_after": 0.04275278470595367,
-        "fixed_anchor_kl": 1.45894607320729e-05,
-        "live_anchor_kl": 4.983737665387178e-05,
+        "fixed_anchor_kl": 0.0000145894607320729,
+        "live_anchor_kl": 0.00004983737665387178,
         "correct": 0.93359375,
         "cap_rate": 0
       },
@@ -790,7 +838,7 @@
         },
         "permutation_check": {
           "partition_error": 0,
-          "entropy_error": 3.5762786865234375e-07,
+          "entropy_error": 3.5762786865234375e-7,
           "protected_error": 0
         },
         "code_sha256": "28e5e0fd56d3f2480051fa59802fde14b171edd253f64d855ae5ff4669cfdacf"
@@ -830,7 +878,7 @@
         "correct": 0.25,
         "cap_rate": 0,
         "reward_std": 0.4330126941204071,
-        "policy_loss": -2.9802322387695312e-08,
+        "policy_loss": -2.9802322387695312e-8,
         "reference_kl": 0.00201736234157579,
         "process_kl": 22.174095153808594,
         "grad_norm": 61.97623825073242,
@@ -865,7 +913,8 @@
           "teacher64",
           "opd120",
           "teacher200",
-          "student_fresh600"
+          "student_fresh600",
+          "teacher_fresh600"
         ],
         "allocation_check": {
           "time": 1789105097.9527445,
@@ -1005,6 +1054,50 @@
                 ]
               }
             }
+          },
+          "extra200": {
+            "greedy": {
+              "candidate": 0.905,
+              "original": 0.915,
+              "comparison": {
+                "delta_pp": -1,
+                "wrong_to_right": 0,
+                "right_to_wrong": 2,
+                "mcnemar_exact_p": 0.5,
+                "paired_bootstrap95_pp": [
+                  -2.5,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.92,
+              "original": 0.915,
+              "comparison": {
+                "delta_pp": 0.5,
+                "wrong_to_right": 3,
+                "right_to_wrong": 2,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -1.5,
+                  2.5
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.905,
+              "original": 0.91,
+              "comparison": {
+                "delta_pp": -0.5,
+                "wrong_to_right": 2,
+                "right_to_wrong": 3,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -2.5,
+                  1.5
+                ]
+              }
+            }
           }
         },
         "student_results": {
@@ -1064,10 +1157,13 @@
               ]
             }
           }
-        }
+        },
+        "complete": true,
+        "all_planned_phases_complete": true,
+        "end": 1789105841.0044353
       },
       "log_errors": [],
-      "last_log_progress": "sampling 184 / 200"
+      "last_log_progress": "raw 200 / 200"
     },
     "kl_only_smoke": {
       "manifest": {
@@ -1100,9 +1196,9 @@
         "answer_ce": 1.604665756225586,
         "own_answer_ce": 0.0003302220720797777,
         "live_answer_ce": 3.209001302719116,
-        "own_anchor_kl": 9.929174666467588e-06,
-        "fixed_anchor_kl": 2.2536701393960357e-08,
-        "live_anchor_kl": 9.906638297252357e-06,
+        "own_anchor_kl": 0.000009929174666467588,
+        "fixed_anchor_kl": 2.2536701393960357e-8,
+        "live_anchor_kl": 0.000009906638297252357,
         "alignment_total": 0.5154680013656616,
         "alignment_pg": 0,
         "alignment_kl": 0.5154680013656616,
@@ -1134,7 +1230,7 @@
         "cap_rate": 1,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 1.896522007882595e-06,
+        "reference_kl": 0.000001896522007882595,
         "process_kl": 0.5354679822921753,
         "grad_norm": 3.4448366165161133,
         "max_gpu_gb": 18.563785216
@@ -1147,8 +1243,8 @@
         "alignment_after": 0.5687286853790283,
         "pg_after": 0.17387543432414532,
         "kl_after": 0.39485323429107666,
-        "fixed_anchor_kl": 1.1268350696980178e-08,
-        "live_anchor_kl": 4.9533191486261785e-06,
+        "fixed_anchor_kl": 1.1268350696980178e-8,
+        "live_anchor_kl": 0.0000049533191486261785,
         "correct": 0,
         "cap_rate": 1
       },
@@ -1187,10 +1283,10 @@
         "anti_weight": 2,
         "answer_ce": 0.0005650443490594625,
         "own_answer_ce": 0.0011286581866443157,
-        "live_answer_ce": 1.430509428246296e-06,
-        "own_anchor_kl": 7.110840670065954e-05,
-        "fixed_anchor_kl": 1.8644348529051058e-05,
-        "live_anchor_kl": 5.246405999059789e-05,
+        "live_answer_ce": 0.000001430509428246296,
+        "own_anchor_kl": 0.00007110840670065954,
+        "fixed_anchor_kl": 0.000018644348529051058,
+        "live_anchor_kl": 0.00005246405999059789,
         "alignment_total": -0.25255465507507324,
         "alignment_pg": 0,
         "alignment_kl": -0.25255465507507324,
@@ -1222,7 +1318,7 @@
         "cap_rate": 0,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 8.485260138968442e-06,
+        "reference_kl": 0.000008485260138968442,
         "process_kl": 0,
         "grad_norm": 0.018320566043257713,
         "max_gpu_gb": 19.734096896
@@ -1235,8 +1331,8 @@
         "alignment_after": 0.014438647793213022,
         "pg_after": -0.028433971747290343,
         "kl_after": 0.042872620804701,
-        "fixed_anchor_kl": 1.7527798567035235e-05,
-        "live_anchor_kl": 5.0388797237177485e-05,
+        "fixed_anchor_kl": 0.000017527798567035235,
+        "live_anchor_kl": 0.000050388797237177485,
         "correct": 0.9296875,
         "cap_rate": 0
       },
@@ -1257,7 +1353,8 @@
           "teacher64",
           "opd120",
           "teacher200",
-          "student_fresh600"
+          "student_fresh600",
+          "teacher_fresh600"
         ],
         "allocation_check": {
           "time": 1789105383.961972,
@@ -1397,6 +1494,50 @@
                 ]
               }
             }
+          },
+          "extra200": {
+            "greedy": {
+              "candidate": 0.915,
+              "original": 0.915,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.92,
+              "original": 0.915,
+              "comparison": {
+                "delta_pp": 0.5,
+                "wrong_to_right": 1,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  1.5
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.91,
+              "original": 0.91,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 1,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -1.5,
+                  1.5
+                ]
+              }
+            }
           }
         },
         "student_results": {
@@ -1456,10 +1597,13 @@
               ]
             }
           }
-        }
+        },
+        "complete": true,
+        "all_planned_phases_complete": true,
+        "end": 1789106138.8602371
       },
       "log_errors": [],
-      "last_log_progress": "greedy 136 / 200"
+      "last_log_progress": "raw 200 / 200"
     },
     "dense_update_smoke": {
       "manifest": {
@@ -1492,9 +1636,9 @@
         "answer_ce": 1.60078763961792,
         "own_answer_ce": 0.00033023697324097157,
         "live_answer_ce": 3.201245069503784,
-        "own_anchor_kl": 2.9117413191670494e-07,
-        "fixed_anchor_kl": 3.5653140439961817e-09,
-        "live_anchor_kl": 2.8760882742062677e-07,
+        "own_anchor_kl": 2.9117413191670494e-7,
+        "fixed_anchor_kl": 3.5653140439961817e-9,
+        "live_anchor_kl": 2.8760882742062677e-7,
         "alignment_total": 0.8052008748054504,
         "alignment_pg": 0.2899268567562103,
         "alignment_kl": 0.5152739882469177,
@@ -1650,7 +1794,7 @@
         "cap_rate": 1,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 2.352287992835045e-06,
+        "reference_kl": 0.000002352287992835045,
         "process_kl": 0.8252008557319641,
         "grad_norm": 4.160694599151611,
         "max_gpu_gb": 18.563785216
@@ -1663,8 +1807,8 @@
         "alignment_after": 0.5690400898456573,
         "pg_after": 0.17406108975410461,
         "kl_after": 0.39497901499271393,
-        "fixed_anchor_kl": 1.7826570219980908e-09,
-        "live_anchor_kl": 1.4380441371031338e-07,
+        "fixed_anchor_kl": 1.7826570219980908e-9,
+        "live_anchor_kl": 1.4380441371031338e-7,
         "correct": 0,
         "cap_rate": 1
       },
@@ -1703,10 +1847,10 @@
         "anti_weight": 2,
         "answer_ce": 0.0005726221716031432,
         "own_answer_ce": 0.0011438734363764524,
-        "live_answer_ce": 1.3709048971577431e-06,
-        "own_anchor_kl": 6.356539233820513e-05,
-        "fixed_anchor_kl": 1.333140789938625e-05,
-        "live_anchor_kl": 5.0233982619829476e-05,
+        "live_answer_ce": 0.0000013709048971577431,
+        "own_anchor_kl": 0.00006356539233820513,
+        "fixed_anchor_kl": 0.00001333140789938625,
+        "live_anchor_kl": 0.000050233982619829476,
         "alignment_total": -0.14525312185287476,
         "alignment_pg": 0.08934269100427628,
         "alignment_kl": -0.23459580540657043,
@@ -1898,7 +2042,7 @@
         "cap_rate": 0,
         "reward_std": 0,
         "policy_loss": 0,
-        "reference_kl": 6.621775924031681e-06,
+        "reference_kl": 0.000006621775924031681,
         "process_kl": 0,
         "grad_norm": 0.018212996423244476,
         "max_gpu_gb": 19.736060928
@@ -1911,8 +2055,8 @@
         "alignment_after": 0.014992305281339213,
         "pg_after": -0.02449191897540004,
         "kl_after": 0.03948422163375653,
-        "fixed_anchor_kl": 1.6571376048352127e-05,
-        "live_anchor_kl": 5.120732397645433e-05,
+        "fixed_anchor_kl": 0.000016571376048352127,
+        "live_anchor_kl": 0.00005120732397645433,
         "correct": 0.9296875,
         "cap_rate": 0
       },
@@ -1929,13 +2073,14 @@
         "completed_phases": [
           "device_check",
           "smoke",
-          "train"
+          "train",
+          "teacher64"
         ],
         "allocation_check": {
-          "time": 1789105309.2393425,
-          "info": "JobId=9817268 JobName=hold-1gpu-8h-c4m32-g25-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:40:18 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T00:09:08 EligibleTime=2026-09-11T00:09:08 AccrueTime=2026-09-11T00:09:08 StartTime=2026-09-11T01:01:31 EndTime=2026-09-11T09:01:31 Deadline=N/A PreemptEligibleTime=2026-09-11T01:02:31 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T01:01:31 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3950872 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu029 BatchHost=gpu029 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g25.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-cq-9817268.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-cq-9817268.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+          "time": 1789105616.7755795,
+          "info": "JobId=9817268 JobName=hold-1gpu-8h-c4m32-g25-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:45:25 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T00:09:08 EligibleTime=2026-09-11T00:09:08 AccrueTime=2026-09-11T00:09:08 StartTime=2026-09-11T01:01:31 EndTime=2026-09-11T09:01:31 Deadline=N/A PreemptEligibleTime=2026-09-11T01:02:31 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T01:01:31 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3950872 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu029 BatchHost=gpu029 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g25.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-cq-9817268.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g25-cq-9817268.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
         },
-        "phase": "teacher64",
+        "phase": "opd120",
         "command": [
           "srun",
           "--jobid=9817268",
@@ -1947,21 +2092,15 @@
           "-c4",
           "--gres=gpu:1",
           "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/evaluate_plain.py",
-          "--model",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
+          "--teacher",
           "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/dense_update/model",
-          "--examples",
-          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_gsm_test200/gsm8k-results.json",
-          "--output",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/dense_update_teacher64",
-          "--limit",
-          "64",
-          "--modes",
-          "greedy",
-          "sampling",
-          "raw"
+          "--label",
+          "update_dense_update_s10",
+          "--seed",
+          "10"
         ],
-        "process_pid": 201696,
+        "process_pid": 224737,
         "training_result": {
           "completed_steps": 64,
           "merge_check": {
@@ -1980,10 +2119,56 @@
             }
           },
           "trainable_parameters": 5767168
+        },
+        "teacher_results": {
+          "old64": {
+            "greedy": {
+              "candidate": 0.90625,
+              "original": 0.90625,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            },
+            "sampling": {
+              "candidate": 0.90625,
+              "original": 0.921875,
+              "comparison": {
+                "delta_pp": -1.5625,
+                "wrong_to_right": 0,
+                "right_to_wrong": 1,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  -4.6875,
+                  0
+                ]
+              }
+            },
+            "raw": {
+              "candidate": 0.828125,
+              "original": 0.828125,
+              "comparison": {
+                "delta_pp": 0,
+                "wrong_to_right": 0,
+                "right_to_wrong": 0,
+                "mcnemar_exact_p": 1,
+                "paired_bootstrap95_pp": [
+                  0,
+                  0
+                ]
+              }
+            }
+          }
         }
       },
       "log_errors": [],
-      "last_log_progress": "raw 32 / 64"
+      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:     49/   120| tot_loss: 0.6205 | rl_loss: 0.6205 | pt_loss: 0.0000 | pg_loss: 0.1477 | reg_loss: 0.4728 | reward: -0.0713 | rev_kl: 0.4964 | stu_lens: 307.5000 | mixed_lens: 307.5000 | lr: 5.0000e-07 | scale:   1.00 | time: 0.262 | step time: 0.000"
     },
     "control_recovery": {
       "manifest": {},
@@ -1996,13 +2181,14 @@
         "arm": "control_recovery",
         "steps": 64,
         "completed_phases": [
-          "device_check"
+          "device_check",
+          "opd120"
         ],
         "allocation_check": {
-          "time": 1789103812.5024788,
-          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=1 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:10:14 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T01:01:22 EligibleTime=2026-09-11T01:03:23 AccrueTime=2026-09-11T01:01:22 StartTime=2026-09-11T01:06:38 EndTime=2026-09-11T09:06:38 Deadline=N/A PreemptEligibleTime=2026-09-11T01:07:38 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T01:06:38 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu004 BatchHost=gpu004 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+          "time": 1789106110.6179175,
+          "info": "JobId=9795227 JobName=hold-1gpu-8h-c4m32-g23-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=1 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:48:32 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-11T01:01:22 EligibleTime=2026-09-11T01:03:23 AccrueTime=2026-09-11T01:01:22 StartTime=2026-09-11T01:06:38 EndTime=2026-09-11T09:06:38 Deadline=N/A PreemptEligibleTime=2026-09-11T01:07:38 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-11T01:06:38 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:2438803 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu004 BatchHost=gpu004 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g23.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g23-cq-9795227.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
         },
-        "phase": "opd120",
+        "phase": "teacher200",
         "command": [
           "srun",
           "--jobid=9795227",
@@ -2014,15 +2200,21 @@
           "-c4",
           "--gres=gpu:1",
           "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/run_opd.py",
-          "--teacher",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/evaluate_plain.py",
+          "--model",
           "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control/model",
-          "--label",
-          "update_control_recovery_s10",
-          "--seed",
-          "10"
+          "--examples",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_gsm_test200/gsm8k-results.json",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control_recovery_teacher200",
+          "--limit",
+          "200",
+          "--modes",
+          "greedy",
+          "sampling",
+          "raw"
         ],
-        "process_pid": 113543,
+        "process_pid": 254918,
         "recovery": {
           "original_queue": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/control_queue.json",
           "original_opd_manifest": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/update_control_s10_opd_manifest.json",
@@ -2093,19 +2285,306 @@
               }
             }
           }
+        },
+        "student_results": {
+          "old200": {
+            "n": 200,
+            "accuracy": {
+              "candidate": 0.53,
+              "clean": 0.495,
+              "sft": 0.505
+            },
+            "vs_clean": {
+              "delta_pp": 3.5000000000000004,
+              "wrong_to_right": 17,
+              "right_to_wrong": 10,
+              "mcnemar_exact_p": 0.24778856337070465,
+              "paired_bootstrap95_pp": [
+                -1.5,
+                8.5
+              ]
+            },
+            "vs_sft": {
+              "delta_pp": 2.5,
+              "wrong_to_right": 24,
+              "right_to_wrong": 19,
+              "mcnemar_exact_p": 0.542384011856484,
+              "paired_bootstrap95_pp": [
+                -4,
+                9
+              ]
+            }
+          }
         }
       },
       "log_errors": [],
-      "last_log_progress": "train | data_epochs  0/10 | inner iter:   3/  4 | ppo epoch:  0/ 1 | global iter:    105/   120| tot_loss: 0.3929 | rl_loss: 0.3929 | pt_loss: 0.0000 | pg_loss: 0.2091 | reg_loss: 0.1838 | reward: -0.0290 | rev_kl: 0.2141 | stu_lens: 282.1500 | mixed_lens: 282.1500 | lr: 5.0000e-07 | scale:   1.00 | time: 0.262 | step time: 0.472"
+      "last_log_progress": "sampling 56 / 200"
     },
     "direct_protect_smoke": {
-      "manifest": {}
+      "manifest": {
+        "start": 1789105902.0313506,
+        "end": 1789106045.6236985,
+        "complete": true,
+        "completed_steps": 2,
+        "trainable_parameters": 233057792,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "kind": "No merge: independent plain architecture reconstruction",
+          "max_abs_logit_error": 0,
+          "mean_abs_logit_error": 0,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999990463256836,
+            "relative_error": 0.0013729477068409324
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.000647662382107228
+          }
+        },
+        "code_sha256": "909f556901e1c9cecf21adca109862c95894a86228ab43f86e9ac5aa02cd4d43"
+      },
+      "last_update": {
+        "step": 2,
+        "anti_weight": 0.5,
+        "rl_weight": 2,
+        "answer_weight": 1,
+        "anchor_weight": 2,
+        "answer_ce": 1.6007652282714844,
+        "own_answer_ce": 0.00031516607850790024,
+        "live_answer_ce": 3.2012152671813965,
+        "own_anchor_kl": 0.000003700185970956227,
+        "fixed_anchor_kl": 5.756479595220299e-7,
+        "live_anchor_kl": 0.0000031245378977473592,
+        "alignment_total": 0.5641188025474548,
+        "alignment_pg": 0,
+        "alignment_kl": 0.5641188025474548,
+        "chosen_offsets": [
+          123,
+          93,
+          54,
+          36
+        ],
+        "direction_scale": 0.04137745872139931,
+        "query_grad_norm": 21.94000816345215,
+        "alignment_after": 0.8357579708099365,
+        "pg_after": 0.27791234850883484,
+        "kl_after": 0.5578457117080688,
+        "proxy_opd_loss": 0.12155430018901825,
+        "proxy_grad_norm": 0.9458121061325073,
+        "query_before": 6.903946876525879,
+        "query_after": 6.888847351074219,
+        "query_gain": 0.015099525451660156,
+        "query_example_ids": [
+          54,
+          310
+        ],
+        "proxy_predicted_gain": 0.015174386282310479,
+        "elapsed": 86.16540837287903,
+        "source": "proxy_prefix",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 0.000001259148120880127,
+        "process_kl": 0.5841187834739685,
+        "grad_norm": 29.587678909301758,
+        "max_gpu_gb": 37.898683904
+      },
+      "means": {
+        "query_gain": 0.0072438716888427734,
+        "proxy_predicted_gain": 0.007283846700146865,
+        "query_before": 4.978944540023804,
+        "query_grad_norm": 15.450010299682617,
+        "alignment_after": 0.37056922167539597,
+        "pg_after": 0.1524789035320282,
+        "kl_after": 0.21809036284685135,
+        "fixed_anchor_kl": 2.878239797610149e-7,
+        "live_anchor_kl": 0.0000015622689488736796,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 2,
+      "log_errors": [],
+      "last_log_progress": "l.layers.27.self_attn.q_proj.bias\", \"model.layers.27.self_attn.k_proj.weight\", \"model.layers.27.self_attn.k_proj.bias\", \"model.layers.27.self_attn.v_proj.weight\", \"model.layers.27.self_attn.v_proj.bias\", \"model.layers.27.self_attn.o_proj.weight\", \"model.layers.27.mlp.gate_proj.weight\", \"model.layers.27.mlp.up_proj.weight\", \"model.layers.27.mlp.down_proj.weight\", \"model.layers.27.input_layernorm.weight\", \"model.layers.27.post_attention_layernorm.weight\"], \"gradient_scaling\": {\"scale\": 128.0, \"fp32_master\": true, \"nonfinite_gradients_fatal\": true}, \"master_optimizer_sha256\": \"4b259d95cf7cf6a37657adcbe0d6499c71ae22de7bdc718672094940ab3e96f7\", \"fd_check\": {\"c\": {\"cosine\": 0.9999990463256836, \"relative_error\": 0.0013729477068409324}, \"d\": {\"cosine\": 0.9999998807907104, \"relative_error\": 0.000647662382107228}}, \"completed_steps\": 2, \"merge_check\": {\"kind\": \"No merge: independent plain architecture reconstruction\", \"max_abs_logit_error\": 0.0, \"mean_abs_logit_error\": 0.0, \"argmax_equal\": true}, \"plain_export_verified\": true, \"complete\": true, \"end\": 1789106045.6236985, \"plain_model_path\": \"/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/direct_protect_smoke/model\"}"
     },
     "direct_gentle_smoke": {
-      "manifest": {}
+      "manifest": {
+        "start": 1789105872.8390565,
+        "end": 1789106033.3502204,
+        "complete": true,
+        "completed_steps": 2,
+        "trainable_parameters": 233057792,
+        "proxy_trainable_parameters": 733184,
+        "merge_check": {
+          "kind": "No merge: independent plain architecture reconstruction",
+          "max_abs_logit_error": 0,
+          "mean_abs_logit_error": 0,
+          "argmax_equal": true
+        },
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999990463256836,
+            "relative_error": 0.0013729477068409324
+          },
+          "d": {
+            "cosine": 0.9999998807907104,
+            "relative_error": 0.000647662382107228
+          }
+        },
+        "code_sha256": "909f556901e1c9cecf21adca109862c95894a86228ab43f86e9ac5aa02cd4d43"
+      },
+      "last_update": {
+        "step": 2,
+        "anti_weight": 0.5,
+        "rl_weight": 1,
+        "answer_weight": 0.5,
+        "anchor_weight": 1,
+        "answer_ce": 1.6007534265518188,
+        "own_answer_ce": 0.00031516607850790024,
+        "live_answer_ce": 3.2011916637420654,
+        "own_anchor_kl": 0.000008162505764630623,
+        "fixed_anchor_kl": 5.771018436462327e-7,
+        "live_anchor_kl": 0.000007585404091514647,
+        "alignment_total": 0.5646911859512329,
+        "alignment_pg": 0,
+        "alignment_kl": 0.5646911859512329,
+        "chosen_offsets": [
+          123,
+          93,
+          54,
+          36
+        ],
+        "direction_scale": 0.04137631133198738,
+        "query_grad_norm": 21.939973831176758,
+        "alignment_after": 0.8340795040130615,
+        "pg_after": 0.27757710218429565,
+        "kl_after": 0.5565024614334106,
+        "proxy_opd_loss": 0.12152274698019028,
+        "proxy_grad_norm": 0.9440126419067383,
+        "query_before": 6.903941631317139,
+        "query_after": 6.888871669769287,
+        "query_gain": 0.015069961547851562,
+        "query_example_ids": [
+          54,
+          310
+        ],
+        "proxy_predicted_gain": 0.015143467549361845,
+        "elapsed": 102.08316946029663,
+        "source": "proxy_prefix",
+        "mean_reward": -0.10000000149011612,
+        "correct": 0,
+        "cap_rate": 1,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 0.0000012062955647706985,
+        "process_kl": 0.5846911668777466,
+        "grad_norm": 15.958235740661621,
+        "max_gpu_gb": 37.898683904
+      },
+      "means": {
+        "query_gain": 0.007229208946228027,
+        "proxy_predicted_gain": 0.007268083421087957,
+        "query_before": 4.978941917419434,
+        "query_grad_norm": 15.449993133544922,
+        "alignment_after": 0.36968259140849113,
+        "pg_after": 0.1522821532562375,
+        "kl_after": 0.2174004688858986,
+        "fixed_anchor_kl": 2.8855092182311637e-7,
+        "live_anchor_kl": 0.0000037927020457573235,
+        "correct": 0,
+        "cap_rate": 1
+      },
+      "teacher_reward_varying_groups": 0,
+      "active_anti_updates": 2,
+      "log_errors": [],
+      "last_log_progress": "el.layers.27.self_attn.q_proj.bias\", \"model.layers.27.self_attn.k_proj.weight\", \"model.layers.27.self_attn.k_proj.bias\", \"model.layers.27.self_attn.v_proj.weight\", \"model.layers.27.self_attn.v_proj.bias\", \"model.layers.27.self_attn.o_proj.weight\", \"model.layers.27.mlp.gate_proj.weight\", \"model.layers.27.mlp.up_proj.weight\", \"model.layers.27.mlp.down_proj.weight\", \"model.layers.27.input_layernorm.weight\", \"model.layers.27.post_attention_layernorm.weight\"], \"gradient_scaling\": {\"scale\": 128.0, \"fp32_master\": true, \"nonfinite_gradients_fatal\": true}, \"master_optimizer_sha256\": \"4b259d95cf7cf6a37657adcbe0d6499c71ae22de7bdc718672094940ab3e96f7\", \"fd_check\": {\"c\": {\"cosine\": 0.9999990463256836, \"relative_error\": 0.0013729477068409324}, \"d\": {\"cosine\": 0.9999998807907104, \"relative_error\": 0.000647662382107228}}, \"completed_steps\": 2, \"merge_check\": {\"kind\": \"No merge: independent plain architecture reconstruction\", \"max_abs_logit_error\": 0.0, \"mean_abs_logit_error\": 0.0, \"argmax_equal\": true}, \"plain_export_verified\": true, \"complete\": true, \"end\": 1789106033.3502204, \"plain_model_path\": \"/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/direct_gentle_smoke/model\"}"
     },
     "direct_protect": {
-      "manifest": {},
+      "manifest": {
+        "start": 1789106078.5114055,
+        "completed_steps": 20,
+        "trainable_parameters": 233057792,
+        "proxy_trainable_parameters": 733184,
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999992847442627,
+            "relative_error": 0.0011693862034007907
+          },
+          "d": {
+            "cosine": 0.9999995827674866,
+            "relative_error": 0.0009141694754362106
+          }
+        },
+        "code_sha256": "909f556901e1c9cecf21adca109862c95894a86228ab43f86e9ac5aa02cd4d43"
+      },
+      "last_update": {
+        "step": 20,
+        "anti_weight": 0,
+        "rl_weight": 2,
+        "answer_weight": 1,
+        "anchor_weight": 2,
+        "answer_ce": 4.960972309112549,
+        "own_answer_ce": 0.00006662809755653143,
+        "live_answer_ce": 9.92187786102295,
+        "own_anchor_kl": 0.00012747390428557992,
+        "fixed_anchor_kl": 0.00006265808042371646,
+        "live_anchor_kl": 0.00006481583113782108,
+        "alignment_total": -0.10986585915088654,
+        "alignment_pg": 0,
+        "alignment_kl": -0.10986585915088654,
+        "chosen_offsets": [
+          115,
+          103,
+          159,
+          176
+        ],
+        "direction_scale": 0.023857133463025093,
+        "query_grad_norm": 5.573269844055176,
+        "alignment_after": -0.08838725835084915,
+        "pg_after": 0.02083701081573963,
+        "kl_after": -0.10922426730394363,
+        "proxy_opd_loss": 0.3017914295196533,
+        "proxy_grad_norm": 0.5400803685188293,
+        "query_before": 1.614999771118164,
+        "query_after": 1.6152377128601074,
+        "query_gain": -0.00023794174194335938,
+        "query_example_ids": [
+          117,
+          93
+        ],
+        "proxy_predicted_gain": -0.00023504335724861214,
+        "elapsed": 371.4562466144562,
+        "source": "proxy_prefix",
+        "mean_reward": 1,
+        "correct": 1,
+        "cap_rate": 0,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 0.000025757246248758747,
+        "process_kl": 0,
+        "grad_norm": 57.42953872680664,
+        "max_gpu_gb": 39.065827328
+      },
+      "means": {
+        "query_gain": 0.0008070349693298339,
+        "proxy_predicted_gain": 0.0008084033661962135,
+        "query_before": 3.1303424298763276,
+        "query_grad_norm": 11.961767625808715,
+        "alignment_after": 0.015473051462322474,
+        "pg_after": 0.04069641730748117,
+        "kl_after": -0.02522337012924254,
+        "fixed_anchor_kl": 0.0003745415123085127,
+        "live_anchor_kl": 0.0006312471009351839,
+        "correct": 0.9375,
+        "cap_rate": 0
+      },
+      "teacher_reward_varying_groups": 1,
+      "active_anti_updates": 0,
       "queue": {
         "start": 1789104925.26478,
         "driver_pid": 177638,
@@ -2114,12 +2593,145 @@
         "deadline": 1789117873,
         "arm": "direct_protect",
         "steps": 64,
-        "completed_phases": [],
-        "phase": "waiting_full_update_pipeline"
-      }
+        "completed_phases": [
+          "device_check",
+          "smoke"
+        ],
+        "phase": "train",
+        "prerequisite": {
+          "arm": "full_update",
+          "end": 1789105872.4704602,
+          "complete": true
+        },
+        "allocation_check": {
+          "time": 1789106052.3507817,
+          "info": "JobId=9801342 JobName=hold-1gpu-8h-c4m32-g24-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:42:59 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:11:13 EndTime=2026-09-11T05:11:13 Deadline=N/A PreemptEligibleTime=2026-09-10T21:12:13 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:11:13 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-cq-9801342.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "command": [
+          "srun",
+          "--jobid=9801342",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_direct.py",
+          "--arm",
+          "direct_protect",
+          "--teacher",
+          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+          "--proxy",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+          "--context",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/direct_protect",
+          "--steps",
+          "64",
+          "--process-weight",
+          ".5",
+          "--max-seconds",
+          "3600",
+          "--rl-weight",
+          "2",
+          "--answer-weight",
+          "1",
+          "--anchor-weight",
+          "2",
+          "--anti-warmup",
+          "24",
+          "--anti-ramp-end",
+          "64"
+        ],
+        "process_pid": 251439
+      },
+      "log_errors": [],
+      "last_log_progress": "TRAIN {\"step\": 20, \"anti_weight\": 0.0, \"rl_weight\": 2.0, \"answer_weight\": 1.0, \"anchor_weight\": 2.0, \"answer_ce\": 4.960972309112549, \"own_answer_ce\": 6.662809755653143e-05, \"live_answer_ce\": 9.92187786102295, \"own_anchor_kl\": 0.00012747390428557992, \"fixed_anchor_kl\": 6.265808042371646e-05, \"live_anchor_kl\": 6.481583113782108e-05, \"alignment_total\": -0.10986585915088654, \"alignment_pg\": 0.0, \"alignment_kl\": -0.10986585915088654, \"chosen_offsets\": [115, 103, 159, 176], \"direction_scale\": 0.023857133463025093, \"query_grad_norm\": 5.573269844055176, \"alignment_after\": -0.08838725835084915, \"pg_after\": 0.02083701081573963, \"kl_after\": -0.10922426730394363, \"proxy_opd_loss\": 0.3017914295196533, \"proxy_grad_norm\": 0.5400803685188293, \"query_before\": 1.614999771118164, \"query_after\": 1.6152377128601074, \"query_gain\": -0.00023794174194335938, \"query_example_ids\": [117, 93], \"proxy_predicted_gain\": -0.00023504335724861214, \"elapsed\": 371.4562466144562, \"source\": \"proxy_prefix\", \"mean_reward\": 1.0, \"correct\": 1.0, \"cap_rate\": 0.0, \"reward_std\": 0.0, \"policy_loss\": 0.0, \"reference_kl\": 2.5757246248758747e-05, \"process_kl\": 0.0, \"grad_norm\": 57.42953872680664, \"max_gpu_gb\": 39.065827328}"
     },
     "direct_gentle": {
-      "manifest": {},
+      "manifest": {
+        "start": 1789106075.9177985,
+        "completed_steps": 20,
+        "trainable_parameters": 233057792,
+        "proxy_trainable_parameters": 733184,
+        "fd_check": {
+          "c": {
+            "cosine": 0.9999992847442627,
+            "relative_error": 0.0011693862034007907
+          },
+          "d": {
+            "cosine": 0.9999995827674866,
+            "relative_error": 0.0009141694754362106
+          }
+        },
+        "code_sha256": "909f556901e1c9cecf21adca109862c95894a86228ab43f86e9ac5aa02cd4d43"
+      },
+      "last_update": {
+        "step": 20,
+        "anti_weight": 0.10714285714285714,
+        "rl_weight": 1,
+        "answer_weight": 0.5,
+        "anchor_weight": 1,
+        "answer_ce": 4.962934970855713,
+        "own_answer_ce": 0.00008563396841054782,
+        "live_answer_ce": 9.92578411102295,
+        "own_anchor_kl": 0.00011814305617008358,
+        "fixed_anchor_kl": 0.000041046056139748544,
+        "live_anchor_kl": 0.00007709700003033504,
+        "alignment_total": -0.1051260456442833,
+        "alignment_pg": 0,
+        "alignment_kl": -0.1051260456442833,
+        "chosen_offsets": [
+          115,
+          103,
+          159,
+          176
+        ],
+        "direction_scale": 0.023881269618868828,
+        "query_grad_norm": 5.579031467437744,
+        "alignment_after": -0.08157242089509964,
+        "pg_after": 0.021617185324430466,
+        "kl_after": -0.1031896099448204,
+        "proxy_opd_loss": 0.30145809054374695,
+        "proxy_grad_norm": 0.5382125377655029,
+        "query_before": 1.6164424419403076,
+        "query_after": 1.6166629791259766,
+        "query_gain": -0.0002205371856689453,
+        "query_example_ids": [
+          117,
+          93
+        ],
+        "proxy_predicted_gain": -0.00021736498167046036,
+        "elapsed": 378.0366907119751,
+        "source": "proxy_prefix",
+        "mean_reward": 1,
+        "correct": 1,
+        "cap_rate": 0,
+        "reward_std": 0,
+        "policy_loss": 0,
+        "reference_kl": 0.000023077044488672982,
+        "process_kl": 0,
+        "grad_norm": 28.706371307373047,
+        "max_gpu_gb": 39.066226688
+      },
+      "means": {
+        "query_gain": 0.0005007266998291015,
+        "proxy_predicted_gain": 0.0005017795575674234,
+        "query_before": 3.131201002001762,
+        "query_grad_norm": 11.969584655761718,
+        "alignment_after": 0.003397590387612581,
+        "pg_after": 0.03325150681193918,
+        "kl_after": -0.02985391756519675,
+        "fixed_anchor_kl": 0.00033218514739132845,
+        "live_anchor_kl": 0.0005235203630007846,
+        "correct": 0.9375,
+        "cap_rate": 0
+      },
+      "teacher_reward_varying_groups": 1,
+      "active_anti_updates": 12,
       "queue": {
         "start": 1789104925.2676086,
         "driver_pid": 177639,
@@ -2128,9 +2740,69 @@
         "deadline": 1789119739,
         "arm": "direct_gentle",
         "steps": 64,
-        "completed_phases": [],
-        "phase": "waiting_rank_live_pipeline"
-      }
+        "completed_phases": [
+          "device_check",
+          "smoke"
+        ],
+        "phase": "train",
+        "prerequisite": {
+          "arm": "rank_live",
+          "end": 1789105841.0044353,
+          "complete": true
+        },
+        "allocation_check": {
+          "time": 1789106042.456374,
+          "info": "JobId=9801341 JobName=hold-1gpu-8h-c4m32-g24-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3600 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:11:43 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-10T21:08:02 EligibleTime=2026-09-10T21:08:02 AccrueTime=2026-09-10T21:08:02 StartTime=2026-09-10T21:42:19 EndTime=2026-09-11T05:42:19 Deadline=N/A PreemptEligibleTime=2026-09-10T21:43:19 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-10T21:42:19 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper2:3064046 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu019 BatchHost=gpu019 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g24.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g24-gq-9801341.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4"
+        },
+        "command": [
+          "srun",
+          "--jobid=9801341",
+          "--overlap",
+          "--exact",
+          "--cpu-bind=none",
+          "-N1",
+          "-n1",
+          "-c4",
+          "--gres=gpu:1",
+          "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_direct.py",
+          "--arm",
+          "direct_gentle",
+          "--teacher",
+          "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+          "--proxy",
+          "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+          "--context",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/context384",
+          "--output",
+          "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/direct_gentle",
+          "--steps",
+          "64",
+          "--process-weight",
+          ".5",
+          "--max-seconds",
+          "3600",
+          "--rl-weight",
+          "1",
+          "--answer-weight",
+          ".5",
+          "--anchor-weight",
+          "1",
+          "--anti-warmup",
+          "8",
+          "--anti-ramp-end",
+          "64"
+        ],
+        "process_pid": 250799
+      },
+      "log_errors": [],
+      "last_log_progress": "ep\": 20, \"anti_weight\": 0.10714285714285714, \"rl_weight\": 1.0, \"answer_weight\": 0.5, \"anchor_weight\": 1.0, \"answer_ce\": 4.962934970855713, \"own_answer_ce\": 8.563396841054782e-05, \"live_answer_ce\": 9.92578411102295, \"own_anchor_kl\": 0.00011814305617008358, \"fixed_anchor_kl\": 4.1046056139748544e-05, \"live_anchor_kl\": 7.709700003033504e-05, \"alignment_total\": -0.1051260456442833, \"alignment_pg\": 0.0, \"alignment_kl\": -0.1051260456442833, \"chosen_offsets\": [115, 103, 159, 176], \"direction_scale\": 0.023881269618868828, \"query_grad_norm\": 5.579031467437744, \"alignment_after\": -0.08157242089509964, \"pg_after\": 0.021617185324430466, \"kl_after\": -0.1031896099448204, \"proxy_opd_loss\": 0.30145809054374695, \"proxy_grad_norm\": 0.5382125377655029, \"query_before\": 1.6164424419403076, \"query_after\": 1.6166629791259766, \"query_gain\": -0.0002205371856689453, \"query_example_ids\": [117, 93], \"proxy_predicted_gain\": -0.00021736498167046036, \"elapsed\": 378.0366907119751, \"source\": \"proxy_prefix\", \"mean_reward\": 1.0, \"correct\": 1.0, \"cap_rate\": 0.0, \"reward_std\": 0.0, \"policy_loss\": 0.0, \"reference_kl\": 2.3077044488672982e-05, \"process_kl\": 0.0, \"grad_norm\": 28.706371307373047, \"max_gpu_gb\": 39.066226688}"
+    },
+    "direct_rank_smoke": {
+      "manifest": {}
+    },
+    "direct_rank": {
+      "manifest": {}
     }
   }
 }

@@ -19,3 +19,5 @@ Sequence after prerequisite:
 6. If research_sequence_complete andGPUstillallocated, inspect andcontinuebaselineopenresearch; don't let it idle. Candidate nextdirections GKDforwardKL onstudentcontexts, longerrollouts/truncationdiagnostics, promptbudget/teacherconsistency, orinitial7BCoTSFTcheckpointalreadyonHopper. Prioritizewithactualevidence.
 
 CurrentonlyCPUpreflightandwaitingdriververified. ActualbaselineGPUtraininghasnotstartedat01:46ET. FailedoriginalcontrolOPDelsewhereisexpectedpreemptionandmustnottriggerrestart. Otherdefensequeueprogress inOPD_UPDATE_STATUS.md. HeartbeatteacherACTIVEevery5min nowexplicitlyownsbaselinealongsidefourdefensecards.
+
+02:01ET: KL pipeline complete, baseline PID220058 automatically took gpu023. Device check/raw_val completed; full_sft_val active. Raw heldout train128 score64.0625%; this is not comparable to old test20040.5%. Current short-SFT closest45% validation heuristic cannot establish test45%. Subsequent research should select relative to within-slice raw/full gain or test both1/2epoch on validation, retaining original executed protocol. Do not silently alter active code or misstate its criterion.
