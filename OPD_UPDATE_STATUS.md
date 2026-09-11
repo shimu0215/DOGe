@@ -105,3 +105,5 @@ Full FKL240已完成：val12057.8125/24059.375 vs64.0625，无增益，正在sel
 
 04:30ET：short SFT旧OPD240验证56.25→64.84375，+8.59375pp，paired95CI[.78125,16.40625]，19wrong→right/8reverse，p=.05224；120仅+.78125。baseline已自动short_initial_test1000/新片确认，有预算后只额外1seed，尚不能称稳定成功。原完整SFT仍没有明显增益。为该有希望初始化准备short_rank_defense.py接GPU029完整FP16pair后（原截止09:01:31），原strongrank teacher普通权重，实际BF16 legacyOPD240标签239更新/lr1e-6/seed10/short checkpoint49，同baseline精确协议；预先固定240 final，不挑最差student。val120/240各配clean，newtest1000final配原baseline初始/clean，同时独立original/rank BF16teacher200 g/s/raw，以实际OPD精度做联合评价。该卡是防御研究，GPU023仍专用baseline。程序待启动，绝不抢FP16pair最后一片。
 新gpu012 RKL/PG4更新烟测均PASS，正式22/24；rank_minillm22/240，highlr84/480，shortFKL232/long184，direct_fkl_dense59/128。FP16pair protectold20049.5=同精度clean49.5，pairedCI约−4.51至5，无压制；现extra600最后阶段。11卡busy，无pending/错误。
+
+04:31ET接续排队核实：short_rank_defense parent793975记录waiting_fp16_pair_complete，无错误，尚未占GPU029；原pair正在extra600末阶段，禁止另插接续。新基线short首次test1000初始模型仍评估中，无确认结论。a7c6997代码推拉一致，heartbeat已更新为11GPU ownership与此后继，所有卡busy无新故障。
