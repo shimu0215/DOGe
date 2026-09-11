@@ -1,0 +1,32 @@
+{
+  "official_losses.py": {
+    "url": "https://raw.githubusercontent.com/microsoft/LMOps/main/minillm/minillm/losses.py",
+    "sha256": "ff294bd560a5bc9818ee6e4003b59b59e2aeeaf0a909e9bdea0b5dccb8190ff5",
+    "bytes": 9359
+  },
+  "official_trainer.py": {
+    "url": "https://raw.githubusercontent.com/microsoft/LMOps/main/minillm/minillm/trainer.py",
+    "sha256": "01f239c1d672c7dc10c0a06aab716002cbcf21c909238c21b526898895be5ac3",
+    "bytes": 27713
+  },
+  "official_reward.py": {
+    "url": "https://raw.githubusercontent.com/microsoft/LMOps/main/minillm/minillm/reward.py",
+    "sha256": "a693031869b8fcd92f8be9cfc9d68fe043535fc1293a16ee5691a62f34647a79",
+    "bytes": 3112
+  },
+  "tinker_on_policy.py": {
+    "url": "https://raw.githubusercontent.com/thinking-machines-lab/tinker-cookbook/main/tinker_cookbook/distillation/train_on_policy.py",
+    "sha256": "4a7a24afc5ac0d7f0b5f8afcd26e5bb44f3d379b17e4344935e44a46764bad1e",
+    "bytes": 19663
+  },
+  "trl_gkd.py": {
+    "url": "https://raw.githubusercontent.com/huggingface/trl/main/trl/experimental/gkd/gkd_trainer.py",
+    "sha256": "5664f278d374ddc92e029b8b06a5f4f166920b0d4ffd6f2b01287d633189c9c1",
+    "bytes": 26296
+  },
+  "imitkd_readme.md": {
+    "url": "https://raw.githubusercontent.com/asappresearch/imitkd/master/README.md",
+    "sha256": "0d43a0cd4f706280e94864df21a7a9f4dd912f668aceedcf1a96065cc6775971",
+    "bytes": 1508
+  }
+}
