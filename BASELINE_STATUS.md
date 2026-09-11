@@ -29,3 +29,5 @@ CurrentonlyCPUpreflightandwaitingdriververified. ActualbaselineGPUtraininghasnot
 04:31ET弱SFT线索：checkpoint49起点同train12856.25%，旧OPD12057.03125、24064.84375。240增益8.59375pp，19纠正/8退化，paired95CI[.78125,16.40625]（探索选择后不作为确认显著性），按既定规则在test1000:1200确认中。不能转换成oldtest45→50，也不能与raw/full同片64.0625忽略比较。GPU029之后将用强排序teacher做同弱起点/同legacy240协议配对，并补BF16teacher自身200，脚本short_rank_defense.py parent793975等当前FP16pair整条结束。
 
 04:49ET新片确认seed10：test1000:1200初始shortSFT41%，OPD240后47%，+6pp，30纠正/18退化，paired95CI[−.5,12.5]，p=.1114。validation与新片同方向但稳定性未确认，已按预设启动short_lr1e6_s11。raw/fullSFT在此新片锚点待GPU019末段预算允许补测；不能假设短SFT41%仍优于raw。
+
+05:07ET短FKL全部完成：short checkpoint49旧test0:200初始46.5%、FKL240后46.5%（27纠正/27退化，CI−7至7.5）；新test1000:1200初始41%、FKL240后45%（+4pp，26纠正/18退化，CI−2.5至10.5）。不同于旧MiniLLM短起点新片41→47。短起点old46.5可与full50.5/raw40.5比较，但不能称达成稳定OPD提升。GPU011空出的两卡已分别接shortFKL防御迁移与新soft target教师训练。长FKL240验证退化，oldselected结果待汇总，不再占卡。
