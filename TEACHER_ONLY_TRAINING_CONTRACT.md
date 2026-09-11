@@ -30,3 +30,10 @@ The corpus currently contains one offline negative generator. The objective does
 ## Current iteration, 11:55 ET
 
 First top32 trial completed but greedy fell1pp/2.5pp on old/new200, so no student experiment ran. New independent train_static_top2.py/run_static_top2.py starts from original teacher, uses top2 swap and anchor8, and obeys the same boundary. If teacher preservation passes, external evaluation now uses the successful shortSFT correctedMiniLLM baseline, fixed120 updates chosen from clean validation, rather than fullSFT FKL. This changes evaluation protocol only; no student model or outcome enters teacher training. Sources and results of the first trial are preserved.
+
+
+## User priority revision, 2026-09-11 18:57 ET
+
+The user explicitly prioritizes student OPD degradation and an elegant method. Preserving teacher performance at high temperature remains desirable and should be pursued, but if difficult, preservation under ordinary generation settings can suffice. Operationally, retain greedy no-drop and official Qwen2.5 sampling (T=.7,p=.8,k=20,rep=1.05) delta>=-1pp as the main quality screen. Raw T=1,p=1,k=0,rep=1 becomes supplementary robustness evidence, NOT a standalone veto on student evaluation. Report both settings honestly and preserve historical failed-screen records. Do not claim raw robustness where it failed or change the student OPD rollout/scoring protocol to flatter results.
+
+Ongoing pipelines may finish their already-started stricter quality checks. If they skip students solely because of raw128 but meet all standard per-slice checks, the new eval_standard_qualified.py can continue external student evaluation from the fixed teacher, preserving the prior record. It requires the source worker complete, no previous student evaluation, compliant teacher provenance, and standard quality passes. New pipelines should encode this revised screen directly. Student outcome priorities do not relax the ban on student-parameter training signals. Favor simple transformations and direct head/last-layer tuning when similarly effective; high-temperature robustness breaks ties rather than overriding the main goal.
