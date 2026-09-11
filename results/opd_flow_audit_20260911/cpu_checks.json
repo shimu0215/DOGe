@@ -1,0 +1,76 @@
+{
+  "time": 1789107035.873735,
+  "checks": {
+    "self_teacher_numerics": {
+      "torch.float32": {
+        "self_teacher_reward_abs_max": 0.0000019073486328125,
+        "self_teacher_reward_rms": 3.3979875979639473e-7,
+        "teacher_logprob_error_rms": 3.3979875979639473e-7,
+        "student_logprob_error_rms": 0
+      },
+      "torch.bfloat16": {
+        "self_teacher_reward_abs_max": 0.125,
+        "self_teacher_reward_rms": 0.021035799756646156,
+        "teacher_logprob_error_rms": 0.021496394649147987,
+        "student_logprob_error_rms": 0.018662583082914352
+      },
+      "torch.float16": {
+        "self_teacher_reward_abs_max": 0.0078125,
+        "self_teacher_reward_rms": 0.0023674245458096266,
+        "teacher_logprob_error_rms": 0.0026792585849761963,
+        "student_logprob_error_rms": 0.0022879967000335455
+      }
+    },
+    "return_and_whitening": {
+      "padding_only_max_change": 10.322233200073242,
+      "gamma095_vs1_cosine": 0.9809821844100952,
+      "actual_gamma": 0.95,
+      "proxy_objective_gamma": 1,
+      "note": "Production includes zero padding in mean/variance; proxy has one unpadded trajectory. Prior shared check used gamma1, not CLI default gamma.95."
+    },
+    "teacher_dtype_flag": {
+      "requested_teacher_model_fp16": true,
+      "deepspeed_selected_args_dtype": "torch.bfloat16",
+      "actual_loader_dtype": "torch.bfloat16",
+      "independent_teacher_evaluation_dtype": "torch.float16",
+      "status": "confirmed ignored flag"
+    },
+    "step_counter": {
+      "requested": 120,
+      "actual_optimizer_steps": 119,
+      "microbatches": 238,
+      "checkpoint_saves": [
+        {
+          "checkpoint_label": 40,
+          "optimizer_updates": 39,
+          "microbatches": 78
+        },
+        {
+          "checkpoint_label": 80,
+          "optimizer_updates": 79,
+          "microbatches": 158
+        },
+        {
+          "checkpoint_label": 120,
+          "optimizer_updates": 119,
+          "microbatches": 238
+        },
+        {
+          "checkpoint_label": 120,
+          "optimizer_updates": 119,
+          "microbatches": 238
+        }
+      ],
+      "note": "Actual count is 119, not zero. This small off-by-one cannot alone explain weak learning."
+    }
+  },
+  "scope": "Executed production methods using synthetic CPU inputs; not efficacy evidence",
+  "source_sha256": {
+    "/scratch/wzhao20/AKDA2/gsm_vocab_aligned_minillm_20260909/minillm/trainer.py": "b92f97c4c09fb700db2053946c14d575ebbcb51eda0bbedb04cc5a37d1568bfa",
+    "/scratch/wzhao20/AKDA2/gsm_vocab_aligned_minillm_20260909/minillm/losses.py": "aa0667583d0643ed94bb1a6ae0f3c6c4bb99f990517442a9a9c318fd84e425a6",
+    "/scratch/wzhao20/AKDA2/gsm_vocab_aligned_minillm_20260909/minillm/reward.py": "e7ca4806a5327d70a741199f9797d91a5b0727dcd7e2c62b6b02c62180241ee5",
+    "/scratch/wzhao20/AKDA2/gsm_vocab_aligned_minillm_20260909/minillm/utils.py": "38029055c92c510899fe99e28a389708aef57681d99f41f11095e55d12d4f2b9",
+    "/scratch/wzhao20/AKDA2/gsm_vocab_aligned_minillm_20260909/train_minillm.py": "d8eeef1ed77f7521a9826030b6433b820c1697fde5f7d5ef0337661261ce1685"
+  },
+  "complete": true
+}
