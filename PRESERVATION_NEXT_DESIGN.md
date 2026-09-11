@@ -2,6 +2,8 @@
 
 Status 2026-09-11 10:37 ET: research designs only, no GPU outcomes. The current direct-FKL plain teacher has promising student suppression, but additional64 teacher sampling falls from84.375% to79.6875%. The baseline GPU is already occupied; these experiments must use later verified free allocated time.
 
+Update11:09ET: expanded additional200 gives original/directFKL greedy87.5/89%, sampling86.5/86%. Sampling loss0.5pp meets the user's subsequently clarified1pp point-estimate tolerance. Keep the full teacher update for the active cross-MiniLLM test; scaling is now a backup, not a response to an unresolved64-only point estimate. Export code is implemented and tiny CPU checks pass, but no large scaled model or performance result exists.
+
 ## First candidate: scale the learned last-layer update
 
 Let the original teacher weights be phi0 and the trained direct-FKL teacher be phi1. Build one ordinary checkpoint with the same architecture:
