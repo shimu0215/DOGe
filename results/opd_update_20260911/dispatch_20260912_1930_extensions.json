@@ -1,0 +1,19 @@
+{
+  "pid": 2107031,
+  "command": [
+    "srun",
+    "--jobid=9983836",
+    "--overlap",
+    "--exact",
+    "--cpu-bind=none",
+    "-N1",
+    "-n1",
+    "-c4",
+    "--gres=gpu:1",
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/eval_process_followup_extensions.py",
+    "--job",
+    "9983836"
+  ],
+  "time": 1789256131.5145414
+}

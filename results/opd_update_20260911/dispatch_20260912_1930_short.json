@@ -1,0 +1,42 @@
+[
+  {
+    "pid": 2072687,
+    "command": [
+      "srun",
+      "--jobid=9916493",
+      "--exclusive",
+      "--exact",
+      "--mem=32G",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/diagnose_teacher_short_anchor36.py",
+      "--job",
+      "9916493"
+    ],
+    "time": 1789255917.808831
+  },
+  {
+    "pid": 2072688,
+    "command": [
+      "srun",
+      "--jobid=9916493",
+      "--exclusive",
+      "--exact",
+      "--mem=32G",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/diagnose_teacher_short_answer4.py",
+      "--job",
+      "9916493"
+    ],
+    "time": 1789255917.8153162
+  }
+]
