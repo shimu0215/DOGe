@@ -33,3 +33,7 @@ Projection telemetry from the full64-step run shows a final corrected inner prod
 ## September12 11:22 follow-up
 
 Tail v1 completed the main and extra teacher quality screens and matched the original120/128 raw score (paired difference0,95% interval[-4.6875,4.6875]pp). Student OPD is still running, so preservation is the reason for trying a stronger target; no suppression result has been assumed. A new trial starts from original7B with anti weight4 instead2 and the tie-safe v2 target. The v2 helper is now deployed and its CPU checks passed, including co-maximal and all-equal cases. The new trainer/driver use different filenames/tags; v1 files and results remain unchanged. This changes both target tie handling and weight, so it is not a pure strength ablation. Final inference still has no extra component or student signal.
+
+## September12 matched anti1.5 control
+
+The same Top2 anti1.5 training recipe without parameter-step projection gives182/40045.5 student accuracy, versus projected177/40044.25. Exact paired difference projected-minus-control is-1.25pp,95% bootstrap[-5.5,3], McNemarp=.64446. There is no clear evidence of projection superiority from this pilot. Projected expanded1000 is48.2 and expandedteacher greedy88.5vs91 fails; unprojected control expansion is running. Target local first-order composite-loss protection must not be described as guaranteed accuracy preservation.
