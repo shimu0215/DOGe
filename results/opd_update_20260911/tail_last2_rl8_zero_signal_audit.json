@@ -1,0 +1,238 @@
+{
+  "time": 1789245042.9460418,
+  "sources": [
+    "static_tail_last2_anchor24_9983837",
+    "static_tail_last2_rl8_anchor24_9916541"
+  ],
+  "trainable_tensors_equal": {
+    "model.layers.26.self_attn.q_proj.weight": true,
+    "model.layers.26.self_attn.q_proj.bias": true,
+    "model.layers.26.self_attn.k_proj.weight": true,
+    "model.layers.26.self_attn.k_proj.bias": true,
+    "model.layers.26.self_attn.v_proj.weight": true,
+    "model.layers.26.self_attn.v_proj.bias": true,
+    "model.layers.26.self_attn.o_proj.weight": true,
+    "model.layers.26.mlp.gate_proj.weight": true,
+    "model.layers.26.mlp.up_proj.weight": true,
+    "model.layers.26.mlp.down_proj.weight": true,
+    "model.layers.26.input_layernorm.weight": true,
+    "model.layers.26.post_attention_layernorm.weight": true,
+    "model.layers.27.self_attn.q_proj.weight": true,
+    "model.layers.27.self_attn.q_proj.bias": true,
+    "model.layers.27.self_attn.k_proj.weight": true,
+    "model.layers.27.self_attn.k_proj.bias": true,
+    "model.layers.27.self_attn.v_proj.weight": true,
+    "model.layers.27.self_attn.v_proj.bias": true,
+    "model.layers.27.self_attn.o_proj.weight": true,
+    "model.layers.27.mlp.gate_proj.weight": true,
+    "model.layers.27.mlp.up_proj.weight": true,
+    "model.layers.27.mlp.down_proj.weight": true,
+    "model.layers.27.input_layernorm.weight": true,
+    "model.layers.27.post_attention_layernorm.weight": true
+  },
+  "all_trainable_equal": true,
+  "groups": {
+    "static_tail_last2_anchor24_9983837": {
+      "rewards": {
+        "1": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "5": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "9": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "13": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "17": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "21": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "25": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "29": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "33": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "37": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "41": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "45": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "49": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "53": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "57": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "61": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "nonconstant": 0
+    },
+    "static_tail_last2_rl8_anchor24_9916541": {
+      "rewards": {
+        "1": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "5": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "9": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "13": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "17": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "21": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "25": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "29": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "33": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "37": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "41": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "45": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "49": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "53": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "57": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "61": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "nonconstant": 0
+    }
+  }
+}
