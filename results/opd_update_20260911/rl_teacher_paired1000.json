@@ -1,0 +1,203 @@
+{
+  "scope": "Paired1000 GSM questions, adaptively reused data; fixedteacher checkpoints; point differences are not statistical noninferiority. Raw128 separately reported, not pooled with standard sampling.",
+  "modes": {
+    "greedy": {
+      "scores": {
+        "original": {
+          "n": 1000,
+          "correct": 906,
+          "accuracy": 0.906
+        },
+        "frequent_rl": {
+          "n": 1000,
+          "correct": 915,
+          "accuracy": 0.915
+        },
+        "hard_last2": {
+          "n": 1000,
+          "correct": 913,
+          "accuracy": 0.913
+        }
+      },
+      "comparisons": {
+        "frequent_rl": {
+          "delta_pp": 0.8999999999999999,
+          "wrong_to_right": 25,
+          "right_to_wrong": 16,
+          "mcnemar_exact_p": 0.21102359760880063,
+          "paired_bootstrap95_pp": [
+            -0.3,
+            2.1999999999999997
+          ]
+        },
+        "hard_last2": {
+          "delta_pp": 0.7000000000000001,
+          "wrong_to_right": 24,
+          "right_to_wrong": 17,
+          "mcnemar_exact_p": 0.34888887944907765,
+          "paired_bootstrap95_pp": [
+            -0.5,
+            2.0
+          ]
+        }
+      }
+    },
+    "sampling": {
+      "scores": {
+        "original": {
+          "n": 1000,
+          "correct": 896,
+          "accuracy": 0.896
+        },
+        "frequent_rl": {
+          "n": 1000,
+          "correct": 898,
+          "accuracy": 0.898
+        },
+        "hard_last2": {
+          "n": 1000,
+          "correct": 900,
+          "accuracy": 0.9
+        }
+      },
+      "comparisons": {
+        "frequent_rl": {
+          "delta_pp": 0.2,
+          "wrong_to_right": 29,
+          "right_to_wrong": 27,
+          "mcnemar_exact_p": 0.8938530948350217,
+          "paired_bootstrap95_pp": [
+            -1.3,
+            1.7000000000000002
+          ]
+        },
+        "hard_last2": {
+          "delta_pp": 0.4,
+          "wrong_to_right": 31,
+          "right_to_wrong": 27,
+          "mcnemar_exact_p": 0.6940040940761316,
+          "paired_bootstrap95_pp": [
+            -1.0999999999999999,
+            1.9
+          ]
+        }
+      }
+    }
+  },
+  "sources": {
+    "original": {
+      "greedy": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/original_teacher200/greedy.jsonl",
+          "sha256": "1b9de5ec382fc63ac899ed8801843ebf8d341e5a9202ead7c32bac730f435034"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/recovery_fkl_transfer_9871084_original_teacher_new200/greedy.jsonl",
+          "sha256": "8e7e9edb7a451b2e1cbba1c7e355419fd734c9f38ae9bf19b306f0b91e3b70fd"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_original_extra200_9870980/greedy.jsonl",
+          "sha256": "3ffe310bffd9eb595bf3ffb144acafe176cfda90e6a5428e82388b23cebc0d36"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_teachers_slice600_9916542_original/greedy.jsonl",
+          "sha256": "d85a62c55c1a9cf358a8e82020f8ff04d36da704759efca428d966e890594750"
+        }
+      ],
+      "sampling": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/internalize/original_teacher200/sampling.jsonl",
+          "sha256": "996bfb657ddf806cfa1c1a360f668d429fd987b08f2f98e0b21d8d15e4239f9a"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/recovery_fkl_transfer_9871084_original_teacher_new200/sampling.jsonl",
+          "sha256": "683e9abd0bbb461ff067a251c07cf98f5613ed862c18a86064d48caafefd7280"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_original_extra200_9870980/sampling.jsonl",
+          "sha256": "283a83ffdbd0f8118fcde2475daf7698ddb34e7cd676e34446c82d702b541c41"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_teachers_slice600_9916542_original/sampling.jsonl",
+          "sha256": "a3bcc12c530328087771aae1173e9d3bae5c0c252c2b5467fb475969d2dda761"
+        }
+      ]
+    },
+    "frequent_rl": {
+      "greedy": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_frequent_rl_9983837_teacher_old200/greedy.jsonl",
+          "sha256": "156678f2d3d21a47f853dddce4b41ae2ed74c088df10f5da8bbc0f24cf90cbbe"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_frequent_rl_9983837_teacher_new200/greedy.jsonl",
+          "sha256": "3f78460464bceb30bc29dba86b9befb3517ad850d9bc4fedf94b6b35548ba407"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_frequent_rl_9983837_teacher_extra200/greedy.jsonl",
+          "sha256": "cced60be6df571fa61f8e1788b5a0f1fc9b9e860d9873fc9244a0484d25f3dc6"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_freqrl_extensions_9916493_teacher400/greedy.jsonl",
+          "sha256": "10d549f0e65a782c8e406347d7cd52130b76c9306f687dcee30060518f51d98e"
+        }
+      ],
+      "sampling": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_frequent_rl_9983837_teacher_old200/sampling.jsonl",
+          "sha256": "2908923b299e7457c701630de2d545fed4ce3328c9208af7279bd8ac719f2f7b"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_frequent_rl_9983837_teacher_new200/sampling.jsonl",
+          "sha256": "8b4d96fd875ed20e41401a608d5dd097594c1a39686e3cc8c1707114b25f3e3f"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_frequent_rl_9983837_teacher_extra200/sampling.jsonl",
+          "sha256": "d830edd3b4bc7d32bb6fd634101a38192227120e4f5f7b955f85043c61015915"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_freqrl_extensions_9916493_teacher400/sampling.jsonl",
+          "sha256": "be61fc9d39fb0b7866a6e6d5d63ccaeb0cf8eb10f72e75b5ec66da372292622d"
+        }
+      ]
+    },
+    "hard_last2": {
+      "greedy": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_hardrl_anchor24_9916541_teacher_old200/greedy.jsonl",
+          "sha256": "621c6bfe0ca76aaadb50e9bda257781aeb421ca475cd7cd121a2fdba2cd87cf5"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_hardrl_anchor24_9916541_teacher_new200/greedy.jsonl",
+          "sha256": "ceb845d746845e9ec110b506decf788fce0902804fe2ef403c26be0e66806deb"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_hardrl_anchor24_9916541_teacher_extra200/greedy.jsonl",
+          "sha256": "d90c7540f683fd856fa980497b33f85846430c435adbaae080aa484ca284dad9"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_hardlast2_extensions_9916493_teacher400/greedy.jsonl",
+          "sha256": "615ad9ad5127984a9a3dbdd60a0a773c61675c5bbc1a97cc757fd26a9b2d4a55"
+        }
+      ],
+      "sampling": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_hardrl_anchor24_9916541_teacher_old200/sampling.jsonl",
+          "sha256": "3a29dac5ae4dc725062cf8956312ec7b35b09c7e446302914987b6eb6f28df26"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_hardrl_anchor24_9916541_teacher_new200/sampling.jsonl",
+          "sha256": "21488defa904a91b7f10bf7f95df48b60110ec480c8f29b09512ef50e3b09db1"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_hardrl_anchor24_9916541_teacher_extra200/sampling.jsonl",
+          "sha256": "2aa2b8c04bad20722af0aac7a45bfd041f00016863729a1ae98af6c3efe42c90"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_hardlast2_extensions_9916493_teacher400/sampling.jsonl",
+          "sha256": "93d5cfc174201ab46773a84ccf96e16eec5a5b3d74bcd3bab067e81ff6159c3f"
+        }
+      ]
+    }
+  }
+}
