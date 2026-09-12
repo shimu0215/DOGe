@@ -1,0 +1,373 @@
+{
+  "scope": "Adaptive main400 GSMtest0:200/1000:1200; not independent replication or transfer. Same shortSFT checkpoint49 and120-step OPD seed10; teacher quality separately recorded.",
+  "scores": {
+    "sft": {
+      "n": 400,
+      "correct": 175,
+      "accuracy": 0.4375
+    },
+    "clean": {
+      "n": 400,
+      "correct": 210,
+      "accuracy": 0.525
+    },
+    "identity": {
+      "n": 400,
+      "correct": 210,
+      "accuracy": 0.525
+    },
+    "reward_only": {
+      "n": 400,
+      "correct": 199,
+      "accuracy": 0.4975
+    },
+    "regularizer_only": {
+      "n": 400,
+      "correct": 199,
+      "accuracy": 0.4975
+    },
+    "sparse_top2": {
+      "n": 400,
+      "correct": 189,
+      "accuracy": 0.4725
+    },
+    "self_rl_hard": {
+      "n": 400,
+      "correct": 205,
+      "accuracy": 0.5125
+    },
+    "top2_hardrl": {
+      "n": 400,
+      "correct": 180,
+      "accuracy": 0.45
+    },
+    "tail_coverage": {
+      "n": 400,
+      "correct": 197,
+      "accuracy": 0.4925
+    },
+    "tail_anti8_anchor24": {
+      "n": 400,
+      "correct": 178,
+      "accuracy": 0.445
+    },
+    "tail_last2_anchor24": {
+      "n": 400,
+      "correct": 176,
+      "accuracy": 0.44
+    }
+  },
+  "sources": {
+    "sft": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/short_fkl_initial_test0/gsm8k-results.json",
+        "sha256": "60512dc32ec9f68d4f03f589da88cdb74b35158b8665d5296bda147466b6c940"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_initial_test1000/gsm8k-results.json",
+        "sha256": "1bb3660aeae1189e6e50ed7d66661abdd3faa499e04f3a6ebe1f97c25033786d"
+      }
+    ],
+    "clean": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/short_minillm_9871083_selected_test0/gsm8k-results.json",
+        "sha256": "f1a031fe42dab20022288b1896f3f30e0e72ec862e80dc4f59a5c93cd0b3624e"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/short_minillm_9871083_selected_test1000/gsm8k-results.json",
+        "sha256": "8f15a3d7d799b8db8c0e68f92ecba668bf3a46e783fa681d355ae36fa69c2a11"
+      }
+    ],
+    "identity": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_identity_v2_9870979_student_test0/gsm8k-results.json",
+        "sha256": "e15dca54bce31666bd56df1effd24f89652b888c52276eee4173b18938e82d80"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_identity_v2_9870979_student_test1000/gsm8k-results.json",
+        "sha256": "aa6364df7cffb4b839500b325d086c6da96deef3e73620bbd60b643ecb404d17"
+      }
+    ],
+    "reward_only": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_role_reward_top2_9916493_student_test0/gsm8k-results.json",
+        "sha256": "48d8f8a6f9380cd9524c0a3f12e269af7eb3ea4661134211f2103b8d7b30a0dc"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_role_reward_top2_9916493_student_test1000/gsm8k-results.json",
+        "sha256": "eefb8b24afba9dab2e4be64b9a9a600da6e3017426897d9c5b0695e82fdbfb38"
+      }
+    ],
+    "regularizer_only": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_role_regularizer_top2_9916493_student_test0/gsm8k-results.json",
+        "sha256": "637a76ee52f72c4c1103ad3f3833f3cea27a64caf6a06b422e75008c4997f14c"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_role_regularizer_top2_9916493_student_test1000/gsm8k-results.json",
+        "sha256": "d990553b83f4eec0efedbbfbbfeee537389ae0f4e52a402ff82129af1161fbd7"
+      }
+    ],
+    "sparse_top2": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_sparse_top2_9916493_student_test0/gsm8k-results.json",
+        "sha256": "d40dceb9025e4446d3ba48b483aba39f556700d779623adbe3e0ac8b117510fb"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_sparse_top2_9916493_student_test1000/gsm8k-results.json",
+        "sha256": "541bdab750e8434fcddbe3fbcbb01b971617378bd2071df00cacf13efcabd750"
+      }
+    ],
+    "self_rl_hard": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_self_rl_hard_9916479_student_test0/gsm8k-results.json",
+        "sha256": "e63a726973de04873f1d2e883f5267d880dcc93d187b86ddddbaf4a3923d2823"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_self_rl_hard_9916479_student_test1000/gsm8k-results.json",
+        "sha256": "c52514f96880cffd49cbabef03913e9cfd09d247a581997640f2360ec6ef8f0c"
+      }
+    ],
+    "top2_hardrl": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_top2_hardrl_9983838_student_test0/gsm8k-results.json",
+        "sha256": "509b1f75b9a616cf5bd0a0d15c87d21ebba6ab5b3ec58504be0edd1014a3f9f6"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_top2_hardrl_9983838_student_test1000/gsm8k-results.json",
+        "sha256": "6b11090ee9ca8031f092fc4b714c38d0d1a7aae3ebc15ec08f4cf66e6b8139df"
+      }
+    ],
+    "tail_coverage": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_permutation_coverage_9870979_student_test0/gsm8k-results.json",
+        "sha256": "aad04a403d37169045903ad8988d55ee5c02c0a196950651c8e8d3bb1aebdab7"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_permutation_coverage_9870979_student_test1000/gsm8k-results.json",
+        "sha256": "3e7eee6424e26eab16b8f466ab1dae0d744d9dbe5db8dddd91f77f1f46c4229c"
+      }
+    ],
+    "tail_anti8_anchor24": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_anti8_anchor24_9983835_student_test0/gsm8k-results.json",
+        "sha256": "cd200bbe36ed696ef95eb8c4d55891d5e65ffcfee0cfe2590fe2fd8cee408d8e"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_anti8_anchor24_9983835_student_test1000/gsm8k-results.json",
+        "sha256": "5ab41558f8e3a4c36e1fad562cb1ef45f287b3237c92778521f87dfe27a17403"
+      }
+    ],
+    "tail_last2_anchor24": [
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_anchor24_9983837_student_test0/gsm8k-results.json",
+        "sha256": "c3ea903ae2c5cb7195dd341af827311a26e4f3d6335f6ade9cdfc1804bc5182d"
+      },
+      {
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_last2_anchor24_9983837_student_test1000/gsm8k-results.json",
+        "sha256": "9b784fa7dc1846d314c52db994473a3debba77c5df3bd15c0d5b4c41658d2d8b"
+      }
+    ]
+  },
+  "comparisons": {
+    "identity": {
+      "clean": {
+        "delta_pp": 0.0,
+        "wrong_to_right": 0,
+        "right_to_wrong": 0,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          0.0,
+          0.0
+        ]
+      },
+      "sft": {
+        "delta_pp": 8.75,
+        "wrong_to_right": 67,
+        "right_to_wrong": 32,
+        "mcnemar_exact_p": 0.000562208248357049,
+        "paired_bootstrap95_pp": [
+          4.0,
+          13.5
+        ]
+      }
+    },
+    "reward_only": {
+      "clean": {
+        "delta_pp": -2.75,
+        "wrong_to_right": 24,
+        "right_to_wrong": 35,
+        "mcnemar_exact_p": 0.19252645776146274,
+        "paired_bootstrap95_pp": [
+          -6.75,
+          0.75
+        ]
+      },
+      "sft": {
+        "delta_pp": 6.0,
+        "wrong_to_right": 61,
+        "right_to_wrong": 37,
+        "mcnemar_exact_p": 0.019690184799846844,
+        "paired_bootstrap95_pp": [
+          1.25,
+          10.75
+        ]
+      }
+    },
+    "regularizer_only": {
+      "clean": {
+        "delta_pp": -2.75,
+        "wrong_to_right": 26,
+        "right_to_wrong": 37,
+        "mcnemar_exact_p": 0.20736789985685422,
+        "paired_bootstrap95_pp": [
+          -6.5,
+          1.0
+        ]
+      },
+      "sft": {
+        "delta_pp": 6.0,
+        "wrong_to_right": 66,
+        "right_to_wrong": 42,
+        "mcnemar_exact_p": 0.026423520277147814,
+        "paired_bootstrap95_pp": [
+          1.0,
+          11.0
+        ]
+      }
+    },
+    "sparse_top2": {
+      "clean": {
+        "delta_pp": -5.25,
+        "wrong_to_right": 19,
+        "right_to_wrong": 40,
+        "mcnemar_exact_p": 0.008641499683281734,
+        "paired_bootstrap95_pp": [
+          -9.0,
+          -1.5
+        ]
+      },
+      "sft": {
+        "delta_pp": 3.5000000000000004,
+        "wrong_to_right": 56,
+        "right_to_wrong": 42,
+        "mcnemar_exact_p": 0.18884671980890244,
+        "paired_bootstrap95_pp": [
+          -1.25,
+          8.25
+        ]
+      }
+    },
+    "self_rl_hard": {
+      "clean": {
+        "delta_pp": -1.25,
+        "wrong_to_right": 25,
+        "right_to_wrong": 30,
+        "mcnemar_exact_p": 0.5900533317766357,
+        "paired_bootstrap95_pp": [
+          -5.0,
+          2.25
+        ]
+      },
+      "sft": {
+        "delta_pp": 7.5,
+        "wrong_to_right": 63,
+        "right_to_wrong": 33,
+        "mcnemar_exact_p": 0.002878610081200932,
+        "paired_bootstrap95_pp": [
+          2.75,
+          12.25
+        ]
+      }
+    },
+    "top2_hardrl": {
+      "clean": {
+        "delta_pp": -7.5,
+        "wrong_to_right": 26,
+        "right_to_wrong": 56,
+        "mcnemar_exact_p": 0.0012203820686775507,
+        "paired_bootstrap95_pp": [
+          -11.75,
+          -3.0
+        ]
+      },
+      "sft": {
+        "delta_pp": 1.25,
+        "wrong_to_right": 50,
+        "right_to_wrong": 45,
+        "mcnemar_exact_p": 0.6817425059181855,
+        "paired_bootstrap95_pp": [
+          -3.5000000000000004,
+          6.25
+        ]
+      }
+    },
+    "tail_coverage": {
+      "clean": {
+        "delta_pp": -3.25,
+        "wrong_to_right": 32,
+        "right_to_wrong": 45,
+        "mcnemar_exact_p": 0.17106097355391156,
+        "paired_bootstrap95_pp": [
+          -7.5,
+          1.0
+        ]
+      },
+      "sft": {
+        "delta_pp": 5.5,
+        "wrong_to_right": 56,
+        "right_to_wrong": 34,
+        "mcnemar_exact_p": 0.02630166513112228,
+        "paired_bootstrap95_pp": [
+          0.75,
+          10.0
+        ]
+      }
+    },
+    "tail_anti8_anchor24": {
+      "clean": {
+        "delta_pp": -8.0,
+        "wrong_to_right": 23,
+        "right_to_wrong": 55,
+        "mcnemar_exact_p": 0.00037779201420676267,
+        "paired_bootstrap95_pp": [
+          -12.25,
+          -3.75
+        ]
+      },
+      "sft": {
+        "delta_pp": 0.75,
+        "wrong_to_right": 52,
+        "right_to_wrong": 49,
+        "mcnemar_exact_p": 0.842382098507744,
+        "paired_bootstrap95_pp": [
+          -4.25,
+          5.75
+        ]
+      }
+    },
+    "tail_last2_anchor24": {
+      "clean": {
+        "delta_pp": -8.5,
+        "wrong_to_right": 25,
+        "right_to_wrong": 59,
+        "mcnemar_exact_p": 0.00026645108697203517,
+        "paired_bootstrap95_pp": [
+          -13.0,
+          -4.25
+        ]
+      },
+      "sft": {
+        "delta_pp": 0.25,
+        "wrong_to_right": 48,
+        "right_to_wrong": 47,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          -4.5,
+          5.25
+        ]
+      }
+    }
+  },
+  "identity_predictions_equal": true
+}
