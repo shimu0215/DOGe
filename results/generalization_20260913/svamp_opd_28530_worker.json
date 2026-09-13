@@ -2,7 +2,7 @@
   "job": "28530",
   "tag": "svamp_opd_28530",
   "start": 1789299167.4478524,
-  "complete": false,
+  "complete": true,
   "completed": [
     "prepare",
     "smoke2",
@@ -11,7 +11,9 @@
     "val80",
     "initial_test100",
     "clean_test100",
-    "defense_teacher_val100"
+    "defense_teacher_val100",
+    "defense40",
+    "defense_test100"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:50:07 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -36,12 +38,18 @@
     "teacher_training": false,
     "scope": "Student OPD on independent arithmetic corpus; teacher remains GSM-trained. Related source families may overlap in semantics, exact normalized questions removed"
   },
-  "phase": "defense40",
+  "phase": "complete",
   "command": [
-    "bash",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_mawps_asdiv.sh"
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/svamp_matched_eval.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/svamp_opd_28530_defense40_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/svamp_opd_28530_defense_test100",
+    "--start",
+    "100"
   ],
-  "child_pid": 1932660,
+  "child_pid": 1933500,
   "validation": {
     "40": {
       "n": 100,
@@ -126,5 +134,44 @@
     "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_dense_23371/model",
     "manifest_sha256": "11e1dbb1640b0646f1d0e9911f82aa9d9a2a4413718f53429e79e3cb96751665",
     "new_dataset_training": false
-  }
+  },
+  "defense_test": {
+    "vs_initial": {
+      "n": 100,
+      "initial_correct": 62,
+      "candidate_correct": 66,
+      "initial": 0.62,
+      "accuracy": 0.66,
+      "paired": {
+        "delta_pp": 4.0,
+        "wrong_to_right": 11,
+        "right_to_wrong": 7,
+        "mcnemar_exact_p": 0.480682373046875,
+        "paired_bootstrap95_pp": [
+          -4.0,
+          12.0
+        ]
+      }
+    },
+    "vs_clean": {
+      "n": 100,
+      "initial_correct": 66,
+      "candidate_correct": 66,
+      "initial": 0.66,
+      "accuracy": 0.66,
+      "paired": {
+        "delta_pp": 0.0,
+        "wrong_to_right": 6,
+        "right_to_wrong": 6,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          -7.000000000000001,
+          7.000000000000001
+        ]
+      }
+    },
+    "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/svamp_opd_28530_defense_test100/gsm8k-results.json",
+    "scope": "Only greedy teacher SVAMPquality checked here; not proof of sampling noninferiority"
+  },
+  "end": 1789301755.835634
 }

@@ -1,0 +1,14 @@
+{
+  "time": "2026-09-13T08:30:55-04:00",
+  "running": [
+    "28527",
+    "28528",
+    "28529",
+    "28530"
+  ],
+  "pending": [],
+  "numeric_steps": [
+    "28528.9"
+  ],
+  "source": "Observed squeue account and steps; pre-dispatch"
+}

@@ -1,0 +1,71 @@
+{
+  "time": "2026-09-13T08:31:52.886033-04:00",
+  "dispatch": [
+    {
+      "job": "28527",
+      "start": 200,
+      "pid": 635268,
+      "command": [
+        "srun",
+        "--jobid=28527",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/generalization_20260913/tiny_extension_slice.py",
+        "--job",
+        "28527",
+        "--start",
+        "200"
+      ]
+    },
+    {
+      "job": "28529",
+      "start": 600,
+      "pid": 635276,
+      "command": [
+        "srun",
+        "--jobid=28529",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/generalization_20260913/tiny_extension_slice.py",
+        "--job",
+        "28529",
+        "--start",
+        "600"
+      ]
+    },
+    {
+      "job": "28530",
+      "start": 800,
+      "pid": 635284,
+      "command": [
+        "srun",
+        "--jobid=28530",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/generalization_20260913/tiny_extension_slice.py",
+        "--job",
+        "28530",
+        "--start",
+        "800"
+      ]
+    }
+  ]
+}
