@@ -1,0 +1,29 @@
+{
+  "start": 1789274345.745275,
+  "complete": true,
+  "models": {
+    "qwen2.5-0.5b-base": {
+      "repo": "Qwen/Qwen2.5-0.5B",
+      "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+      "weights_downloaded": true,
+      "tokenizer_size": 151665,
+      "exact_teacher_vocab_mapping": true,
+      "chat_template_present": true,
+      "eos_token_id": 151643,
+      "pad_token_id": 151643
+    },
+    "smollm2-360m-tokenizer": {
+      "repo": "HuggingFaceTB/SmolLM2-360M-Instruct",
+      "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm2-360m-tokenizer",
+      "weights_downloaded": false,
+      "tokenizer_size": 49152,
+      "exact_teacher_vocab_mapping": false,
+      "chat_template_present": true,
+      "eos_token_id": 2,
+      "pad_token_id": 2
+    }
+  },
+  "end": 1789274351.2394035
+}

@@ -1,0 +1,18 @@
+{
+  "start": 1789275089.3683503,
+  "complete": true,
+  "models": {
+    "smollm2-360m-instruct": {
+      "repo": "HuggingFaceTB/SmolLM2-360M-Instruct",
+      "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm2-360m-instruct",
+      "weights_downloaded": true,
+      "tokenizer_size": 49152,
+      "exact_teacher_vocab_mapping": false,
+      "chat_template_present": true,
+      "eos_token_id": 2,
+      "pad_token_id": 2
+    }
+  },
+  "end": 1789275094.1130948
+}
