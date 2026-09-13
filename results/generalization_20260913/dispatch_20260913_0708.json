@@ -1,0 +1,42 @@
+[
+  {
+    "time": "2026-09-13T07:03:04.169714",
+    "job": "28527",
+    "previous": "static_entropy4_pcgrad72_28527",
+    "script": "experiments/opd_update_20260911/run_static_entropy2_pcgrad.py",
+    "srun_pid": 431344,
+    "log": "results/generalization_20260913/dispatch_0708_28527.log"
+  },
+  {
+    "time": "2026-09-13T07:03:04.202839",
+    "job": "28528",
+    "previous": "math_mix14b_28528",
+    "script": "experiments/generalization_20260913/coder_high_oracle_entropy2.py",
+    "srun_pid": 431352,
+    "log": "results/generalization_20260913/dispatch_0708_28528.log"
+  },
+  {
+    "time": "2026-09-13T07:03:04.236906",
+    "job": "23371",
+    "previous": "static_repair_extension_entropy4mix14b_23371",
+    "script": "experiments/opd_update_20260911/run_static_entropy2_scorefit.py",
+    "srun_pid": 431364,
+    "log": "results/generalization_20260913/dispatch_0708_23371.log"
+  },
+  {
+    "time": "2026-09-13T07:03:04.268128",
+    "job": "22480",
+    "previous": "math_fkl40_22480",
+    "script": "experiments/generalization_20260913/math_coder_headroom.py",
+    "srun_pid": 431376,
+    "log": "results/generalization_20260913/dispatch_0708_22480.log"
+  },
+  {
+    "time": "2026-09-13T07:03:04.297190",
+    "job": "23372",
+    "previous": "oracle_entropy2_all_23372",
+    "script": "experiments/generalization_20260913/source_target_fit_t2.py",
+    "srun_pid": 431386,
+    "log": "results/generalization_20260913/dispatch_0708_23372.log"
+  }
+]

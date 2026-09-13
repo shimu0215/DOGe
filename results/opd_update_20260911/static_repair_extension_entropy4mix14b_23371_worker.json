@@ -1,8 +1,11 @@
 {
   "start": 1789295896.4298506,
   "job": "23371",
-  "complete": false,
-  "completed": [],
+  "complete": true,
+  "completed": [
+    "entropy4mix14b_student_test200",
+    "entropy4mix14b_student_test600"
+  ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=23371 JobName=hold-1gpu-8h-c4m32-g37-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3603 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:23:06 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:15:10 EndTime=2026-09-13T08:15:10 Deadline=N/A PreemptEligibleTime=2026-09-13T00:16:10 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:15:10 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
   "device": {
@@ -18,20 +21,126 @@
       "static_entropy4_mix14b_23371"
     ]
   ],
-  "phase": "entropy4mix14b_student_test200",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
     "--model",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_mix14b_23371_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
     "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4mix14b_23371_entropy4mix14b_student_test200",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4mix14b_23371_entropy4mix14b_student_test600",
     "--split",
     "test",
     "--start",
-    "200",
+    "600",
     "--count",
-    "200"
+    "400"
   ],
-  "child_pid": 2562045
+  "child_pid": 2612004,
+  "student_results": {
+    "entropy4mix14b": {
+      "200": {
+        "n": 200,
+        "accuracy": 0.555,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 13.5,
+            "wrong_to_right": 36,
+            "right_to_wrong": 9,
+            "mcnemar_exact_p": 6.57466324582856e-05,
+            "paired_bootstrap95_pp": [
+              7.5,
+              19.5
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": 2.5,
+            "wrong_to_right": 22,
+            "right_to_wrong": 17,
+            "mcnemar_exact_p": 0.5223973804968409,
+            "paired_bootstrap95_pp": [
+              -4.0,
+              8.5
+            ]
+          }
+        }
+      },
+      "600": {
+        "n": 400,
+        "accuracy": 0.5225,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 8.25,
+            "wrong_to_right": 68,
+            "right_to_wrong": 35,
+            "mcnemar_exact_p": 0.0014896711969493311,
+            "paired_bootstrap95_pp": [
+              3.25,
+              13.25
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": -4.0,
+            "wrong_to_right": 33,
+            "right_to_wrong": 49,
+            "mcnemar_exact_p": 0.09703091129729906,
+            "paired_bootstrap95_pp": [
+              -8.5,
+              0.25
+            ]
+          }
+        }
+      }
+    }
+  },
+  "student1000": {
+    "entropy4mix14b": {
+      "source": "static_entropy4_mix14b_23371",
+      "n": 1000,
+      "correct": 495,
+      "accuracy": 0.495,
+      "comparisons": {
+        "sft": {
+          "delta_pp": 6.0,
+          "wrong_to_right": 157,
+          "right_to_wrong": 97,
+          "mcnemar_exact_p": 0.0002010224717139477,
+          "paired_bootstrap95_pp": [
+            2.8000000000000003,
+            9.2
+          ]
+        },
+        "clean": {
+          "delta_pp": -4.6,
+          "wrong_to_right": 78,
+          "right_to_wrong": 124,
+          "mcnemar_exact_p": 0.0014819724010223091,
+          "paired_bootstrap95_pp": [
+            -7.3,
+            -1.9
+          ]
+        }
+      },
+      "paths": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_mix14b_23371_student_test0/gsm8k-results.json",
+          "sha256": "ecfba7e6c36df590e97cce77315ccb42c524c210f407927acfad963cf78593ea"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_mix14b_23371_student_test1000/gsm8k-results.json",
+          "sha256": "57120e1d0cb9ede58337cab31a9d466d008bc6af0feb7964e8444011ac8f5b96"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4mix14b_23371_entropy4mix14b_student_test200/gsm8k-results.json",
+          "sha256": "638192c0ac784c5d71b82c24b638397fcacede96a3994f7bf12b50e72ad7366f"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4mix14b_23371_entropy4mix14b_student_test600/gsm8k-results.json",
+          "sha256": "4de0f9fba7ca237f11493bc264f82a7f66c449767f0767b5e4cd745230c766c8"
+        }
+      ]
+    }
+  },
+  "teacher_evaluation_performed": false,
+  "end": 1789296699.8981514
 }

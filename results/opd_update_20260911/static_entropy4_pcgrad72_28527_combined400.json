@@ -1,0 +1,28 @@
+{
+  "tag": "static_entropy4_pcgrad72_28527",
+  "n": 400,
+  "correct": 178,
+  "accuracy": 0.445,
+  "clean_correct": 210,
+  "sft_correct": 175,
+  "versus_clean": {
+    "delta_pp": -8.0,
+    "wrong_to_right": 24,
+    "right_to_wrong": 56,
+    "mcnemar_exact_p": 0.0004515172719148107,
+    "paired_bootstrap95_pp": [
+      -12.25,
+      -3.75
+    ]
+  },
+  "versus_sft": {
+    "delta_pp": 0.75,
+    "wrong_to_right": 51,
+    "right_to_wrong": 48,
+    "mcnemar_exact_p": 0.8408215252256425,
+    "paired_bootstrap95_pp": [
+      -4.25,
+      5.506249999999909
+    ]
+  }
+}

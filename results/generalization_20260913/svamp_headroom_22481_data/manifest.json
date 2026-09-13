@@ -1,0 +1,8 @@
+{
+  "repo": "https://github.com/arkilpatel/SVAMP",
+  "revision": "78e727689e1c1bebfc4be39c446898e8e10b0518",
+  "url": "https://raw.githubusercontent.com/arkilpatel/SVAMP/78e727689e1c1bebfc4be39c446898e8e10b0518/SVAMP.json",
+  "sha256": "5be77703a6d891ae476d7c082787ad361392aa02453b132516cdd5f4e7934e3e",
+  "n": 1000,
+  "scope": "Official challenge set, evaluation only; no training split invented"
+}

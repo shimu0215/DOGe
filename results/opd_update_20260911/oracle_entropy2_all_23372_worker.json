@@ -1,10 +1,13 @@
 {
   "start": 1789293928.2108293,
   "job": "23372",
-  "complete": false,
+  "complete": true,
   "completed": [
     "target_checks",
-    "smoke_external_student"
+    "smoke_external_student",
+    "external_student_minillm",
+    "student_test0",
+    "student_test1000"
   ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=23372 JobName=hold-1gpu-8h-c4m32-g37-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:48:17 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:17:11 EndTime=2026-09-13T07:17:11 Deadline=N/A PreemptEligibleTime=2026-09-12T23:18:11 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:17:11 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -13,12 +16,22 @@
     "step": "6",
     "uuid": "GPU-37a8069b-922f-4de2-143c-541de7c81a73"
   },
-  "phase": "external_student_minillm",
+  "phase": "complete",
   "command": [
-    "bash",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/oracle_entropy2_opd.sh"
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/oracle_entropy2_all_23372_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/oracle_entropy2_all_23372_student_test1000",
+    "--split",
+    "test",
+    "--start",
+    "1000",
+    "--count",
+    "200"
   ],
-  "child_pid": 696205,
+  "child_pid": 701424,
   "teacher_training_performed": false,
   "eligible_standalone_defense": false,
   "oracle_target": "all",
@@ -50,5 +63,87 @@
       "regularizer": 8
     },
     "target_properties_checked": true
-  }
+  },
+  "oracle_calls": {
+    "mode": "all",
+    "scope": "All-vocabulary entropy flattening beta.5 without rank reversal; conditional eligible distribution is temperature2, known-student-source direct target diagnostic, sparse or all eligible process positions. No trained teacher/source detector or standalone defense claim.",
+    "teacher_training_performed": false,
+    "student_parameter_signal_for_teacher": false,
+    "calls": {
+      "reward": 240,
+      "regularizer": 240
+    },
+    "selected_positions": {
+      "reward": 123433,
+      "regularizer": 123433
+    },
+    "rows": {
+      "reward": 480,
+      "regularizer": 480
+    },
+    "target_properties_checked": true
+  },
+  "student_results": {
+    "0": {
+      "versus_clean_opd": {
+        "original": 0.555,
+        "candidate": 0.435,
+        "paired": {
+          "delta_pp": -12.0,
+          "wrong_to_right": 12,
+          "right_to_wrong": 36,
+          "mcnemar_exact_p": 0.0007172696733945827,
+          "paired_bootstrap95_pp": [
+            -18.5,
+            -5.487500000000182
+          ]
+        }
+      },
+      "versus_sft": {
+        "original": 0.465,
+        "candidate": 0.435,
+        "paired": {
+          "delta_pp": -3.0,
+          "wrong_to_right": 24,
+          "right_to_wrong": 30,
+          "mcnemar_exact_p": 0.4966174353179338,
+          "paired_bootstrap95_pp": [
+            -10.0,
+            4.5
+          ]
+        }
+      }
+    },
+    "1000": {
+      "versus_clean_opd": {
+        "original": 0.495,
+        "candidate": 0.36,
+        "paired": {
+          "delta_pp": -13.5,
+          "wrong_to_right": 13,
+          "right_to_wrong": 40,
+          "mcnemar_exact_p": 0.0002685401188191605,
+          "paired_bootstrap95_pp": [
+            -20.5,
+            -7.000000000000001
+          ]
+        }
+      },
+      "versus_sft": {
+        "original": 0.41,
+        "candidate": 0.36,
+        "paired": {
+          "delta_pp": -5.0,
+          "wrong_to_right": 16,
+          "right_to_wrong": 26,
+          "mcnemar_exact_p": 0.16414940178310644,
+          "paired_bootstrap95_pp": [
+            -11.5,
+            1.012499999999818
+          ]
+        }
+      }
+    }
+  },
+  "end": 1789296707.030022
 }
