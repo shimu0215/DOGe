@@ -2,10 +2,12 @@
   "job": "22480",
   "tag": "smollm17_sft_22480",
   "start": 1789286669.6071675,
-  "complete": false,
+  "complete": true,
   "completed": [
     "download",
-    "raw_val100"
+    "raw_val100",
+    "sft1",
+    "sft_val100"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=22480 JobName=hold-1gpu-8h-c4m32-g35-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:48:52 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -15,28 +17,22 @@
     "visible": "0",
     "step": "4"
   },
-  "phase": "sft1",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-    "/scratch/wzhao20/DOGe-official/scripts/train_gsm_cot_sft.py",
-    "--student-model",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_native",
-    "--train-jsonl",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_train.jsonl",
-    "--output-dir",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_training",
-    "--epochs",
-    "1",
-    "--batch-size",
-    "4",
-    "--grad-accum",
-    "4",
-    "--learning-rate",
-    "2e-5",
-    "--seed",
-    "42"
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_training/final",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_sft_val100",
+    "--split",
+    "train",
+    "--start",
+    "7000",
+    "--count",
+    "100"
   ],
-  "child_pid": 1824841,
+  "child_pid": 1825095,
   "scope": "Native-format independent-family student preparation. No teacher training, no cross-tokenizer logit alignment, no OPD or defense result claimed.",
   "raw_evaluation": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_raw_val100/gsm8k-results.json",
   "raw_correct": 60,
@@ -70,5 +66,30 @@
     "max_tokens": 695,
     "all_original_ids_in_train_first1000": true,
     "all_cot_answers_correct": true
-  }
+  },
+  "sft": {
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_training/final",
+    "correct": 44,
+    "teacher_correct": 97,
+    "vs_raw": {
+      "n": 100,
+      "initial_correct": 60,
+      "candidate_correct": 44,
+      "initial": 0.6,
+      "accuracy": 0.44,
+      "paired": {
+        "delta_pp": -16.0,
+        "wrong_to_right": 9,
+        "right_to_wrong": 25,
+        "mcnemar_exact_p": 0.00904118549078703,
+        "paired_bootstrap95_pp": [
+          -27.0,
+          -5.0
+        ]
+      }
+    },
+    "validation_path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_sft_22480_sft_val100/gsm8k-results.json"
+  },
+  "next": "If useful, design an explicitly cross-tokenizer on-policy objective with its own positive baseline before testing defense. Do not crop logits or claim this SFT check is OPD.",
+  "end": 1789287097.0990174
 }

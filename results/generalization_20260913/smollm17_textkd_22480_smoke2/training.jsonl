@@ -1,0 +1,2 @@
+{"step": 1, "loss": 0.3944874405860901, "grad_norm": 5.13456916809082, "first_parameter_master_delta_rms": 4.6125182961986866e-07, "elapsed": 9.07148003578186, "max_gpu_gb": 50.755068928}
+{"step": 2, "loss": 0.5486233830451965, "grad_norm": 6.3483381271362305, "first_parameter_master_delta_rms": 3.942493265185476e-07, "elapsed": 16.607786178588867, "max_gpu_gb": 50.755069952}

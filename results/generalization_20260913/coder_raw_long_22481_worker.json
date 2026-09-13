@@ -2,7 +2,7 @@
   "job": "22481",
   "tag": "coder_raw_long_22481",
   "start": 1789283254.716904,
-  "complete": false,
+  "complete": true,
   "completed": [
     "initial_val",
     "smoke2",
@@ -10,7 +10,9 @@
     "val40",
     "val80",
     "initial_test100",
-    "clean_test100"
+    "clean_test100",
+    "defense40",
+    "defense_test100"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=22481 JobName=hold-1gpu-8h-c4m32-g35-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:52:59 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:14:35 EndTime=2026-09-13T07:14:35 Deadline=N/A PreemptEligibleTime=2026-09-12T23:15:35 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:14:35 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -20,12 +22,22 @@
     "visible": "0",
     "step": "4"
   },
-  "phase": "defense40",
+  "phase": "complete",
   "command": [
-    "bash",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_long_unrestricted.sh"
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_long_22481_defense40_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len1024/pe1_rs0.5_nr8_ln_sr/40",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_long_22481_defense_test100",
+    "--split",
+    "test",
+    "--start",
+    "1200",
+    "--count",
+    "100"
   ],
-  "child_pid": 1097225,
+  "child_pid": 1100719,
   "project_sft_performed": false,
   "protocol": {
     "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
@@ -111,5 +123,43 @@
     "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_freq_anti6_anchor36_9916493/model",
     "manifest_sha256": "376364b2e06b88e78d6a26ccd0bd34affb8c23c271393c4b59ed323ce838c25e",
     "new_student_data_used": false
-  }
+  },
+  "defense_test": {
+    "vs_initial": {
+      "n": 100,
+      "initial_correct": 28,
+      "candidate_correct": 26,
+      "initial": 0.28,
+      "accuracy": 0.26,
+      "paired": {
+        "delta_pp": -2.0,
+        "wrong_to_right": 9,
+        "right_to_wrong": 11,
+        "mcnemar_exact_p": 0.8238029479980469,
+        "paired_bootstrap95_pp": [
+          -11.0,
+          7.000000000000001
+        ]
+      }
+    },
+    "vs_clean": {
+      "n": 100,
+      "initial_correct": 30,
+      "candidate_correct": 26,
+      "initial": 0.3,
+      "accuracy": 0.26,
+      "paired": {
+        "delta_pp": -4.0,
+        "wrong_to_right": 4,
+        "right_to_wrong": 8,
+        "mcnemar_exact_p": 0.3876953125,
+        "paired_bootstrap95_pp": [
+          -11.0,
+          3.0
+        ]
+      }
+    },
+    "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_long_22481_defense_test100/gsm8k-results.json"
+  },
+  "end": 1789287063.130443
 }
