@@ -1,0 +1,2344 @@
+{
+  "timestamp": 1789276011.8275497,
+  "ssh_session": 45124,
+  "login_host": "hop-amd-2",
+  "previous_ssh_closed": 49371,
+  "workers": {
+    "foreign_prefix_28530_worker.json": {
+      "job": "28530",
+      "tag": "foreign_prefix_28530",
+      "start": 1789275210.4597113,
+      "complete": true,
+      "completed": [],
+      "teacher_training_performed": false,
+      "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:10:50 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789303360.0,
+      "device": {
+        "uuid": "GPU-daf511d8-e962-9aed-37e9-4ccce2230390",
+        "visible": "0",
+        "step": "0"
+      },
+      "scope": "Frozen 7B output-change diagnostics on independent SmolLM text, own text and whitespace-normalized own text. No teacher updates, no cross-tokenizer KL, no OPD efficacy/source-classification-accuracy claim.",
+      "n": 64,
+      "validation": "GSM train7000:7064",
+      "teacher_checkpoint": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_freq_anti6_anchor36_9916493/model",
+      "phase": "complete",
+      "foreign_generated": 64,
+      "self_generated": 64,
+      "generation_correct": {
+        "foreign": 5,
+        "self": 62,
+        "self_compact": 62
+      },
+      "rollouts": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/foreign_prefix_28530_rollouts.json",
+      "scored_rows": 192,
+      "summary": {
+        "foreign": {
+          "n": 64,
+          "forward_kl": 0.02104916408279678,
+          "observed_logp_change": 0.07320570481897448,
+          "argmax_flip_fraction": 0.02001953125,
+          "by_correctness": {
+            "0": {
+              "n": 59,
+              "forward_kl": 0.021670834295514783
+            },
+            "1": {
+              "n": 5,
+              "forward_kl": 0.013713455572724343
+            }
+          }
+        },
+        "self": {
+          "n": 64,
+          "forward_kl": 0.010657235488906736,
+          "observed_logp_change": -0.025988719859014964,
+          "argmax_flip_fraction": 0.0087890625,
+          "by_correctness": {
+            "0": {
+              "n": 2,
+              "forward_kl": 0.010811052285134792
+            },
+            "1": {
+              "n": 62,
+              "forward_kl": 0.010652273656770347
+            }
+          }
+        },
+        "self_compact": {
+          "n": 64,
+          "forward_kl": 0.015034649746667128,
+          "observed_logp_change": -0.02618406061810674,
+          "argmax_flip_fraction": 0.01025390625,
+          "by_correctness": {
+            "0": {
+              "n": 2,
+              "forward_kl": 0.010795285925269127
+            },
+            "1": {
+              "n": 62,
+              "forward_kl": 0.015171403418325128
+            }
+          }
+        }
+      },
+      "interpretation_limit": "Distribution shifts can reflect errors, length, content or surface format; these summaries do not identify a causal source detector or establish suppression. Cross-student OPD still needs its own positive baseline.",
+      "end": 1789275503.7787426
+    },
+    "foreign_prefix_28530_measurements.json": {
+      "summary": {
+        "foreign": {
+          "n": 64,
+          "forward_kl": 0.02104916408279678,
+          "observed_logp_change": 0.07320570481897448,
+          "argmax_flip_fraction": 0.02001953125,
+          "by_correctness": {
+            "0": {
+              "n": 59,
+              "forward_kl": 0.021670834295514783
+            },
+            "1": {
+              "n": 5,
+              "forward_kl": 0.013713455572724343
+            }
+          }
+        },
+        "self": {
+          "n": 64,
+          "forward_kl": 0.010657235488906736,
+          "observed_logp_change": -0.025988719859014964,
+          "argmax_flip_fraction": 0.0087890625,
+          "by_correctness": {
+            "0": {
+              "n": 2,
+              "forward_kl": 0.010811052285134792
+            },
+            "1": {
+              "n": 62,
+              "forward_kl": 0.010652273656770347
+            }
+          }
+        },
+        "self_compact": {
+          "n": 64,
+          "forward_kl": 0.015034649746667128,
+          "observed_logp_change": -0.02618406061810674,
+          "argmax_flip_fraction": 0.01025390625,
+          "by_correctness": {
+            "0": {
+              "n": 2,
+              "forward_kl": 0.010795285925269127
+            },
+            "1": {
+              "n": 62,
+              "forward_kl": 0.015171403418325128
+            }
+          }
+        }
+      },
+      "rows": [
+        {
+          "role": "foreign",
+          "id": 7000,
+          "correct": 0,
+          "teacher_tokens": 128,
+          "positions": 32,
+          "forward_kl": 0.021246420219540596,
+          "observed_logp_change": 0.41234534978866577,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7001,
+          "correct": 0,
+          "teacher_tokens": 159,
+          "positions": 32,
+          "forward_kl": 0.014597563073039055,
+          "observed_logp_change": 0.06746035069227219,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7002,
+          "correct": 0,
+          "teacher_tokens": 244,
+          "positions": 32,
+          "forward_kl": 0.019142746925354004,
+          "observed_logp_change": 0.09815134853124619,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7003,
+          "correct": 0,
+          "teacher_tokens": 356,
+          "positions": 32,
+          "forward_kl": 0.018776917830109596,
+          "observed_logp_change": 0.01425094436854124,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7004,
+          "correct": 0,
+          "teacher_tokens": 112,
+          "positions": 32,
+          "forward_kl": 0.012987797148525715,
+          "observed_logp_change": -0.006759387440979481,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7005,
+          "correct": 0,
+          "teacher_tokens": 444,
+          "positions": 32,
+          "forward_kl": 0.010458864271640778,
+          "observed_logp_change": 0.04809601977467537,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7006,
+          "correct": 0,
+          "teacher_tokens": 199,
+          "positions": 32,
+          "forward_kl": 0.05882113426923752,
+          "observed_logp_change": 0.3459756374359131,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7007,
+          "correct": 0,
+          "teacher_tokens": 178,
+          "positions": 32,
+          "forward_kl": 0.01897512748837471,
+          "observed_logp_change": 0.08553808927536011,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7008,
+          "correct": 0,
+          "teacher_tokens": 182,
+          "positions": 32,
+          "forward_kl": 0.0058475579135119915,
+          "observed_logp_change": 0.01582885906100273,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7009,
+          "correct": 0,
+          "teacher_tokens": 482,
+          "positions": 32,
+          "forward_kl": 0.033122651278972626,
+          "observed_logp_change": -0.10438862442970276,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7010,
+          "correct": 0,
+          "teacher_tokens": 279,
+          "positions": 32,
+          "forward_kl": 0.015255597420036793,
+          "observed_logp_change": 0.013195239007472992,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7011,
+          "correct": 1,
+          "teacher_tokens": 162,
+          "positions": 32,
+          "forward_kl": 0.013260186649858952,
+          "observed_logp_change": 0.13192474842071533,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7012,
+          "correct": 0,
+          "teacher_tokens": 172,
+          "positions": 32,
+          "forward_kl": 0.02136821672320366,
+          "observed_logp_change": 0.08726882934570312,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7013,
+          "correct": 0,
+          "teacher_tokens": 343,
+          "positions": 32,
+          "forward_kl": 0.019603678956627846,
+          "observed_logp_change": 0.034040551632642746,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7014,
+          "correct": 0,
+          "teacher_tokens": 106,
+          "positions": 32,
+          "forward_kl": 0.03047618269920349,
+          "observed_logp_change": 0.1574108600616455,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7015,
+          "correct": 0,
+          "teacher_tokens": 133,
+          "positions": 32,
+          "forward_kl": 0.02719263546168804,
+          "observed_logp_change": 0.09366241097450256,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7016,
+          "correct": 0,
+          "teacher_tokens": 176,
+          "positions": 32,
+          "forward_kl": 0.03420835733413696,
+          "observed_logp_change": 0.07499302923679352,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7017,
+          "correct": 1,
+          "teacher_tokens": 158,
+          "positions": 32,
+          "forward_kl": 0.017038892954587936,
+          "observed_logp_change": 0.013875793665647507,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7018,
+          "correct": 0,
+          "teacher_tokens": 473,
+          "positions": 32,
+          "forward_kl": 0.015922363847494125,
+          "observed_logp_change": 0.05222468078136444,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7019,
+          "correct": 0,
+          "teacher_tokens": 259,
+          "positions": 32,
+          "forward_kl": 0.02772211842238903,
+          "observed_logp_change": 0.14644505083560944,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7020,
+          "correct": 0,
+          "teacher_tokens": 124,
+          "positions": 32,
+          "forward_kl": 0.03507832810282707,
+          "observed_logp_change": 0.01010818500071764,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7021,
+          "correct": 0,
+          "teacher_tokens": 221,
+          "positions": 32,
+          "forward_kl": 0.022384366020560265,
+          "observed_logp_change": 0.053652573376894,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7022,
+          "correct": 0,
+          "teacher_tokens": 374,
+          "positions": 32,
+          "forward_kl": 0.017323244363069534,
+          "observed_logp_change": 0.01904040388762951,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7023,
+          "correct": 0,
+          "teacher_tokens": 145,
+          "positions": 32,
+          "forward_kl": 0.029732484370470047,
+          "observed_logp_change": 0.06810922920703888,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7024,
+          "correct": 1,
+          "teacher_tokens": 183,
+          "positions": 32,
+          "forward_kl": 0.016438651829957962,
+          "observed_logp_change": 0.04129711538553238,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7025,
+          "correct": 0,
+          "teacher_tokens": 207,
+          "positions": 32,
+          "forward_kl": 0.040978334844112396,
+          "observed_logp_change": 0.13069698214530945,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7026,
+          "correct": 0,
+          "teacher_tokens": 187,
+          "positions": 32,
+          "forward_kl": 0.014467439614236355,
+          "observed_logp_change": -0.0033962372690439224,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7027,
+          "correct": 0,
+          "teacher_tokens": 236,
+          "positions": 32,
+          "forward_kl": 0.027394309639930725,
+          "observed_logp_change": 0.017787490040063858,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7028,
+          "correct": 0,
+          "teacher_tokens": 391,
+          "positions": 32,
+          "forward_kl": 0.009926225990056992,
+          "observed_logp_change": -0.023346636444330215,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7029,
+          "correct": 0,
+          "teacher_tokens": 270,
+          "positions": 32,
+          "forward_kl": 0.014291204512119293,
+          "observed_logp_change": -0.02846471220254898,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7030,
+          "correct": 0,
+          "teacher_tokens": 233,
+          "positions": 32,
+          "forward_kl": 0.013635816052556038,
+          "observed_logp_change": 0.01021793857216835,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7031,
+          "correct": 0,
+          "teacher_tokens": 199,
+          "positions": 32,
+          "forward_kl": 0.019874487072229385,
+          "observed_logp_change": 0.051429204642772675,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7032,
+          "correct": 0,
+          "teacher_tokens": 202,
+          "positions": 32,
+          "forward_kl": 0.015202224254608154,
+          "observed_logp_change": 0.05109024420380592,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7033,
+          "correct": 0,
+          "teacher_tokens": 152,
+          "positions": 32,
+          "forward_kl": 0.05354634299874306,
+          "observed_logp_change": 0.21733024716377258,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7034,
+          "correct": 0,
+          "teacher_tokens": 228,
+          "positions": 32,
+          "forward_kl": 0.006768142804503441,
+          "observed_logp_change": 0.003935577347874641,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7035,
+          "correct": 0,
+          "teacher_tokens": 169,
+          "positions": 32,
+          "forward_kl": 0.051420632749795914,
+          "observed_logp_change": 0.06228148192167282,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7036,
+          "correct": 0,
+          "teacher_tokens": 468,
+          "positions": 32,
+          "forward_kl": 0.010614564642310143,
+          "observed_logp_change": 0.0021816869266331196,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7037,
+          "correct": 0,
+          "teacher_tokens": 228,
+          "positions": 32,
+          "forward_kl": 0.014511293731629848,
+          "observed_logp_change": 0.13837766647338867,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7038,
+          "correct": 1,
+          "teacher_tokens": 105,
+          "positions": 32,
+          "forward_kl": 0.010698026977479458,
+          "observed_logp_change": -0.01855531334877014,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7039,
+          "correct": 0,
+          "teacher_tokens": 267,
+          "positions": 32,
+          "forward_kl": 0.026600347831845284,
+          "observed_logp_change": 0.06092439591884613,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7040,
+          "correct": 0,
+          "teacher_tokens": 310,
+          "positions": 32,
+          "forward_kl": 0.02134200744330883,
+          "observed_logp_change": 0.056698594242334366,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7041,
+          "correct": 0,
+          "teacher_tokens": 109,
+          "positions": 32,
+          "forward_kl": 0.036552224308252335,
+          "observed_logp_change": 0.4557798504829407,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7042,
+          "correct": 0,
+          "teacher_tokens": 169,
+          "positions": 32,
+          "forward_kl": 0.027613239362835884,
+          "observed_logp_change": 0.14437541365623474,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7043,
+          "correct": 0,
+          "teacher_tokens": 174,
+          "positions": 32,
+          "forward_kl": 0.023037055507302284,
+          "observed_logp_change": -0.03711096942424774,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7044,
+          "correct": 0,
+          "teacher_tokens": 288,
+          "positions": 32,
+          "forward_kl": 0.01647528074681759,
+          "observed_logp_change": 0.026677347719669342,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7045,
+          "correct": 0,
+          "teacher_tokens": 128,
+          "positions": 32,
+          "forward_kl": 0.019070681184530258,
+          "observed_logp_change": 0.16430489718914032,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7046,
+          "correct": 0,
+          "teacher_tokens": 171,
+          "positions": 32,
+          "forward_kl": 0.024825619533658028,
+          "observed_logp_change": 0.04813249409198761,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7047,
+          "correct": 0,
+          "teacher_tokens": 265,
+          "positions": 32,
+          "forward_kl": 0.011132780462503433,
+          "observed_logp_change": -0.01530534215271473,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7048,
+          "correct": 0,
+          "teacher_tokens": 211,
+          "positions": 32,
+          "forward_kl": 0.027141449972987175,
+          "observed_logp_change": 0.15972979366779327,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7049,
+          "correct": 0,
+          "teacher_tokens": 101,
+          "positions": 32,
+          "forward_kl": 0.007595711387693882,
+          "observed_logp_change": -0.015603962354362011,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7050,
+          "correct": 0,
+          "teacher_tokens": 178,
+          "positions": 32,
+          "forward_kl": 0.02631404437124729,
+          "observed_logp_change": 0.08012017607688904,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7051,
+          "correct": 0,
+          "teacher_tokens": 243,
+          "positions": 32,
+          "forward_kl": 0.01917295716702938,
+          "observed_logp_change": -0.007573287934064865,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7052,
+          "correct": 0,
+          "teacher_tokens": 485,
+          "positions": 32,
+          "forward_kl": 0.00993813294917345,
+          "observed_logp_change": 0.025464877486228943,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7053,
+          "correct": 0,
+          "teacher_tokens": 163,
+          "positions": 32,
+          "forward_kl": 0.017252400517463684,
+          "observed_logp_change": 0.3920200765132904,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7054,
+          "correct": 0,
+          "teacher_tokens": 147,
+          "positions": 32,
+          "forward_kl": 0.003014462999999523,
+          "observed_logp_change": 0.034080829471349716,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7055,
+          "correct": 0,
+          "teacher_tokens": 116,
+          "positions": 32,
+          "forward_kl": 0.0240717101842165,
+          "observed_logp_change": 0.18191783130168915,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7056,
+          "correct": 0,
+          "teacher_tokens": 172,
+          "positions": 32,
+          "forward_kl": 0.012438887730240822,
+          "observed_logp_change": 0.15220052003860474,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7057,
+          "correct": 0,
+          "teacher_tokens": 479,
+          "positions": 32,
+          "forward_kl": 0.010794227011501789,
+          "observed_logp_change": 0.0034752239007502794,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7058,
+          "correct": 0,
+          "teacher_tokens": 117,
+          "positions": 32,
+          "forward_kl": 0.021272648125886917,
+          "observed_logp_change": 0.020350143313407898,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7059,
+          "correct": 1,
+          "teacher_tokens": 210,
+          "positions": 32,
+          "forward_kl": 0.011131519451737404,
+          "observed_logp_change": 0.009500036016106606,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "foreign",
+          "id": 7060,
+          "correct": 0,
+          "teacher_tokens": 133,
+          "positions": 32,
+          "forward_kl": 0.03478480130434036,
+          "observed_logp_change": 0.08571681380271912,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "foreign",
+          "id": 7061,
+          "correct": 0,
+          "teacher_tokens": 221,
+          "positions": 32,
+          "forward_kl": 0.026359040290117264,
+          "observed_logp_change": 0.027933381497859955,
+          "argmax_flip_fraction": 0.15625
+        },
+        {
+          "role": "foreign",
+          "id": 7062,
+          "correct": 0,
+          "teacher_tokens": 229,
+          "positions": 32,
+          "forward_kl": 0.017856644466519356,
+          "observed_logp_change": 0.04981463775038719,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "foreign",
+          "id": 7063,
+          "correct": 0,
+          "teacher_tokens": 468,
+          "positions": 32,
+          "forward_kl": 0.011047495529055595,
+          "observed_logp_change": -0.003771571908146143,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7000,
+          "correct": 1,
+          "teacher_tokens": 212,
+          "positions": 32,
+          "forward_kl": 0.00849201064556837,
+          "observed_logp_change": -0.015251366421580315,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7001,
+          "correct": 1,
+          "teacher_tokens": 200,
+          "positions": 32,
+          "forward_kl": 0.006541180890053511,
+          "observed_logp_change": -0.014236224815249443,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7002,
+          "correct": 0,
+          "teacher_tokens": 335,
+          "positions": 32,
+          "forward_kl": 0.008128062821924686,
+          "observed_logp_change": -0.029049353674054146,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7003,
+          "correct": 1,
+          "teacher_tokens": 322,
+          "positions": 32,
+          "forward_kl": 0.004191294778138399,
+          "observed_logp_change": -0.003380825975909829,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7004,
+          "correct": 1,
+          "teacher_tokens": 311,
+          "positions": 32,
+          "forward_kl": 0.004573030397295952,
+          "observed_logp_change": -0.013328168541193008,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7005,
+          "correct": 1,
+          "teacher_tokens": 474,
+          "positions": 32,
+          "forward_kl": 0.0033244318328797817,
+          "observed_logp_change": -0.007010242436081171,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7006,
+          "correct": 1,
+          "teacher_tokens": 342,
+          "positions": 32,
+          "forward_kl": 0.014104530215263367,
+          "observed_logp_change": -0.031483206897974014,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7007,
+          "correct": 1,
+          "teacher_tokens": 183,
+          "positions": 32,
+          "forward_kl": 0.010994134470820427,
+          "observed_logp_change": -0.011930225417017937,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7008,
+          "correct": 1,
+          "teacher_tokens": 342,
+          "positions": 32,
+          "forward_kl": 0.014795448631048203,
+          "observed_logp_change": -0.03154689446091652,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7009,
+          "correct": 1,
+          "teacher_tokens": 295,
+          "positions": 32,
+          "forward_kl": 0.012857312336564064,
+          "observed_logp_change": -0.027861338108778,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7010,
+          "correct": 1,
+          "teacher_tokens": 277,
+          "positions": 32,
+          "forward_kl": 0.003572920337319374,
+          "observed_logp_change": -0.00021853391081094742,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7011,
+          "correct": 1,
+          "teacher_tokens": 213,
+          "positions": 32,
+          "forward_kl": 0.01694885641336441,
+          "observed_logp_change": -0.03396453335881233,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7012,
+          "correct": 1,
+          "teacher_tokens": 223,
+          "positions": 32,
+          "forward_kl": 0.012171799317002296,
+          "observed_logp_change": -0.02131231315433979,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7013,
+          "correct": 1,
+          "teacher_tokens": 209,
+          "positions": 32,
+          "forward_kl": 0.005734886042773724,
+          "observed_logp_change": -0.017619160935282707,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7014,
+          "correct": 1,
+          "teacher_tokens": 214,
+          "positions": 32,
+          "forward_kl": 0.007078688591718674,
+          "observed_logp_change": -0.014927313663065434,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7015,
+          "correct": 1,
+          "teacher_tokens": 179,
+          "positions": 32,
+          "forward_kl": 0.028673499822616577,
+          "observed_logp_change": -0.08234074711799622,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "self",
+          "id": 7016,
+          "correct": 1,
+          "teacher_tokens": 224,
+          "positions": 32,
+          "forward_kl": 0.013099957257509232,
+          "observed_logp_change": -0.027087528258562088,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7017,
+          "correct": 1,
+          "teacher_tokens": 232,
+          "positions": 32,
+          "forward_kl": 0.006743412930518389,
+          "observed_logp_change": -0.023483648896217346,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7018,
+          "correct": 1,
+          "teacher_tokens": 243,
+          "positions": 32,
+          "forward_kl": 0.006206685211509466,
+          "observed_logp_change": -0.0193511713296175,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7019,
+          "correct": 1,
+          "teacher_tokens": 208,
+          "positions": 32,
+          "forward_kl": 0.015313895419239998,
+          "observed_logp_change": -0.04055339843034744,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7020,
+          "correct": 1,
+          "teacher_tokens": 212,
+          "positions": 32,
+          "forward_kl": 0.022086698561906815,
+          "observed_logp_change": -0.05144619569182396,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7021,
+          "correct": 1,
+          "teacher_tokens": 215,
+          "positions": 32,
+          "forward_kl": 0.006800144910812378,
+          "observed_logp_change": -0.018894631415605545,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7022,
+          "correct": 1,
+          "teacher_tokens": 359,
+          "positions": 32,
+          "forward_kl": 0.015841618180274963,
+          "observed_logp_change": -0.03999275341629982,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7023,
+          "correct": 1,
+          "teacher_tokens": 320,
+          "positions": 32,
+          "forward_kl": 0.009691418148577213,
+          "observed_logp_change": -0.02502647414803505,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7024,
+          "correct": 1,
+          "teacher_tokens": 218,
+          "positions": 32,
+          "forward_kl": 0.010507640428841114,
+          "observed_logp_change": -0.01765032671391964,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7025,
+          "correct": 1,
+          "teacher_tokens": 283,
+          "positions": 32,
+          "forward_kl": 0.014120759442448616,
+          "observed_logp_change": -0.050490569323301315,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "self",
+          "id": 7026,
+          "correct": 1,
+          "teacher_tokens": 197,
+          "positions": 32,
+          "forward_kl": 0.01315080001950264,
+          "observed_logp_change": -0.0322844460606575,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7027,
+          "correct": 1,
+          "teacher_tokens": 272,
+          "positions": 32,
+          "forward_kl": 0.006576146464794874,
+          "observed_logp_change": -0.016471754759550095,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7028,
+          "correct": 1,
+          "teacher_tokens": 205,
+          "positions": 32,
+          "forward_kl": 0.014675983227789402,
+          "observed_logp_change": -0.029515456408262253,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7029,
+          "correct": 1,
+          "teacher_tokens": 220,
+          "positions": 32,
+          "forward_kl": 0.006688342895358801,
+          "observed_logp_change": -0.01661893166601658,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7030,
+          "correct": 0,
+          "teacher_tokens": 512,
+          "positions": 32,
+          "forward_kl": 0.013494041748344898,
+          "observed_logp_change": -0.03918866068124771,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7031,
+          "correct": 1,
+          "teacher_tokens": 229,
+          "positions": 32,
+          "forward_kl": 0.0036330544389784336,
+          "observed_logp_change": -0.010075057856738567,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7032,
+          "correct": 1,
+          "teacher_tokens": 279,
+          "positions": 32,
+          "forward_kl": 0.009893114678561687,
+          "observed_logp_change": -0.024091403931379318,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7033,
+          "correct": 1,
+          "teacher_tokens": 186,
+          "positions": 32,
+          "forward_kl": 0.011978734284639359,
+          "observed_logp_change": -0.027201149612665176,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7034,
+          "correct": 1,
+          "teacher_tokens": 277,
+          "positions": 32,
+          "forward_kl": 0.005471834912896156,
+          "observed_logp_change": -0.0104579608887434,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7035,
+          "correct": 1,
+          "teacher_tokens": 456,
+          "positions": 32,
+          "forward_kl": 0.0037045315839350224,
+          "observed_logp_change": -0.008563037030398846,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7036,
+          "correct": 1,
+          "teacher_tokens": 246,
+          "positions": 32,
+          "forward_kl": 0.006697149947285652,
+          "observed_logp_change": -0.014256089925765991,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7037,
+          "correct": 1,
+          "teacher_tokens": 341,
+          "positions": 32,
+          "forward_kl": 0.004285043105483055,
+          "observed_logp_change": -0.009039022959768772,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7038,
+          "correct": 1,
+          "teacher_tokens": 203,
+          "positions": 32,
+          "forward_kl": 0.010626308619976044,
+          "observed_logp_change": -0.026971079409122467,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7039,
+          "correct": 1,
+          "teacher_tokens": 355,
+          "positions": 32,
+          "forward_kl": 0.008550900034606457,
+          "observed_logp_change": -0.017974980175495148,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7040,
+          "correct": 1,
+          "teacher_tokens": 241,
+          "positions": 32,
+          "forward_kl": 0.010376326739788055,
+          "observed_logp_change": -0.031201869249343872,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7041,
+          "correct": 1,
+          "teacher_tokens": 251,
+          "positions": 32,
+          "forward_kl": 0.005239189602434635,
+          "observed_logp_change": -0.013550154864788055,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7042,
+          "correct": 1,
+          "teacher_tokens": 223,
+          "positions": 32,
+          "forward_kl": 0.014941038563847542,
+          "observed_logp_change": -0.04311791807413101,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7043,
+          "correct": 1,
+          "teacher_tokens": 351,
+          "positions": 32,
+          "forward_kl": 0.013643136247992516,
+          "observed_logp_change": -0.026269912719726562,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7044,
+          "correct": 1,
+          "teacher_tokens": 259,
+          "positions": 32,
+          "forward_kl": 0.005236373282968998,
+          "observed_logp_change": -0.012510931119322777,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7045,
+          "correct": 1,
+          "teacher_tokens": 313,
+          "positions": 32,
+          "forward_kl": 0.007500764913856983,
+          "observed_logp_change": -0.017223043367266655,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7046,
+          "correct": 1,
+          "teacher_tokens": 319,
+          "positions": 32,
+          "forward_kl": 0.00315951113589108,
+          "observed_logp_change": -0.0065123289823532104,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7047,
+          "correct": 1,
+          "teacher_tokens": 270,
+          "positions": 32,
+          "forward_kl": 0.008964034728705883,
+          "observed_logp_change": -0.012675459496676922,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7048,
+          "correct": 1,
+          "teacher_tokens": 166,
+          "positions": 32,
+          "forward_kl": 0.013550980016589165,
+          "observed_logp_change": -0.030996188521385193,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7049,
+          "correct": 1,
+          "teacher_tokens": 292,
+          "positions": 32,
+          "forward_kl": 0.005133710335940123,
+          "observed_logp_change": -0.011168338358402252,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7050,
+          "correct": 1,
+          "teacher_tokens": 246,
+          "positions": 32,
+          "forward_kl": 0.012838593684136868,
+          "observed_logp_change": -0.028719767928123474,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7051,
+          "correct": 1,
+          "teacher_tokens": 189,
+          "positions": 32,
+          "forward_kl": 0.012125699780881405,
+          "observed_logp_change": -0.04326030611991882,
+          "argmax_flip_fraction": 0.09375
+        },
+        {
+          "role": "self",
+          "id": 7052,
+          "correct": 1,
+          "teacher_tokens": 163,
+          "positions": 32,
+          "forward_kl": 0.008950532414019108,
+          "observed_logp_change": -0.025581054389476776,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7053,
+          "correct": 1,
+          "teacher_tokens": 219,
+          "positions": 32,
+          "forward_kl": 0.010278817266225815,
+          "observed_logp_change": -0.03304667770862579,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7054,
+          "correct": 1,
+          "teacher_tokens": 295,
+          "positions": 32,
+          "forward_kl": 0.008537913672626019,
+          "observed_logp_change": -0.02386084944009781,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7055,
+          "correct": 1,
+          "teacher_tokens": 218,
+          "positions": 32,
+          "forward_kl": 0.005460312590003014,
+          "observed_logp_change": -0.009608843363821507,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7056,
+          "correct": 1,
+          "teacher_tokens": 350,
+          "positions": 32,
+          "forward_kl": 0.013461101800203323,
+          "observed_logp_change": -0.027410097420215607,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7057,
+          "correct": 1,
+          "teacher_tokens": 270,
+          "positions": 32,
+          "forward_kl": 0.01411999948322773,
+          "observed_logp_change": -0.044094715267419815,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7058,
+          "correct": 1,
+          "teacher_tokens": 216,
+          "positions": 32,
+          "forward_kl": 0.0364203117787838,
+          "observed_logp_change": -0.09255393594503403,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self",
+          "id": 7059,
+          "correct": 1,
+          "teacher_tokens": 255,
+          "positions": 32,
+          "forward_kl": 0.01364954188466072,
+          "observed_logp_change": -0.0322888158261776,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7060,
+          "correct": 1,
+          "teacher_tokens": 262,
+          "positions": 32,
+          "forward_kl": 0.022727198898792267,
+          "observed_logp_change": -0.060251906514167786,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7061,
+          "correct": 1,
+          "teacher_tokens": 253,
+          "positions": 32,
+          "forward_kl": 0.016338229179382324,
+          "observed_logp_change": -0.040852125734090805,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7062,
+          "correct": 1,
+          "teacher_tokens": 290,
+          "positions": 32,
+          "forward_kl": 0.010158978402614594,
+          "observed_logp_change": -0.020199447870254517,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self",
+          "id": 7063,
+          "correct": 1,
+          "teacher_tokens": 370,
+          "positions": 32,
+          "forward_kl": 0.007230470888316631,
+          "observed_logp_change": -0.024177204817533493,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7000,
+          "correct": 1,
+          "teacher_tokens": 203,
+          "positions": 32,
+          "forward_kl": 0.012189348228275776,
+          "observed_logp_change": -0.02955053374171257,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7001,
+          "correct": 1,
+          "teacher_tokens": 180,
+          "positions": 32,
+          "forward_kl": 0.02302788756787777,
+          "observed_logp_change": -0.05832752585411072,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7002,
+          "correct": 0,
+          "teacher_tokens": 335,
+          "positions": 32,
+          "forward_kl": 0.012516742572188377,
+          "observed_logp_change": -0.032449737191200256,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7003,
+          "correct": 1,
+          "teacher_tokens": 326,
+          "positions": 32,
+          "forward_kl": 0.013904957100749016,
+          "observed_logp_change": -0.03977443277835846,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7004,
+          "correct": 1,
+          "teacher_tokens": 289,
+          "positions": 32,
+          "forward_kl": 0.010674347169697285,
+          "observed_logp_change": -0.027865055948495865,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7005,
+          "correct": 1,
+          "teacher_tokens": 451,
+          "positions": 32,
+          "forward_kl": 0.008459266275167465,
+          "observed_logp_change": -0.010522393509745598,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7006,
+          "correct": 1,
+          "teacher_tokens": 334,
+          "positions": 32,
+          "forward_kl": 0.01783100515604019,
+          "observed_logp_change": -0.016785617917776108,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7007,
+          "correct": 1,
+          "teacher_tokens": 174,
+          "positions": 32,
+          "forward_kl": 0.017830435186624527,
+          "observed_logp_change": -0.02002168446779251,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7008,
+          "correct": 1,
+          "teacher_tokens": 330,
+          "positions": 32,
+          "forward_kl": 0.008969767019152641,
+          "observed_logp_change": -0.0022353986278176308,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7009,
+          "correct": 1,
+          "teacher_tokens": 275,
+          "positions": 32,
+          "forward_kl": 0.010775772854685783,
+          "observed_logp_change": -0.03123510256409645,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7010,
+          "correct": 1,
+          "teacher_tokens": 267,
+          "positions": 32,
+          "forward_kl": 0.007040876895189285,
+          "observed_logp_change": -0.01481233537197113,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7011,
+          "correct": 1,
+          "teacher_tokens": 211,
+          "positions": 32,
+          "forward_kl": 0.015321070328354836,
+          "observed_logp_change": -0.053696081042289734,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7012,
+          "correct": 1,
+          "teacher_tokens": 210,
+          "positions": 32,
+          "forward_kl": 0.032019879668951035,
+          "observed_logp_change": -0.053787410259246826,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7013,
+          "correct": 1,
+          "teacher_tokens": 199,
+          "positions": 32,
+          "forward_kl": 0.012141579762101173,
+          "observed_logp_change": -0.011935089714825153,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7014,
+          "correct": 1,
+          "teacher_tokens": 207,
+          "positions": 32,
+          "forward_kl": 0.018420502543449402,
+          "observed_logp_change": -0.020325247198343277,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7015,
+          "correct": 1,
+          "teacher_tokens": 183,
+          "positions": 32,
+          "forward_kl": 0.036147620528936386,
+          "observed_logp_change": -0.016414139419794083,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7016,
+          "correct": 1,
+          "teacher_tokens": 228,
+          "positions": 32,
+          "forward_kl": 0.016825001686811447,
+          "observed_logp_change": -0.03751657158136368,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7017,
+          "correct": 1,
+          "teacher_tokens": 210,
+          "positions": 32,
+          "forward_kl": 0.015559956431388855,
+          "observed_logp_change": 0.0007061325013637543,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7018,
+          "correct": 1,
+          "teacher_tokens": 234,
+          "positions": 32,
+          "forward_kl": 0.005292247515171766,
+          "observed_logp_change": -0.012987135909497738,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7019,
+          "correct": 1,
+          "teacher_tokens": 200,
+          "positions": 32,
+          "forward_kl": 0.014687244780361652,
+          "observed_logp_change": -0.046022843569517136,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7020,
+          "correct": 1,
+          "teacher_tokens": 217,
+          "positions": 32,
+          "forward_kl": 0.026915501803159714,
+          "observed_logp_change": 0.011010754853487015,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "self_compact",
+          "id": 7021,
+          "correct": 1,
+          "teacher_tokens": 205,
+          "positions": 32,
+          "forward_kl": 0.01187583152204752,
+          "observed_logp_change": 0.026290573179721832,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7022,
+          "correct": 1,
+          "teacher_tokens": 338,
+          "positions": 32,
+          "forward_kl": 0.015550713986158371,
+          "observed_logp_change": -0.024901513010263443,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7023,
+          "correct": 1,
+          "teacher_tokens": 297,
+          "positions": 32,
+          "forward_kl": 0.008236617781221867,
+          "observed_logp_change": -0.01232849806547165,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7024,
+          "correct": 1,
+          "teacher_tokens": 218,
+          "positions": 32,
+          "forward_kl": 0.015157978050410748,
+          "observed_logp_change": 0.027311546728014946,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7025,
+          "correct": 1,
+          "teacher_tokens": 259,
+          "positions": 32,
+          "forward_kl": 0.01617235690355301,
+          "observed_logp_change": -0.03028697706758976,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "self_compact",
+          "id": 7026,
+          "correct": 1,
+          "teacher_tokens": 201,
+          "positions": 32,
+          "forward_kl": 0.022068418562412262,
+          "observed_logp_change": -0.05227624624967575,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7027,
+          "correct": 1,
+          "teacher_tokens": 265,
+          "positions": 32,
+          "forward_kl": 0.006468156352639198,
+          "observed_logp_change": -0.013504673726856709,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7028,
+          "correct": 1,
+          "teacher_tokens": 200,
+          "positions": 32,
+          "forward_kl": 0.017196478322148323,
+          "observed_logp_change": -0.04209420830011368,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7029,
+          "correct": 1,
+          "teacher_tokens": 207,
+          "positions": 32,
+          "forward_kl": 0.013477329164743423,
+          "observed_logp_change": -0.01609646901488304,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7030,
+          "correct": 0,
+          "teacher_tokens": 475,
+          "positions": 32,
+          "forward_kl": 0.009073829278349876,
+          "observed_logp_change": -0.02594943344593048,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7031,
+          "correct": 1,
+          "teacher_tokens": 214,
+          "positions": 32,
+          "forward_kl": 0.011781226843595505,
+          "observed_logp_change": -0.02408740669488907,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7032,
+          "correct": 1,
+          "teacher_tokens": 263,
+          "positions": 32,
+          "forward_kl": 0.013533690944314003,
+          "observed_logp_change": -0.04266722500324249,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7033,
+          "correct": 1,
+          "teacher_tokens": 185,
+          "positions": 32,
+          "forward_kl": 0.018889162689447403,
+          "observed_logp_change": -0.044728778302669525,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7034,
+          "correct": 1,
+          "teacher_tokens": 265,
+          "positions": 32,
+          "forward_kl": 0.007833482697606087,
+          "observed_logp_change": -0.017984267324209213,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7035,
+          "correct": 1,
+          "teacher_tokens": 414,
+          "positions": 32,
+          "forward_kl": 0.012698419392108917,
+          "observed_logp_change": -0.043257709592580795,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7036,
+          "correct": 1,
+          "teacher_tokens": 227,
+          "positions": 32,
+          "forward_kl": 0.006236430257558823,
+          "observed_logp_change": -0.004703120794147253,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7037,
+          "correct": 1,
+          "teacher_tokens": 317,
+          "positions": 32,
+          "forward_kl": 0.015333485789597034,
+          "observed_logp_change": -0.04265609756112099,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7038,
+          "correct": 1,
+          "teacher_tokens": 180,
+          "positions": 32,
+          "forward_kl": 0.009224573150277138,
+          "observed_logp_change": -0.020469533279538155,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7039,
+          "correct": 1,
+          "teacher_tokens": 345,
+          "positions": 32,
+          "forward_kl": 0.016252601519227028,
+          "observed_logp_change": -0.034246496856212616,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7040,
+          "correct": 1,
+          "teacher_tokens": 225,
+          "positions": 32,
+          "forward_kl": 0.009674356319010258,
+          "observed_logp_change": -0.009036587551236153,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7041,
+          "correct": 1,
+          "teacher_tokens": 242,
+          "positions": 32,
+          "forward_kl": 0.011048206128180027,
+          "observed_logp_change": -0.0063651567324995995,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7042,
+          "correct": 1,
+          "teacher_tokens": 226,
+          "positions": 32,
+          "forward_kl": 0.007968969643115997,
+          "observed_logp_change": -0.011776825413107872,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7043,
+          "correct": 1,
+          "teacher_tokens": 320,
+          "positions": 32,
+          "forward_kl": 0.015067751519382,
+          "observed_logp_change": -0.019201289862394333,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7044,
+          "correct": 1,
+          "teacher_tokens": 259,
+          "positions": 32,
+          "forward_kl": 0.012752941809594631,
+          "observed_logp_change": -0.030454512685537338,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7045,
+          "correct": 1,
+          "teacher_tokens": 301,
+          "positions": 32,
+          "forward_kl": 0.013486269861459732,
+          "observed_logp_change": -0.03238345682621002,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7046,
+          "correct": 1,
+          "teacher_tokens": 302,
+          "positions": 32,
+          "forward_kl": 0.011705342680215836,
+          "observed_logp_change": -0.032529316842556,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7047,
+          "correct": 1,
+          "teacher_tokens": 254,
+          "positions": 32,
+          "forward_kl": 0.012192204594612122,
+          "observed_logp_change": -0.013730071485042572,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7048,
+          "correct": 1,
+          "teacher_tokens": 160,
+          "positions": 32,
+          "forward_kl": 0.024165749549865723,
+          "observed_logp_change": -0.06237669289112091,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7049,
+          "correct": 1,
+          "teacher_tokens": 292,
+          "positions": 32,
+          "forward_kl": 0.005901147611439228,
+          "observed_logp_change": -0.015779316425323486,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7050,
+          "correct": 1,
+          "teacher_tokens": 238,
+          "positions": 32,
+          "forward_kl": 0.0182981938123703,
+          "observed_logp_change": -0.05861344560980797,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "self_compact",
+          "id": 7051,
+          "correct": 1,
+          "teacher_tokens": 183,
+          "positions": 32,
+          "forward_kl": 0.010177413932979107,
+          "observed_logp_change": -0.02226193994283676,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7052,
+          "correct": 1,
+          "teacher_tokens": 157,
+          "positions": 32,
+          "forward_kl": 0.021397927775979042,
+          "observed_logp_change": -0.0670693889260292,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7053,
+          "correct": 1,
+          "teacher_tokens": 205,
+          "positions": 32,
+          "forward_kl": 0.020129039883613586,
+          "observed_logp_change": -0.04612264782190323,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7054,
+          "correct": 1,
+          "teacher_tokens": 275,
+          "positions": 32,
+          "forward_kl": 0.0260664951056242,
+          "observed_logp_change": -0.061391718685626984,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7055,
+          "correct": 1,
+          "teacher_tokens": 209,
+          "positions": 32,
+          "forward_kl": 0.01613314263522625,
+          "observed_logp_change": 0.0014162622392177582,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7056,
+          "correct": 1,
+          "teacher_tokens": 337,
+          "positions": 32,
+          "forward_kl": 0.007766840048134327,
+          "observed_logp_change": -0.01777549460530281,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7057,
+          "correct": 1,
+          "teacher_tokens": 257,
+          "positions": 32,
+          "forward_kl": 0.020231308415532112,
+          "observed_logp_change": -0.042291413992643356,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7058,
+          "correct": 1,
+          "teacher_tokens": 210,
+          "positions": 32,
+          "forward_kl": 0.02979787066578865,
+          "observed_logp_change": -0.014418520033359528,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7059,
+          "correct": 1,
+          "teacher_tokens": 245,
+          "positions": 32,
+          "forward_kl": 0.011528121307492256,
+          "observed_logp_change": -0.024490587413311005,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7060,
+          "correct": 1,
+          "teacher_tokens": 243,
+          "positions": 32,
+          "forward_kl": 0.027578599750995636,
+          "observed_logp_change": -0.0796249657869339,
+          "argmax_flip_fraction": 0.03125
+        },
+        {
+          "role": "self_compact",
+          "id": 7061,
+          "correct": 1,
+          "teacher_tokens": 243,
+          "positions": 32,
+          "forward_kl": 0.013932090252637863,
+          "observed_logp_change": -0.036119285970926285,
+          "argmax_flip_fraction": 0.0625
+        },
+        {
+          "role": "self_compact",
+          "id": 7062,
+          "correct": 1,
+          "teacher_tokens": 293,
+          "positions": 32,
+          "forward_kl": 0.015719810500741005,
+          "observed_logp_change": 0.025445105507969856,
+          "argmax_flip_fraction": 0.0
+        },
+        {
+          "role": "self_compact",
+          "id": 7063,
+          "correct": 1,
+          "teacher_tokens": 339,
+          "positions": 32,
+          "forward_kl": 0.01588599570095539,
+          "observed_logp_change": -0.03564462810754776,
+          "argmax_flip_fraction": 0.0
+        }
+      ]
+    },
+    "base_transfer_23369_worker.json": {
+      "job": "23369",
+      "tag": "base_transfer_23369",
+      "start": 1789274848.6997313,
+      "complete": false,
+      "completed": [
+        "raw_native_val",
+        "original_teacher_val",
+        "sft2",
+        "sft_checkpoint-49_val",
+        "sft_checkpoint-98_val"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=23369 JobName=hold-1gpu-8h-c4m32-g36-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:41:40 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:05:48 EndTime=2026-09-13T08:05:48 Deadline=N/A PreemptEligibleTime=2026-09-13T00:06:48 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:05:48 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789301148.0,
+      "device": {
+        "uuid": "GPU-f4d4e65b-a3f0-c46c-2124-12cef395c78c",
+        "visible": "0",
+        "step": "1"
+      },
+      "scope": "Unseen pretrained checkpoint, same Qwen family; NOT a cross-family proof. Teacher remains fixed and has no new negative examples.",
+      "download": {
+        "repo": "Qwen/Qwen2.5-0.5B",
+        "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+        "weights_downloaded": true,
+        "tokenizer_size": 151665,
+        "exact_teacher_vocab_mapping": true,
+        "chat_template_present": true,
+        "eos_token_id": 151643,
+        "pad_token_id": 151643
+      },
+      "phase": "clean120",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+      ],
+      "child_pid": 364917,
+      "raw_gap": {
+        "raw_correct": 53,
+        "teacher_correct": 97,
+        "n": 100,
+        "format_note": "raw base completion versus teacher native chat; same questions and token budget"
+      },
+      "sft_protocol": {
+        "raw_weight_model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+        "prepared_format": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_transfer_23369_base_chat_format",
+        "data": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+        "data_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+        "epochs": 2,
+        "learning_rate": 2e-05,
+        "selection": "Checkpoint nearest 40% on validation; ties earlier epoch. No test selection.",
+        "format_change": "Teacher ChatML tokenizer and stop configuration, identical token-to-ID mapping, no weight changes before SFT."
+      },
+      "sft_validation": {
+        "checkpoint-49": {
+          "correct": 64,
+          "epoch": 1.0,
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_transfer_23369_sft_checkpoint-49_val/gsm8k-results.json"
+        },
+        "checkpoint-98": {
+          "correct": 66,
+          "epoch": 2.0,
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_transfer_23369_sft_checkpoint-98_val/gsm8k-results.json"
+        }
+      },
+      "selected_sft": {
+        "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_transfer_23369_sft/checkpoint-49",
+        "epoch": 1.0,
+        "correct": 64
+      }
+    },
+    "coder_transfer_28528_worker.json": {
+      "job": "28528",
+      "tag": "coder_transfer_28528",
+      "start": 1789275105.0431838,
+      "complete": false,
+      "completed": [
+        "raw_instruct_val",
+        "original_teacher_val"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=28528 JobName=hold-1gpu-8h-c4m32-g38-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:10:11 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu007 BatchHost=gpu007 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-cq-28528.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-cq-28528.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789303294.0,
+      "device": {
+        "uuid": "GPU-d1a6cb76-d866-5de8-cd07-ff11b2cc35c1",
+        "visible": "0",
+        "step": "0"
+      },
+      "scope": "Unseen code-specialized instruct checkpoint, same Qwen family; NOT a cross-family proof. Teacher remains fixed and has no new negative examples.",
+      "download": {
+        "repo": "Qwen/Qwen2.5-Coder-0.5B-Instruct",
+        "revision": "ea3f2471cf1b1f0db85067f1ef93848e38e88c25",
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "weights_downloaded": true,
+        "tokenizer_size": 151665,
+        "exact_teacher_vocab_mapping": true,
+        "chat_template_present": true,
+        "eos_token_id": 151645,
+        "pad_token_id": 151643
+      },
+      "phase": "sft2",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/DOGe-official/scripts/train_gsm_cot_sft.py",
+        "--student-model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_transfer_28528_base_chat_format",
+        "--train-jsonl",
+        "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+        "--output-dir",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_transfer_28528_sft",
+        "--epochs",
+        "2",
+        "--batch-size",
+        "4",
+        "--grad-accum",
+        "4",
+        "--learning-rate",
+        "2e-5",
+        "--seed",
+        "42"
+      ],
+      "child_pid": 1800811,
+      "raw_gap": {
+        "raw_correct": 36,
+        "teacher_correct": 97,
+        "n": 100,
+        "format_note": "student and teacher native chat; same questions and token budget"
+      },
+      "sft_protocol": {
+        "raw_weight_model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "prepared_format": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_transfer_28528_base_chat_format",
+        "data": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+        "data_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+        "epochs": 2,
+        "learning_rate": 2e-05,
+        "selection": "Checkpoint nearest 40% on validation; ties earlier epoch. No test selection.",
+        "format_change": "Teacher ChatML tokenizer and stop configuration, identical token-to-ID mapping, no weight changes before SFT."
+      },
+      "error": "AssertionError(('sft2', 1))",
+      "end": 1789275514.1377058
+    },
+    "coder_transfer_fixed_28528_worker.json": {
+      "job": "28528",
+      "tag": "coder_transfer_fixed_28528",
+      "start": 1789275938.5343704,
+      "complete": false,
+      "completed": [],
+      "teacher_training_performed": false,
+      "allocation": "JobId=28528 JobName=hold-1gpu-8h-c4m32-g38-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:24:04 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu007 BatchHost=gpu007 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-cq-28528.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-cq-28528.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789303294.0,
+      "device": {
+        "uuid": "GPU-d1a6cb76-d866-5de8-cd07-ff11b2cc35c1",
+        "visible": "0",
+        "step": "1"
+      },
+      "scope": "Unseen code-specialized instruct checkpoint, same Qwen family; NOT a cross-family proof. Teacher remains fixed and has no new negative examples.",
+      "download": {
+        "repo": "Qwen/Qwen2.5-Coder-0.5B-Instruct",
+        "revision": "ea3f2471cf1b1f0db85067f1ef93848e38e88c25",
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "weights_downloaded": true,
+        "tokenizer_size": 151665,
+        "exact_teacher_vocab_mapping": true,
+        "chat_template_present": true,
+        "eos_token_id": 151645,
+        "pad_token_id": 151643
+      },
+      "reused_evaluations": "Prior native student/teacher validation complete; SFT failed only on saving conflicting generation config.",
+      "raw_gap": {
+        "raw_correct": 36,
+        "teacher_correct": 97,
+        "n": 100,
+        "format_note": "student and teacher native chat; same questions and token budget"
+      },
+      "sft_protocol": {
+        "raw_weight_model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "prepared_format": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_transfer_fixed_28528_base_chat_format",
+        "data": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+        "data_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+        "epochs": 2,
+        "learning_rate": 2e-05,
+        "selection": "Checkpoint nearest 40% on validation; ties earlier epoch. No test selection.",
+        "format_change": "Teacher ChatML tokenizer and stop configuration, identical token-to-ID mapping, no weight changes before SFT."
+      },
+      "phase": "sft2",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/DOGe-official/scripts/train_gsm_cot_sft.py",
+        "--student-model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_transfer_fixed_28528_base_chat_format",
+        "--train-jsonl",
+        "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+        "--output-dir",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_transfer_fixed_28528_sft",
+        "--epochs",
+        "2",
+        "--batch-size",
+        "4",
+        "--grad-accum",
+        "4",
+        "--learning-rate",
+        "2e-5",
+        "--seed",
+        "42"
+      ],
+      "child_pid": 1801916
+    },
+    "base_forwardkl_28530_worker.json": {
+      "job": "28530",
+      "tag": "base_forwardkl_28530",
+      "start": 1789275979.21887,
+      "complete": false,
+      "completed": [],
+      "teacher_training_performed": false,
+      "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:23:39 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789303360.0,
+      "device": {
+        "uuid": "GPU-daf511d8-e962-9aed-37e9-4ccce2230390",
+        "visible": "0",
+        "step": "1"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_transfer_23369_sft/checkpoint-49",
+        "initial_correct": 64,
+        "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "objective": "forward_kl",
+        "steps": 120,
+        "lr": 1e-06,
+        "seed": 10,
+        "validation_only": true,
+        "no_test_selection": true,
+        "source_worker": "base_transfer_23369",
+        "source_sft_epoch": 1.0
+      },
+      "phase": "clean120",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+      ],
+      "child_pid": 1888277
+    },
+    "dispatch_coder_fixed.json": {
+      "start": 1789275937.1421046,
+      "job": "28528",
+      "pid": 3414686,
+      "command": [
+        "srun",
+        "--jobid=28528",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/coder_pipeline_fixed.py",
+        "--job",
+        "28528"
+      ]
+    },
+    "dispatch_base_forwardkl.json": {
+      "start": 1789275976.996833,
+      "pid": 3418555,
+      "command": [
+        "srun",
+        "--jobid=28530",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/base_forwardkl.py",
+        "--job",
+        "28530"
+      ]
+    }
+  }
+}

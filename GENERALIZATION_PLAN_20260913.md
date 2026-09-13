@@ -50,3 +50,5 @@ PCGrad 原论文将冲突任务梯度投影到另一任务梯度的法平面：[
 28527.0 gpu015 UUID2c684969-2b10-8c8b-905d-917fb50bcbd9，srun134678，run_oracle_tail_gap.py --targetall --port31231。28529.0同node但UUIDe70ee1d6-21e0-11e6-ec61-5ee3b691bb77，srun134689，run_oracle_tail_gap01.py --targetsparse --port31233。两条均新策略强度诊断：分别gap压缩.25的全过程覆盖，和更激进.01的稀疏覆盖。CPU性质检查和actual2smoke均通过，fresh0.5B OPD120/main400进行中。没有teacher正确率准入；都不是部署方案或数学上限。
 
 原三teacher64训练均已完成，正在mainteacher质量检查。此前两个固定修复teacher raw400完整完成：原361/40090.25%，anchor36和answer4均347/40086.75%，均-3.5pp，配对CI[-6.75,-.25]。不能说high-temperature性能保持，常规温度点值检查与此分开。结果/启动来源snapshot_20260913_0056.json。
+
+01:09更新：SmolLM前缀诊断已完成，foreign平均KL变化大于self，但SmolLM仅5/64正确、teacher62/64，存在严重质量混杂，不能认定来源识别或OPD泛化。28530已接续Base的前向KL正常OPD验证，与23369共享已选1epoch SFT初始化（验证64/100），没有重复SFT，也不自动根据测试集选择。Coder初版SFT因generation config保存校验失败，已用新coder_pipeline_fixed.py重启，旧失败保留；复用其原生验证36/100和teacher97/100。新SSH45124已认证恢复，后台实验继续。
