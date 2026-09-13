@@ -1,4 +1,4 @@
-# Teacher 防 OPD：截至 2026-09-12 20:42 ET
+# Teacher 防 OPD：截至 2026-09-12 21:00 ET
 
 当前找到的是能显著削弱 OPD 收益的普通 teacher checkpoint，尚未在扩大评测中稳定把学生压回 SFT，或只留下 1–2 个百分点收益。
 
@@ -24,3 +24,8 @@ Anchor36 在完整 1000 题比正常 OPD 低 7.4pp，配对 bootstrap 95% CI [-1
 后续有新 GPU 时，优先补齐 anchor36 的完整 teacher 扩展质量与 answer4 的学生 1000 题，再决定是否继续。现有结果主要来自反复使用的同一评测集和一个学生训练种子，是探索性结果；尚无不同学生模型或不同 QA 数据集的泛化证据。优先完成方法，不机械重复无效方案的多种子。
 
 具体可追溯文件：PROGRESS_20260911_0955.md；results/opd_update_20260911/repaired_teachers_paired400.json；snapshot_20260912_2042.json；此前 defenses_frequent_rl_paired1000.json 和 rl_teacher_paired1000.json。短 teacher64 补测的最终状态另见后续进度记录，不能代替完整 teacher400。
+
+
+本轮资源已结束：20:59:50 ET 确认账户无运行或排队 job、无 GPU step，已删除 teacher 自动监控。没有申请、延长或取消 reservation；目标并未完成。
+
+最后的 teacher64 补测因分配时限终止。Greedy 完成 64 题，候选和原 teacher 都为 57/64；sampling 仅完成前 40/64 题，两者均为 36/40。保留这些配对结果，但不把部分完成的检查算作通过，也不代替完整 teacher 扩展 400 题。原 worker 因系统终止而停留 complete=false；外部终止证据与各模式数量记录在 results/opd_update_20260911/resource_exhaustion_20260912_2100.json。下次获得 GPU 时，应补齐质量检查和缺失的扩大评测后再做结论。
