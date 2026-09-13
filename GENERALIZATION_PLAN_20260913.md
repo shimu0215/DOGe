@@ -60,3 +60,5 @@ PCGrad 原论文将冲突任务梯度投影到另一任务梯度的法平面：[
 02:25：Coder一epoch MiniLLM验证43→52，但固定test35→32，未进入防御。Base一epoch MiniLLM无增益，FKL验证64→67（40步）已按验证选择，28530新owner在做initial/clean100，正收益才匹配FKL40防御。28528转Coder半epochSFT，23369转与22479共享Base半epoch checkpoint25的FKL验证（其初始val63）。当前owners见PROGRESS，未获跨学生防御结果。
 
 02:48：Base一epoch FKL40 fixedtest48→48无增益，停止防御。28530已转Coder半epoch学生的长rollout/no_repeat_ngram_size0基线，max1024而非640，先实际2smoke→80步验证40/80，test100正收益后才同设置防御。这是训练生成限制的排查，非已确认bug。详见PROGRESS/dispatch_0246。
+
+03:13更新：Q3完整完成，22480按用户授权首次接用于SmolLM2-360M不同家族原生SFT准备（raw100→14BCoT重新按本模型词表编码→1epoch→val100），不是跨词表KL/OPD结果。原BasehalfMiniLLM和CoderoneepochFKL验证仍无+3，22479转Basehalf长rollout，22481转rawCoder无项目SFT长rollout。现在6张泛化+6张原研究，具体owner/ports见PROGRESS最新段。
