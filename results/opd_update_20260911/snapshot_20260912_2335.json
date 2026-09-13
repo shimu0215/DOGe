@@ -1,0 +1,308 @@
+{
+  "time": 1789270471.731659,
+  "excluded_jobs": [
+    "22480"
+  ],
+  "workers": {
+    "oracle_current_tail_sparse_23372": {
+      "start": 1789270338.4349086,
+      "job": "23372",
+      "complete": false,
+      "completed": [
+        "target_checks",
+        "smoke_external_student"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=23372 JobName=hold-1gpu-8h-c4m32-g37-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:15:07 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:17:11 EndTime=2026-09-13T07:17:11 Deadline=N/A PreemptEligibleTime=2026-09-12T23:18:11 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:17:11 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "0",
+        "uuid": "GPU-37a8069b-922f-4de2-143c-541de7c81a73"
+      },
+      "phase": "external_student_minillm",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/oracle_current_tail_opd.sh"
+      ],
+      "child_pid": 653279,
+      "teacher_training_performed": false,
+      "eligible_standalone_defense": false,
+      "oracle_target": "sparse",
+      "scope": "Current tail-v2 exact target on known student-source trajectories, sparse8 or all eligible process positions, both reward and conditional KL. No fitting or preservation losses, no teacher training; not a standalone defense or mathematical upper bound.",
+      "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      },
+      "smoke_oracle_validation": {
+        "mode": "sparse",
+        "scope": "Current tail-v2, known-student-source direct target diagnostic, sparse or all eligible process positions. No trained teacher/source detector or standalone defense claim.",
+        "teacher_training_performed": false,
+        "student_parameter_signal_for_teacher": false,
+        "calls": {
+          "reward": 4,
+          "regularizer": 4
+        },
+        "selected_positions": {
+          "reward": 64,
+          "regularizer": 64
+        },
+        "rows": {
+          "reward": 8,
+          "regularizer": 8
+        },
+        "target_properties_checked": true
+      }
+    },
+    "oracle_current_tail_all_23370": {
+      "start": 1789270339.73365,
+      "job": "23370",
+      "complete": false,
+      "completed": [
+        "target_checks"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=23370 JobName=hold-1gpu-8h-c4m32-g36-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:16:42 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu002 BatchHost=gpu002 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-cq-23370.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-cq-23370.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "0",
+        "uuid": "GPU-b3ce6d89-5d78-cd18-3856-7da5231708ab"
+      },
+      "phase": "smoke_external_student",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/oracle_current_tail_opd.sh"
+      ],
+      "child_pid": 1084375,
+      "teacher_training_performed": false,
+      "eligible_standalone_defense": false,
+      "oracle_target": "all",
+      "scope": "Current tail-v2 exact target on known student-source trajectories, sparse8 or all eligible process positions, both reward and conditional KL. No fitting or preservation losses, no teacher training; not a standalone defense or mathematical upper bound.",
+      "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      }
+    },
+    "repair_completion_22478": {
+      "start": 1789270339.430086,
+      "job": "22478",
+      "complete": false,
+      "completed": [],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=22478 JobName=hold-1gpu-8h-c4m32-g34-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:17:13 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T23:15:06 EndTime=2026-09-13T07:15:06 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:06 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:06 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu011 BatchHost=gpu011 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "0",
+        "uuid": "GPU-5597ad5f-bf36-02b5-b332-c18284fdf6d0"
+      },
+      "training_performed": false,
+      "protocol": "Complete answer4 missing student400 to aggregate1000, then BOTH fixed repaired teachers expanded400 greedy/sampling. Same protocols, no checkpoint selection or teacher updates.",
+      "phase": "answer4_student_test600",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_tail_freq_anti6_answer4_9916493_standard_eval_9983838_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/repair_completion_22478_answer4_student_test600",
+        "--split",
+        "test",
+        "--start",
+        "600",
+        "--count",
+        "400"
+      ],
+      "child_pid": 4038038
+    }
+  },
+  "cross_workers": {
+    "q15_clean_lr1e6_22479": {
+      "job": "22479",
+      "tag": "q15_clean_lr1e6_22479",
+      "start": 1789269662.4486878,
+      "complete": false,
+      "completed": [
+        "initial_val",
+        "initial_test",
+        "smoke2"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:29:07 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789296715.0,
+      "device": {
+        "uuid": "GPU-a8c99944-94c9-11cd-0525-96f3423af497",
+        "visible": "0",
+        "step": "0"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/qwen2.5-1.5b-instruct",
+        "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "lr": 1e-06,
+        "steps": 120,
+        "checkpoints": [
+          40,
+          80,
+          120
+        ],
+        "seed": 10,
+        "student_additional_sft": false,
+        "validation": "GSM8K train7000:7100",
+        "test": "GSM8K test1200:1300",
+        "selection": "Best validation accuracy; lower step breaks ties; test not used to choose settings"
+      },
+      "tokenizer_identity_verified": true,
+      "phase": "train120",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+      ],
+      "child_pid": 652618
+    },
+    "q15_clean_lr3e6_22481": {
+      "job": "22481",
+      "tag": "q15_clean_lr3e6_22481",
+      "start": 1789269662.6147447,
+      "complete": false,
+      "completed": [
+        "smoke2"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22481 JobName=hold-1gpu-8h-c4m32-g35-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:06:27 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:14:35 EndTime=2026-09-13T07:14:35 Deadline=N/A PreemptEligibleTime=2026-09-12T23:15:35 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:14:35 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789298075.0,
+      "device": {
+        "uuid": "GPU-5f5c0036-6942-24bd-ed30-e097a1c4bdee",
+        "visible": "0",
+        "step": "0"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/qwen2.5-1.5b-instruct",
+        "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "lr": 3e-06,
+        "steps": 120,
+        "checkpoints": [
+          40,
+          80,
+          120
+        ],
+        "seed": 10,
+        "student_additional_sft": false,
+        "validation": "GSM8K train7000:7100",
+        "test": "GSM8K test1200:1300",
+        "selection": "Best validation accuracy; lower step breaks ties; test not used to choose settings"
+      },
+      "tokenizer_identity_verified": true,
+      "phase": "train120",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+      ],
+      "child_pid": 1019265
+    }
+  },
+  "dispatch": [
+    {
+      "job": "23372",
+      "tag": "oracle_current_tail_sparse_23372",
+      "pid": 3838702,
+      "command": [
+        "srun",
+        "--jobid=23372",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/opd_update_20260911/run_oracle_current_tail.py",
+        "--job",
+        "23372",
+        "--target",
+        "sparse",
+        "--port",
+        "31031"
+      ],
+      "time": 1789270337.6808689,
+      "remaining": 27893.341027021408
+    },
+    {
+      "job": "23370",
+      "tag": "oracle_current_tail_all_23370",
+      "pid": 3838712,
+      "command": [
+        "srun",
+        "--jobid=23370",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/opd_update_20260911/run_oracle_current_tail.py",
+        "--job",
+        "23370",
+        "--target",
+        "all",
+        "--port",
+        "31033"
+      ],
+      "time": 1789270337.746145,
+      "remaining": 27799.273117780685
+    },
+    {
+      "job": "22478",
+      "tag": "repair_completion_22478",
+      "pid": 3838723,
+      "command": [
+        "srun",
+        "--jobid=22478",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/opd_update_20260911/eval_repair_completion.py",
+        "--job",
+        "22478"
+      ],
+      "time": 1789270337.8113303,
+      "remaining": 27768.208642959595
+    }
+  ],
+  "oracle_smoke_calls": {
+    "oracle_current_tail_sparse_23372": {
+      "mode": "sparse",
+      "scope": "Current tail-v2, known-student-source direct target diagnostic, sparse or all eligible process positions. No trained teacher/source detector or standalone defense claim.",
+      "teacher_training_performed": false,
+      "student_parameter_signal_for_teacher": false,
+      "calls": {
+        "reward": 4,
+        "regularizer": 4
+      },
+      "selected_positions": {
+        "reward": 64,
+        "regularizer": 64
+      },
+      "rows": {
+        "reward": 8,
+        "regularizer": 8
+      },
+      "target_properties_checked": true
+    }
+  }
+}
