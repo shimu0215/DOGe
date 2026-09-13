@@ -1,0 +1,184 @@
+{
+  "job": "22479",
+  "tag": "source_shift_known_22479",
+  "start": 1789295899.9281192,
+  "complete": true,
+  "completed": [],
+  "teacher_training_performed": false,
+  "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:46:25 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789296715.0,
+  "device": {
+    "uuid": "GPU-a8c99944-94c9-11cd-0525-96f3423af497",
+    "visible": "0",
+    "step": "8"
+  },
+  "scope": "Descriptive frozen-teacher changes on matched32 QA ids and common teacher prompt. Existing source texts only; no source-classification accuracy, teacher training, or causal style claim.",
+  "sources": {
+    "self": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_original_teacher_val/gsm8k-results.json",
+      "sha256": "d2ef6471421eb3092f2d13eb1f9749fcf8d9cc043b4c8059a4d633e044156639",
+      "generation": {
+        "backend": "transformers",
+        "do_sample": false,
+        "seed": 42,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_tokens": 512,
+        "limit": 100,
+        "stop_token_ids": [
+          151643,
+          151645
+        ]
+      }
+    },
+    "known_raw": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/../baseline_20260911/raw_val/gsm8k-results.json",
+      "sha256": "2100ef04a2f306e127e714d240ed811cb552d50b9699b0f5aa6cfe9f6f437291",
+      "generation": {
+        "backend": "transformers",
+        "do_sample": false,
+        "seed": 42,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_tokens": 512,
+        "limit": 128,
+        "stop_token_ids": [
+          151643,
+          151645
+        ]
+      }
+    },
+    "known_full_sft": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/../baseline_20260911/full_sft_val/gsm8k-results.json",
+      "sha256": "953a668f9708361dfd7bc0b049c1746ea137b81cb45a1c83da155a87cc4ec9a7",
+      "generation": {
+        "backend": "transformers",
+        "do_sample": false,
+        "seed": 42,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_tokens": 512,
+        "limit": 128,
+        "stop_token_ids": [
+          151643,
+          151645
+        ]
+      }
+    },
+    "main_short_sft": {
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/../baseline_20260911/short_checkpoint-49_val/gsm8k-results.json",
+      "sha256": "8997be14344efcea25b5cff77334b825de22fbc5b81348f24d74b6fcf8036af7",
+      "generation": {
+        "backend": "transformers",
+        "do_sample": false,
+        "seed": 42,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_tokens": 512,
+        "limit": 128,
+        "stop_token_ids": [
+          151643,
+          151645
+        ]
+      }
+    }
+  },
+  "examples": 96,
+  "phase": "complete",
+  "previous_self_summary": {
+    "entropy4": {
+      "n": 32,
+      "forward_kl": 0.030193316633813083,
+      "observed_logp_change": -0.042354439676273614,
+      "argmax_flip_fraction": 0.009765625,
+      "correct": 31
+    },
+    "pcgrad": {
+      "n": 32,
+      "forward_kl": 0.02064421118120663,
+      "observed_logp_change": -0.03225699390168302,
+      "argmax_flip_fraction": 0.0078125,
+      "correct": 31
+    },
+    "mix14b": {
+      "n": 32,
+      "forward_kl": 0.022438605170464143,
+      "observed_logp_change": -0.03634800316649489,
+      "argmax_flip_fraction": 0.0087890625,
+      "correct": 31
+    }
+  },
+  "summary": {
+    "entropy4": {
+      "known_raw": {
+        "n": 32,
+        "forward_kl": 0.036281082342611626,
+        "observed_logp_change": 0.03363225611974485,
+        "argmax_flip_fraction": 0.02734375,
+        "correct": 23
+      },
+      "known_full_sft": {
+        "n": 32,
+        "forward_kl": 0.0350110856234096,
+        "observed_logp_change": 0.045087239595886786,
+        "argmax_flip_fraction": 0.01953125,
+        "correct": 22
+      },
+      "main_short_sft": {
+        "n": 32,
+        "forward_kl": 0.03739739820593968,
+        "observed_logp_change": 0.07135014684172347,
+        "argmax_flip_fraction": 0.021484375,
+        "correct": 19
+      }
+    },
+    "pcgrad": {
+      "known_raw": {
+        "n": 32,
+        "forward_kl": 0.027183289057575166,
+        "observed_logp_change": 0.03707354125799611,
+        "argmax_flip_fraction": 0.0166015625,
+        "correct": 23
+      },
+      "known_full_sft": {
+        "n": 32,
+        "forward_kl": 0.026276801887433976,
+        "observed_logp_change": 0.046291983999253716,
+        "argmax_flip_fraction": 0.015625,
+        "correct": 22
+      },
+      "main_short_sft": {
+        "n": 32,
+        "forward_kl": 0.02899527965928428,
+        "observed_logp_change": 0.07167396291333716,
+        "argmax_flip_fraction": 0.01953125,
+        "correct": 19
+      }
+    },
+    "mix14b": {
+      "known_raw": {
+        "n": 32,
+        "forward_kl": 0.02274523336382117,
+        "observed_logp_change": 0.03546224294404965,
+        "argmax_flip_fraction": 0.0126953125,
+        "correct": 23
+      },
+      "known_full_sft": {
+        "n": 32,
+        "forward_kl": 0.021942714840406552,
+        "observed_logp_change": 0.0441742657640134,
+        "argmax_flip_fraction": 0.01171875,
+        "correct": 22
+      },
+      "main_short_sft": {
+        "n": 32,
+        "forward_kl": 0.022897671922692098,
+        "observed_logp_change": 0.07183915794303175,
+        "argmax_flip_fraction": 0.0146484375,
+        "correct": 19
+      }
+    }
+  },
+  "limitations": "Different source generation settings, correctness, contents and lengths remain; not an isolated style/source-origin experiment. Distribution change is not OPD efficacy.",
+  "end": 1789296099.0773923
+}

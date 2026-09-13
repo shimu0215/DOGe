@@ -1,7 +1,7 @@
 {
   "start": 1789290687.4170964,
   "job": "23371",
-  "complete": false,
+  "complete": true,
   "completed": [
     "prepare_context",
     "smoke",
@@ -9,7 +9,10 @@
     "teacher_old200",
     "teacher_new200",
     "teacher_raw128",
-    "teacher_extra200"
+    "teacher_extra200",
+    "external_student_minillm",
+    "student_test0",
+    "student_test1000"
   ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=23371 JobName=hold-1gpu-8h-c4m32-g37-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3603 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:56:17 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:15:10 EndTime=2026-09-13T08:15:10 Deadline=N/A PreemptEligibleTime=2026-09-13T00:16:10 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:15:10 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -18,12 +21,22 @@
     "step": "5",
     "uuid": "GPU-f9eb0558-9328-c940-8173-8dcc177f880d"
   },
-  "phase": "external_student_minillm",
+  "phase": "complete",
   "command": [
-    "bash",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_mix14b_23371_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_mix14b_23371_student_test1000",
+    "--split",
+    "test",
+    "--start",
+    "1000",
+    "--count",
+    "200"
   ],
-  "child_pid": 2270914,
+  "child_pid": 2477460,
   "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. entropy4 all-vocabulary gaps.25 target ramp anti1 anchor72 answer4. Half of negative text rows replaced by existing14B correct CoTs; no generator weights/logits loaded, no evaluated Base/Coder/Smol negative texts.",
   "teacher_results": {
     "old200": {
@@ -143,5 +156,68 @@
     "seed": 10,
     "actual_updates": 120,
     "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
-  }
+  },
+  "student_results": {
+    "0": {
+      "versus_clean_opd": {
+        "original": 0.555,
+        "candidate": 0.475,
+        "paired": {
+          "delta_pp": -8.0,
+          "wrong_to_right": 13,
+          "right_to_wrong": 29,
+          "mcnemar_exact_p": 0.019520472782460274,
+          "paired_bootstrap95_pp": [
+            -14.012499999999998,
+            -2.0
+          ]
+        }
+      },
+      "versus_sft": {
+        "original": 0.465,
+        "candidate": 0.475,
+        "paired": {
+          "delta_pp": 1.0,
+          "wrong_to_right": 31,
+          "right_to_wrong": 29,
+          "mcnemar_exact_p": 0.8974218269914305,
+          "paired_bootstrap95_pp": [
+            -6.5,
+            8.5
+          ]
+        }
+      }
+    },
+    "1000": {
+      "versus_clean_opd": {
+        "original": 0.495,
+        "candidate": 0.4,
+        "paired": {
+          "delta_pp": -9.5,
+          "wrong_to_right": 10,
+          "right_to_wrong": 29,
+          "mcnemar_exact_p": 0.0033778479119064286,
+          "paired_bootstrap95_pp": [
+            -15.5,
+            -3.5000000000000004
+          ]
+        }
+      },
+      "versus_sft": {
+        "original": 0.41,
+        "candidate": 0.4,
+        "paired": {
+          "delta_pp": -1.0,
+          "wrong_to_right": 22,
+          "right_to_wrong": 24,
+          "mcnemar_exact_p": 0.8829959121223965,
+          "paired_bootstrap95_pp": [
+            -7.5,
+            5.5
+          ]
+        }
+      }
+    }
+  },
+  "end": 1789295697.9325361
 }

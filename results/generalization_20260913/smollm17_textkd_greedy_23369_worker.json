@@ -2,9 +2,12 @@
   "job": "23369",
   "tag": "smollm17_textkd_greedy_23369",
   "start": 1789292613.561749,
-  "complete": false,
+  "complete": true,
   "completed": [
-    "smoke2"
+    "smoke2",
+    "clean80",
+    "val40",
+    "val80"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=23369 JobName=hold-1gpu-8h-c4m32-g36-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:37:45 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:05:48 EndTime=2026-09-13T08:05:48 Deadline=N/A PreemptEligibleTime=2026-09-13T00:06:48 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:05:48 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -26,26 +29,68 @@
     "batch": 4,
     "teacher_tokens": 384
   },
-  "phase": "clean80",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/text_continuation_greedy_train.py",
-    "--student",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm2-1.7b-instruct",
-    "--teacher",
-    "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_clean80/checkpoint-80",
     "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_clean80",
-    "--steps",
-    "80",
-    "--save-every",
-    "40",
-    "--batch",
-    "4",
-    "--teacher-tokens",
-    "384",
-    "--lr",
-    "1e-6"
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_val80",
+    "--split",
+    "train",
+    "--start",
+    "7000",
+    "--count",
+    "100"
   ],
-  "child_pid": 393766
+  "child_pid": 397579,
+  "validation": {
+    "40": {
+      "n": 100,
+      "initial_correct": 60,
+      "candidate_correct": 59,
+      "initial": 0.6,
+      "accuracy": 0.59,
+      "paired": {
+        "delta_pp": -1.0,
+        "wrong_to_right": 5,
+        "right_to_wrong": 6,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          -8.0,
+          6.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_clean80/checkpoint-40",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_val40/gsm8k-results.json"
+    },
+    "80": {
+      "n": 100,
+      "initial_correct": 60,
+      "candidate_correct": 57,
+      "initial": 0.6,
+      "accuracy": 0.57,
+      "paired": {
+        "delta_pp": -3.0,
+        "wrong_to_right": 8,
+        "right_to_wrong": 11,
+        "mcnemar_exact_p": 0.6476058959960938,
+        "paired_bootstrap95_pp": [
+          -12.0,
+          5.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_clean80/checkpoint-80",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_val80/gsm8k-results.json"
+    }
+  },
+  "selected_opd": {
+    "correct": 59,
+    "step": 40,
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_greedy_23369_clean80/checkpoint-40",
+    "gain_pp": -1
+  },
+  "stopped": "No +3 validation gain; no cross-family defense claim",
+  "end": 1789294884.926177
 }

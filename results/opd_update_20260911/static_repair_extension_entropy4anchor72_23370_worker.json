@@ -1,8 +1,11 @@
 {
   "start": 1789293928.258656,
   "job": "23370",
-  "complete": false,
-  "completed": [],
+  "complete": true,
+  "completed": [
+    "entropy4anchor72_student_test200",
+    "entropy4anchor72_student_test600"
+  ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=23370 JobName=hold-1gpu-8h-c4m32-g36-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:49:51 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu002 BatchHost=gpu002 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-cq-23370.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-cq-23370.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
   "device": {
@@ -18,20 +21,126 @@
       "static_entropy4_anchor72_23370"
     ]
   ],
-  "phase": "entropy4anchor72_student_test200",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
     "--model",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_anchor72_23370_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
     "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4anchor72_23370_entropy4anchor72_student_test200",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4anchor72_23370_entropy4anchor72_student_test600",
     "--split",
     "test",
     "--start",
-    "200",
+    "600",
     "--count",
-    "200"
+    "400"
   ],
-  "child_pid": 1132242
+  "child_pid": 1133009,
+  "student_results": {
+    "entropy4anchor72": {
+      "200": {
+        "n": 200,
+        "accuracy": 0.53,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 11.0,
+            "wrong_to_right": 31,
+            "right_to_wrong": 9,
+            "mcnemar_exact_p": 0.0006795482549932785,
+            "paired_bootstrap95_pp": [
+              5.0,
+              17.0
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": 0.0,
+            "wrong_to_right": 24,
+            "right_to_wrong": 24,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -7.000000000000001,
+              7.000000000000001
+            ]
+          }
+        }
+      },
+      "600": {
+        "n": 400,
+        "accuracy": 0.505,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 6.5,
+            "wrong_to_right": 65,
+            "right_to_wrong": 39,
+            "mcnemar_exact_p": 0.013836195066747952,
+            "paired_bootstrap95_pp": [
+              1.5,
+              11.256249999999909
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": -5.75,
+            "wrong_to_right": 30,
+            "right_to_wrong": 53,
+            "mcnemar_exact_p": 0.015232201861994659,
+            "paired_bootstrap95_pp": [
+              -10.25,
+              -1.25
+            ]
+          }
+        }
+      }
+    }
+  },
+  "student1000": {
+    "entropy4anchor72": {
+      "source": "static_entropy4_anchor72_23370",
+      "n": 1000,
+      "correct": 487,
+      "accuracy": 0.487,
+      "comparisons": {
+        "sft": {
+          "delta_pp": 5.2,
+          "wrong_to_right": 146,
+          "right_to_wrong": 94,
+          "mcnemar_exact_p": 0.0009549735200305356,
+          "paired_bootstrap95_pp": [
+            2.1999999999999997,
+            8.200000000000001
+          ]
+        },
+        "clean": {
+          "delta_pp": -5.4,
+          "wrong_to_right": 77,
+          "right_to_wrong": 131,
+          "mcnemar_exact_p": 0.00022097574550212657,
+          "paired_bootstrap95_pp": [
+            -8.3,
+            -2.6
+          ]
+        }
+      },
+      "paths": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_anchor72_23370_student_test0/gsm8k-results.json",
+          "sha256": "a47f043fb651fecaa7466880a200b9e868d41c35b60c9995f9cce9e41bd7088c"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_anchor72_23370_student_test1000/gsm8k-results.json",
+          "sha256": "35f17556a1d9c23154f3ba0e5d650922c34ecb3e09ae19fc6d72986efbfe216e"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4anchor72_23370_entropy4anchor72_student_test200/gsm8k-results.json",
+          "sha256": "c41ad42a5b5dccba93c1f27a25d53cce2d74134d3dc1bd3ed0765cbb6f9a0a12"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4anchor72_23370_entropy4anchor72_student_test600/gsm8k-results.json",
+          "sha256": "6285510467c236cfd28a497d598dfa295694130c996a8134c27fc5281cfcc00a"
+        }
+      ]
+    }
+  },
+  "teacher_evaluation_performed": false,
+  "end": 1789294752.9863143
 }

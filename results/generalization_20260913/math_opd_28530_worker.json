@@ -2,12 +2,17 @@
   "job": "28530",
   "tag": "math_opd_28530",
   "start": 1789290500.7300272,
-  "complete": false,
+  "complete": true,
   "completed": [
     "prepare",
     "initial_val100",
     "initial_val100_score",
-    "smoke2"
+    "smoke2",
+    "clean80",
+    "val40",
+    "val40_score",
+    "val80",
+    "val80_score"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:25:40 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -17,12 +22,14 @@
     "visible": "0",
     "step": "7"
   },
-  "phase": "clean80",
+  "phase": "complete",
   "command": [
-    "bash",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_math.sh"
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/score_math_verify.py",
+    "--input",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_opd_28530_val80/predictions.json"
   ],
-  "child_pid": 1914982,
+  "child_pid": 1922880,
   "protocol": {
     "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
     "initial_correct": 37,
@@ -59,5 +66,49 @@
     ],
     "dataset": "MATH",
     "teacher_training": false
-  }
+  },
+  "validation": {
+    "40": {
+      "n": 100,
+      "initial_correct": 37,
+      "candidate_correct": 38,
+      "paired": {
+        "delta_pp": 1.0,
+        "wrong_to_right": 11,
+        "right_to_wrong": 10,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          -8.0,
+          10.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/math_opd_28530_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len1536/pe1_rs0.5_nr8_ln_sr/40",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_opd_28530_val40/scored.json"
+    },
+    "80": {
+      "n": 100,
+      "initial_correct": 37,
+      "candidate_correct": 35,
+      "paired": {
+        "delta_pp": -2.0,
+        "wrong_to_right": 11,
+        "right_to_wrong": 13,
+        "mcnemar_exact_p": 0.8388197422027588,
+        "paired_bootstrap95_pp": [
+          -12.0,
+          7.000000000000001
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/math_opd_28530_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len1536/pe1_rs0.5_nr8_ln_sr/80",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_opd_28530_val80/scored.json"
+    }
+  },
+  "selected_opd": {
+    "correct": 38,
+    "step": 40,
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/math_opd_28530_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len1536/pe1_rs0.5_nr8_ln_sr/40",
+    "gain_pp": 1
+  },
+  "stopped": "No +3 validation gain; no defense test",
+  "end": 1789295269.6373703
 }
