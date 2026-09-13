@@ -1,14 +1,15 @@
 {
   "start": 1789297384.615293,
   "job": "23371",
-  "complete": false,
+  "complete": true,
   "completed": [
     "pcgrad_checks",
     "smoke",
     "train",
     "teacher_old200",
     "teacher_new200",
-    "teacher_raw128"
+    "teacher_raw128",
+    "teacher_extra200"
   ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=23371 JobName=hold-1gpu-8h-c4m32-g37-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3603 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:47:54 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:15:10 EndTime=2026-09-13T08:15:10 Deadline=N/A PreemptEligibleTime=2026-09-13T00:16:10 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:15:10 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -18,7 +19,7 @@
     "uuid": "GPU-f9eb0558-9328-c940-8173-8dcc177f880d"
   },
   "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. All-eligible gap.5 no reversal, target ramp anti1 anchor36 answer4, symmetric PCGrad plus fixed-observed-token smooth L1 logprob fit (weight1) toward the same teacher-derived target; no student weights. No student parameter signals; fixed offline texts only.",
-  "phase": "teacher_extra200",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/evaluate_plain.py",
@@ -115,5 +116,39 @@
   },
   "raw_point_tolerance_pass": true,
   "quality_protocol": "User-revised standard per-slice teacher screen; raw128 supplementary, not a veto",
-  "teacher_point_tolerance_pass": false
+  "teacher_point_tolerance_pass": false,
+  "teacher_extra200": {
+    "greedy": {
+      "original": 0.935,
+      "candidate": 0.95,
+      "paired": {
+        "delta_pp": 1.5,
+        "wrong_to_right": 5,
+        "right_to_wrong": 2,
+        "mcnemar_exact_p": 0.453125,
+        "paired_bootstrap95_pp": [
+          -1.0,
+          4.0
+        ]
+      }
+    },
+    "sampling": {
+      "original": 0.92,
+      "candidate": 0.925,
+      "paired": {
+        "delta_pp": 0.5,
+        "wrong_to_right": 5,
+        "right_to_wrong": 4,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          -2.5,
+          3.5000000000000004
+        ]
+      }
+    }
+  },
+  "extra_point_tolerance_pass": true,
+  "extra_quality_scope": "Supplementary check on previously used extra200; retain failures. Main400 admission unchanged.",
+  "student_skipped": "Teacher point estimates do not meet user greedy/sampling tolerances; adjust preservation before student training.",
+  "end": 1789299996.2116673
 }

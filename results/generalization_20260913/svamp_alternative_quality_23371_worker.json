@@ -1,0 +1,51 @@
+{
+  "job": "23371",
+  "tag": "svamp_alternative_quality_23371",
+  "start": 1789300920.4107165,
+  "complete": false,
+  "completed": [
+    "anchor36"
+  ],
+  "teacher_training_performed": false,
+  "allocation": "JobId=23371 JobName=hold-1gpu-8h-c4m32-g37-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3603 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:46:50 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:15:10 EndTime=2026-09-13T08:15:10 Deadline=N/A PreemptEligibleTime=2026-09-13T00:16:10 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:15:10 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789301710.0,
+  "device": {
+    "uuid": "GPU-f9eb0558-9328-c940-8173-8dcc177f880d",
+    "visible": "0",
+    "step": "8"
+  },
+  "scope": "FixedGSMtrained oldanchor36 and entropy4PCGrad SVAMP100greedy quality only; no SVAMP training, no sampling or OPD efficacy claim",
+  "phase": "pcgrad",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/svamp_matched_eval.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad_22478/model",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/svamp_alternative_quality_23371_pcgrad"
+  ],
+  "child_pid": 3109587,
+  "quality": {
+    "anchor36": {
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_freq_anti6_anchor36_9916493/model",
+      "comparison": {
+        "n": 100,
+        "initial_correct": 93,
+        "candidate_correct": 93,
+        "initial": 0.93,
+        "accuracy": 0.93,
+        "paired": {
+          "delta_pp": 0.0,
+          "wrong_to_right": 1,
+          "right_to_wrong": 1,
+          "mcnemar_exact_p": 1.0,
+          "paired_bootstrap95_pp": [
+            -3.0,
+            3.0
+          ]
+        }
+      },
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/svamp_alternative_quality_23371_anchor36/gsm8k-results.json"
+    }
+  }
+}

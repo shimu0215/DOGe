@@ -1,0 +1,90 @@
+{
+  "job": "28527",
+  "tag": "strength_static_entropy2_pcgrad_28527_28527",
+  "start": 1789299850.5759852,
+  "complete": false,
+  "completed": [],
+  "teacher_training_performed": false,
+  "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:02:36 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789303294.0,
+  "device": {
+    "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9",
+    "visible": "0",
+    "step": "7"
+  },
+  "diagnostic_only": true,
+  "checkpoint_interval": 40,
+  "teacher_performance_preserved": false,
+  "source": "static_entropy2_pcgrad_28527",
+  "teacher": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy2_pcgrad_28527/model",
+  "manifest_sha256": "49d4ab9039d2fdadc773eb13f9505d3c98669b797641ac73d8293d31fcb26d6a",
+  "quality_failure": {
+    "old200": {
+      "greedy": {
+        "original": 0.9,
+        "candidate": 0.91,
+        "paired": {
+          "delta_pp": 1.0,
+          "wrong_to_right": 5,
+          "right_to_wrong": 3,
+          "mcnemar_exact_p": 0.7265625,
+          "paired_bootstrap95_pp": [
+            -2.0,
+            4.0
+          ]
+        }
+      },
+      "sampling": {
+        "original": 0.905,
+        "candidate": 0.89,
+        "paired": {
+          "delta_pp": -1.5,
+          "wrong_to_right": 6,
+          "right_to_wrong": 9,
+          "mcnemar_exact_p": 0.60723876953125,
+          "paired_bootstrap95_pp": [
+            -5.5,
+            2.0
+          ]
+        }
+      }
+    },
+    "new200": {
+      "greedy": {
+        "original": 0.875,
+        "candidate": 0.88,
+        "paired": {
+          "delta_pp": 0.5,
+          "wrong_to_right": 4,
+          "right_to_wrong": 3,
+          "mcnemar_exact_p": 1.0,
+          "paired_bootstrap95_pp": [
+            -2.0,
+            3.0
+          ]
+        }
+      },
+      "sampling": {
+        "original": 0.865,
+        "candidate": 0.875,
+        "paired": {
+          "delta_pp": 1.0,
+          "wrong_to_right": 7,
+          "right_to_wrong": 5,
+          "mcnemar_exact_p": 0.7744140625,
+          "paired_bootstrap95_pp": [
+            -2.5,
+            4.5
+          ]
+        }
+      }
+    }
+  },
+  "scope": "External frozen-teacher strength first; quality screen failed and remains failed. User prioritizes understanding suppression before repairing preservation. No student feedback to teacher training. Same main initial and fixed120 clean-selected step",
+  "phase": "student120",
+  "command": [
+    "bash",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+  ],
+  "child_pid": 406325
+}

@@ -1,0 +1,23 @@
+{
+  "time": "2026-09-13T08:00:50.138182",
+  "job": "28528",
+  "source": "static_entropy2_scorefit_23371",
+  "srun_pid": 567428,
+  "cmd": [
+    "srun",
+    "--jobid=28528",
+    "--overlap",
+    "--exact",
+    "--cpu-bind=none",
+    "-N1",
+    "-n1",
+    "-c4",
+    "--gres=gpu:1",
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "experiments/opd_update_20260911/eval_failed_teacher_strength.py",
+    "--job",
+    "28528",
+    "--source",
+    "static_entropy2_scorefit_23371"
+  ]
+}

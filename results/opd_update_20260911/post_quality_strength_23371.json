@@ -3,7 +3,8 @@
   "job": "23371",
   "source": "static_entropy2_scorefit_23371",
   "prior_srun_pid": 431364,
-  "complete": false,
-  "phase": "waiting_whole_pipeline",
-  "scope": "Automatic whole-pipeline completion handoff; external strength diagnostic cannot pass failed teacher quality"
+  "complete": true,
+  "phase": "skipped",
+  "scope": "Automatic whole-pipeline completion handoff; external strength diagnostic cannot pass failed teacher quality",
+  "reason": "Allocation not running or insufficient1800second budget"
 }

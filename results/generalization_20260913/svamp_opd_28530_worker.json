@@ -5,7 +5,13 @@
   "complete": false,
   "completed": [
     "prepare",
-    "smoke2"
+    "smoke2",
+    "clean80",
+    "val40",
+    "val80",
+    "initial_test100",
+    "clean_test100",
+    "defense_teacher_val100"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:50:07 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -30,10 +36,95 @@
     "teacher_training": false,
     "scope": "Student OPD on independent arithmetic corpus; teacher remains GSM-trained. Related source families may overlap in semantics, exact normalized questions removed"
   },
-  "phase": "clean80",
+  "phase": "defense40",
   "command": [
     "bash",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_mawps_asdiv.sh"
   ],
-  "child_pid": 1929489
+  "child_pid": 1932660,
+  "validation": {
+    "40": {
+      "n": 100,
+      "initial_correct": 59,
+      "candidate_correct": 68,
+      "initial": 0.59,
+      "accuracy": 0.68,
+      "paired": {
+        "delta_pp": 9.0,
+        "wrong_to_right": 18,
+        "right_to_wrong": 9,
+        "mcnemar_exact_p": 0.12207812070846558,
+        "paired_bootstrap95_pp": [
+          -1.0,
+          19.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/svamp_opd_28530_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/svamp_opd_28530_val40/gsm8k-results.json"
+    },
+    "80": {
+      "n": 100,
+      "initial_correct": 59,
+      "candidate_correct": 63,
+      "initial": 0.59,
+      "accuracy": 0.63,
+      "paired": {
+        "delta_pp": 4.0,
+        "wrong_to_right": 14,
+        "right_to_wrong": 10,
+        "mcnemar_exact_p": 0.5412561893463135,
+        "paired_bootstrap95_pp": [
+          -5.0,
+          14.000000000000002
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/svamp_opd_28530_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/80",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/svamp_opd_28530_val80/gsm8k-results.json"
+    }
+  },
+  "selected_opd": {
+    "correct": 68,
+    "step": 40,
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/svamp_opd_28530_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "gain_pp": 9
+  },
+  "clean_test": {
+    "n": 100,
+    "initial_correct": 62,
+    "candidate_correct": 66,
+    "initial": 0.62,
+    "accuracy": 0.66,
+    "paired": {
+      "delta_pp": 4.0,
+      "wrong_to_right": 10,
+      "right_to_wrong": 6,
+      "mcnemar_exact_p": 0.454498291015625,
+      "paired_bootstrap95_pp": [
+        -4.0,
+        12.0
+      ]
+    }
+  },
+  "defense_teacher_quality": {
+    "n": 100,
+    "initial_correct": 93,
+    "candidate_correct": 93,
+    "initial": 0.93,
+    "accuracy": 0.93,
+    "paired": {
+      "delta_pp": 0.0,
+      "wrong_to_right": 2,
+      "right_to_wrong": 2,
+      "mcnemar_exact_p": 1.0,
+      "paired_bootstrap95_pp": [
+        -4.0,
+        4.0
+      ]
+    }
+  },
+  "defense_teacher": {
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_dense_23371/model",
+    "manifest_sha256": "11e1dbb1640b0646f1d0e9911f82aa9d9a2a4413718f53429e79e3cb96751665",
+    "new_dataset_training": false
+  }
 }

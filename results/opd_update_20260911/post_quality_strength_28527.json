@@ -4,6 +4,24 @@
   "source": "static_entropy2_pcgrad_28527",
   "prior_srun_pid": 431344,
   "complete": false,
-  "phase": "waiting_whole_pipeline",
-  "scope": "Automatic whole-pipeline completion handoff; external strength diagnostic cannot pass failed teacher quality"
+  "phase": "external_strength",
+  "scope": "Automatic whole-pipeline completion handoff; external strength diagnostic cannot pass failed teacher quality",
+  "srun_pid": 529987,
+  "command": [
+    "srun",
+    "--jobid=28527",
+    "--overlap",
+    "--exact",
+    "--cpu-bind=none",
+    "-N1",
+    "-n1",
+    "-c4",
+    "--gres=gpu:1",
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/eval_failed_teacher_strength.py",
+    "--job",
+    "28527",
+    "--source",
+    "static_entropy2_pcgrad_28527"
+  ]
 }
