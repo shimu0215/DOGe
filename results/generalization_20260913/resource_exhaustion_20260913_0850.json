@@ -1,0 +1,17 @@
+{
+  "time": "2026-09-13T08:52:36.297646-04:00",
+  "account_scan_time": "2026-09-13T08:50:24-04:00",
+  "running": [],
+  "pending": [],
+  "numeric_steps": [],
+  "scorefit": {
+    "complete_training": true,
+    "actual_optimizer_steps": 120,
+    "checkpoint120": [
+      "results/opd_corrected_20260911/strength_static_entropy2_scorefit_23371_28528_student120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120"
+    ],
+    "completed_evaluation": "test0 200 questions",
+    "missing_evaluation": "test1000 200 questions",
+    "cause": "Insufficient allocation time before second evaluation"
+  }
+}

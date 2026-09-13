@@ -1,0 +1,29 @@
+{
+  "n": 400,
+  "correct": 196,
+  "accuracy": 0.49,
+  "initial": 0.4375,
+  "clean": 0.525,
+  "vs_initial": {
+    "delta_pp": 5.25,
+    "wrong_to_right": 62,
+    "right_to_wrong": 41,
+    "mcnemar_exact_p": 0.04823365217099702,
+    "paired_bootstrap95_pp": [
+      0.25,
+      10.25
+    ]
+  },
+  "vs_clean": {
+    "delta_pp": -3.5000000000000004,
+    "wrong_to_right": 23,
+    "right_to_wrong": 37,
+    "mcnemar_exact_p": 0.09246098107292373,
+    "paired_bootstrap95_pp": [
+      -7.249999999999999,
+      0.25
+    ]
+  },
+  "teacher_quality_pass": false,
+  "diagnostic_only": true
+}
