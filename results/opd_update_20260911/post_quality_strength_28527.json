@@ -1,0 +1,9 @@
+{
+  "start": 1789299458.0892122,
+  "job": "28527",
+  "source": "static_entropy2_pcgrad_28527",
+  "prior_srun_pid": 431344,
+  "complete": false,
+  "phase": "waiting_whole_pipeline",
+  "scope": "Automatic whole-pipeline completion handoff; external strength diagnostic cannot pass failed teacher quality"
+}

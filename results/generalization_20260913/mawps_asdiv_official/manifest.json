@@ -1,0 +1,8 @@
+{
+  "repo": "https://github.com/arkilpatel/SVAMP",
+  "revision": "78e727689e1c1bebfc4be39c446898e8e10b0518",
+  "url": "https://raw.githubusercontent.com/arkilpatel/SVAMP/78e727689e1c1bebfc4be39c446898e8e10b0518/data/mawps-asdiv-a_svamp/train.csv",
+  "sha256": "c761cdc6390a67a285c6c346a2931f61bc8f47430eceaeb123cc3d0263efa821",
+  "rows": 3138,
+  "scope": "Official MAWPS+ASDiv-A train for evaluation-only SVAMP; no SVAMP challenge rows intentionally included"
+}

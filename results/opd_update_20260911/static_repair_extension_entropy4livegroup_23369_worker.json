@@ -1,0 +1,69 @@
+{
+  "start": 1789298970.8565779,
+  "job": "23369",
+  "complete": false,
+  "completed": [
+    "entropy4livegroup_student_test200"
+  ],
+  "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+  "allocation": "JobId=23369 JobName=hold-1gpu-8h-c4m32-g36-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:23:42 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:05:48 EndTime=2026-09-13T08:05:48 Deadline=N/A PreemptEligibleTime=2026-09-13T00:06:48 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:05:48 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "device": {
+    "visible": "0",
+    "step": "8",
+    "uuid": "GPU-f4d4e65b-a3f0-c46c-2124-12cef395c78c"
+  },
+  "training_performed": false,
+  "protocol": "Budgeted fixed independent student extra200 and extra400, unchanged evaluation. No teacher evaluation in this worker; skipped phases explicit, adaptive exploratory followup.",
+  "sources": [
+    [
+      "entropy4livegroup",
+      "static_entropy4_livegroup_22478"
+    ]
+  ],
+  "phase": "entropy4livegroup_student_test600",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_livegroup_22478_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4livegroup_23369_entropy4livegroup_student_test600",
+    "--split",
+    "test",
+    "--start",
+    "600",
+    "--count",
+    "400"
+  ],
+  "child_pid": 405396,
+  "student_results": {
+    "entropy4livegroup": {
+      "200": {
+        "n": 200,
+        "accuracy": 0.54,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 12.0,
+            "wrong_to_right": 35,
+            "right_to_wrong": 11,
+            "mcnemar_exact_p": 0.0005355850721002753,
+            "paired_bootstrap95_pp": [
+              5.5,
+              18.5
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 22,
+            "right_to_wrong": 20,
+            "mcnemar_exact_p": 0.8776143287523155,
+            "paired_bootstrap95_pp": [
+              -5.5,
+              7.000000000000001
+            ]
+          }
+        }
+      }
+    }
+  }
+}

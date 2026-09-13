@@ -2,10 +2,12 @@
   "job": "23369",
   "tag": "main_coder_settings_23369",
   "start": 1789295506.088942,
-  "complete": false,
+  "complete": true,
   "completed": [
     "initial_test100",
-    "smoke2"
+    "smoke2",
+    "clean80",
+    "clean_test100"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=23369 JobName=hold-1gpu-8h-c4m32-g36-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:25:58 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:05:48 EndTime=2026-09-13T08:05:48 Deadline=N/A PreemptEligibleTime=2026-09-13T00:06:48 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:05:48 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -25,10 +27,39 @@
     "reason": "Main student under fixed Coder training settings; separate student identity from OPD setting changes. No test selection.",
     "teacher_training": false
   },
-  "phase": "clean80",
+  "phase": "complete",
   "command": [
-    "bash",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_long_unrestricted.sh"
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/main_coder_settings_23369_clean80_opd/bs2-lr3e-06-G2-N1-NN1-lm1-len1024/pe1_rs0.5_nr8_ln_sr/80",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/main_coder_settings_23369_clean_test100",
+    "--split",
+    "test",
+    "--start",
+    "1200",
+    "--count",
+    "100"
   ],
-  "child_pid": 399309
+  "child_pid": 401959,
+  "clean_test": {
+    "n": 100,
+    "initial_correct": 43,
+    "candidate_correct": 43,
+    "initial": 0.43,
+    "accuracy": 0.43,
+    "paired": {
+      "delta_pp": 0.0,
+      "wrong_to_right": 14,
+      "right_to_wrong": 14,
+      "mcnemar_exact_p": 1.0,
+      "paired_bootstrap95_pp": [
+        -10.0,
+        10.0
+      ]
+    }
+  },
+  "stopped": "No positive clean gain under changed settings",
+  "end": 1789297356.975322
 }

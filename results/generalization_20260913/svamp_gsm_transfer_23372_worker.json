@@ -2,7 +2,7 @@
   "job": "23372",
   "tag": "svamp_gsm_transfer_23372",
   "start": 1789297729.1593962,
-  "complete": false,
+  "complete": true,
   "completed": [],
   "teacher_training_performed": false,
   "allocation": "JobId=23372 JobName=hold-1gpu-8h-c4m32-g37-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:51:38 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:17:11 EndTime=2026-09-13T07:17:11 Deadline=N/A PreemptEligibleTime=2026-09-12T23:18:11 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:17:11 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -11,5 +11,63 @@
     "uuid": "GPU-37a8069b-922f-4de2-143c-541de7c81a73",
     "visible": "0",
     "step": "8"
-  }
+  },
+  "source_manifest": {
+    "repo": "https://github.com/arkilpatel/SVAMP",
+    "revision": "78e727689e1c1bebfc4be39c446898e8e10b0518",
+    "url": "https://raw.githubusercontent.com/arkilpatel/SVAMP/78e727689e1c1bebfc4be39c446898e8e10b0518/SVAMP.json",
+    "sha256": "5be77703a6d891ae476d7c082787ad361392aa02453b132516cdd5f4e7934e3e",
+    "n": 1000,
+    "scope": "Official challenge set, evaluation only; no training split invented"
+  },
+  "training_performed": false,
+  "scope": "SVAMP evaluation transfer of students trained only on GSM: same initial vs existing clean GSM OPD vs entropy2-oracle GSM OPD. This is not SVAMP-trained OPD or a deployable teacher defense experiment.",
+  "results": {
+    "initial": {
+      "n": 100,
+      "correct": 59
+    },
+    "clean_gsm_opd": {
+      "n": 100,
+      "correct": 70
+    },
+    "oracle2_gsm_opd": {
+      "n": 100,
+      "correct": 65
+    }
+  },
+  "phase": "complete",
+  "paired_vs_initial": {
+    "clean_gsm_opd": {
+      "delta_pp": 11.0,
+      "wrong_to_right": 20,
+      "right_to_wrong": 9,
+      "mcnemar_exact_p": 0.06142834573984146,
+      "paired_bootstrap95_pp": [
+        1.0,
+        21.0
+      ]
+    },
+    "oracle2_gsm_opd": {
+      "delta_pp": 6.0,
+      "wrong_to_right": 18,
+      "right_to_wrong": 12,
+      "mcnemar_exact_p": 0.361594608053565,
+      "paired_bootstrap95_pp": [
+        -5.0,
+        17.0
+      ]
+    }
+  },
+  "paired_oracle_vs_clean": {
+    "delta_pp": -5.0,
+    "wrong_to_right": 11,
+    "right_to_wrong": 16,
+    "mcnemar_exact_p": 0.44206833839416504,
+    "paired_bootstrap95_pp": [
+      -15.0,
+      5.0
+    ]
+  },
+  "end": 1789298122.9559155
 }

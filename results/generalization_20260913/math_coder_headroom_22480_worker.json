@@ -2,8 +2,11 @@
   "job": "22480",
   "tag": "math_coder_headroom_22480",
   "start": 1789297385.5086164,
-  "complete": false,
-  "completed": [],
+  "complete": true,
+  "completed": [
+    "val100",
+    "score"
+  ],
   "teacher_training_performed": false,
   "allocation": "JobId=22480 JobName=hold-1gpu-8h-c4m32-g35-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:47:28 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
   "deadline": 1789298137.0,
@@ -12,14 +15,20 @@
     "visible": "0",
     "step": "8"
   },
-  "phase": "val100",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/math_matched_eval.py",
-    "--model",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
-    "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_coder_headroom_22480_val100"
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/score_math_verify.py",
+    "--input",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_coder_headroom_22480_val100/predictions.json"
   ],
-  "child_pid": 2785686
+  "child_pid": 2824441,
+  "result": {
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+    "n": 100,
+    "correct": 9,
+    "original_teacher_reference": 76,
+    "scope": "Headroom first100 MATH, native Qwen prompt and matched greedy1024, no OPD baseline or defense claim"
+  },
+  "end": 1789297854.6429338
 }

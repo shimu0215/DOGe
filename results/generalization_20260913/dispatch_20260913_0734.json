@@ -1,0 +1,21 @@
+{
+  "time": "2026-09-13T07:32:45.469640",
+  "job": "28530",
+  "srun_pid": 504736,
+  "cmd": [
+    "srun",
+    "--jobid=28530",
+    "--overlap",
+    "--exact",
+    "--cpu-bind=none",
+    "-N1",
+    "-n1",
+    "-c4",
+    "--gres=gpu:1",
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "experiments/generalization_20260913/svamp_opd_pipeline.py",
+    "--job",
+    "28530"
+  ],
+  "prior_complete": "math_high40_28530"
+}
