@@ -56,3 +56,5 @@ PCGrad 原论文将冲突任务梯度投影到另一任务梯度的法平面：[
 01:44更新：5张泛化卡正常运行。Coder SFT两个epoch验证43/48，按预设选epoch1(43)，clean120进行中；Base MiniLLM120已训练保存，等待验证，Base FKL仍训练。1.5B第二轮接近240步，但尚无有效基线或防御结果。另6卡原研究中，gap.25密集直接干预main400达44.75（clean52.5/SFT43.75），现在开始无学生参数信号的密集目标固化和gap.01密集强度测试。详见最新PROGRESS和snapshot_20260913_0142。
 
 02:03更新：1.5B第二轮仍无验证增益，两卡转Base半epoch SFT和Coder FKL。Base/Coder/BaseFKL三旧120步训练成功，评测被停止符差异断言拦下；新增matched_stops评测恢复已实际通过40步配对比较，三条正在80/120验证，所有旧失败保留。当前新owner和准确paths见PROGRESS最新段。尚无跨学生防御结论。
+
+02:25：Coder一epoch MiniLLM验证43→52，但固定test35→32，未进入防御。Base一epoch MiniLLM无增益，FKL验证64→67（40步）已按验证选择，28530新owner在做initial/clean100，正收益才匹配FKL40防御。28528转Coder半epochSFT，23369转与22479共享Base半epoch checkpoint25的FKL验证（其初始val63）。当前owners见PROGRESS，未获跨学生防御结果。
