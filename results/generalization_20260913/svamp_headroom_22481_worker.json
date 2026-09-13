@@ -13,5 +13,7 @@
     "step": "8"
   },
   "scope": "SVAMP first100 calibration headroom only; no OPD baseline or defense. Challenge set never used for training. Any later OPD requires a separate appropriate training corpus.",
-  "phase": "original_teacher"
+  "phase": "original_teacher",
+  "error": "AssertionError('GSM reference lacks final-answer delimiter')",
+  "end": 1789296532.4005098
 }

@@ -2,7 +2,7 @@
   "job": "22479",
   "tag": "source_target_fit_22479",
   "start": 1789296459.863391,
-  "complete": false,
+  "complete": true,
   "completed": [],
   "teacher_training_performed": false,
   "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:55:44 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -66,5 +66,106 @@
       }
     }
   },
-  "examples": 48
+  "examples": 48,
+  "phase": "complete",
+  "summary": {
+    "entropy4": {
+      "self": {
+        "n": 16,
+        "forward_kl": 0.028025758103467524,
+        "observed_logp_change": -0.038318335195071995,
+        "argmax_flip_fraction": 0.0078125,
+        "target_native_kl": 21.228143572807312,
+        "target_changed_kl": 6.055000573396683,
+        "target_kl_fraction_closed": 0.714119202905219,
+        "correct": 15
+      },
+      "coder": {
+        "n": 16,
+        "forward_kl": 0.038148027495481074,
+        "observed_logp_change": 0.07720764051191509,
+        "argmax_flip_fraction": 0.03125,
+        "target_native_kl": 18.67245888710022,
+        "target_changed_kl": 6.271692723035812,
+        "target_kl_fraction_closed": 0.6561184055862145,
+        "correct": 7
+      },
+      "main_short_sft": {
+        "n": 16,
+        "forward_kl": 0.03843372885603458,
+        "observed_logp_change": 0.06779261468909681,
+        "argmax_flip_fraction": 0.0234375,
+        "target_native_kl": 19.193730235099792,
+        "target_changed_kl": 5.9742322862148285,
+        "target_kl_fraction_closed": 0.6856150728934629,
+        "correct": 9
+      }
+    },
+    "pcgrad": {
+      "self": {
+        "n": 16,
+        "forward_kl": 0.01874065463198349,
+        "observed_logp_change": -0.029008593468461186,
+        "argmax_flip_fraction": 0.0078125,
+        "target_native_kl": 21.228143572807312,
+        "target_changed_kl": 6.854151606559753,
+        "target_kl_fraction_closed": 0.6764310906255597,
+        "correct": 15
+      },
+      "coder": {
+        "n": 16,
+        "forward_kl": 0.02896488452097401,
+        "observed_logp_change": 0.07892214508319739,
+        "argmax_flip_fraction": 0.021484375,
+        "target_native_kl": 18.67245888710022,
+        "target_changed_kl": 6.711103737354279,
+        "target_kl_fraction_closed": 0.6327602823162548,
+        "correct": 7
+      },
+      "main_short_sft": {
+        "n": 16,
+        "forward_kl": 0.029457116615958512,
+        "observed_logp_change": 0.06862683483632281,
+        "argmax_flip_fraction": 0.01953125,
+        "target_native_kl": 19.193730235099792,
+        "target_changed_kl": 6.42678838968277,
+        "target_kl_fraction_closed": 0.6623315182321938,
+        "correct": 9
+      }
+    },
+    "mix14b": {
+      "self": {
+        "n": 16,
+        "forward_kl": 0.02018084464361891,
+        "observed_logp_change": -0.03187914070440456,
+        "argmax_flip_fraction": 0.0078125,
+        "target_native_kl": 21.228143572807312,
+        "target_changed_kl": 6.713861256837845,
+        "target_kl_fraction_closed": 0.6830878347873772,
+        "correct": 15
+      },
+      "coder": {
+        "n": 16,
+        "forward_kl": 0.023246928103617392,
+        "observed_logp_change": 0.08583354201982729,
+        "argmax_flip_fraction": 0.01953125,
+        "target_native_kl": 18.67245888710022,
+        "target_changed_kl": 7.222161054611206,
+        "target_kl_fraction_closed": 0.6039807872800039,
+        "correct": 7
+      },
+      "main_short_sft": {
+        "n": 16,
+        "forward_kl": 0.02446644497103989,
+        "observed_logp_change": 0.06982338556554168,
+        "argmax_flip_fraction": 0.015625,
+        "target_native_kl": 19.193730235099792,
+        "target_changed_kl": 6.899090349674225,
+        "target_kl_fraction_closed": 0.6366287920591003,
+        "correct": 9
+      }
+    }
+  },
+  "limitations": "Different source generation settings, correctness, contents and lengths remain; not an isolated style/source-origin experiment. Distribution change is not OPD efficacy.",
+  "end": 1789296651.6402519
 }
