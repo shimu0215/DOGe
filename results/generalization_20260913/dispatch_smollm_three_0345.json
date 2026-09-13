@@ -1,0 +1,113 @@
+{
+  "time": 1789285347.0748212,
+  "predecessor": {
+    "job": "22480",
+    "tag": "smollm_sft_filtered_22480",
+    "start": 1789284848.4806678,
+    "complete": true,
+    "completed": [
+      "sft1",
+      "sft_val100"
+    ],
+    "teacher_training_performed": false,
+    "allocation": "JobId=22480 JobName=hold-1gpu-8h-c4m32-g35-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:18:31 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+    "deadline": 1789298137.0,
+    "device": {
+      "uuid": "GPU-c7054e53-2ace-e243-47c6-5c43e7f3cb9c",
+      "visible": "0",
+      "step": "2"
+    },
+    "scope": "Native-format independent-family student preparation. No teacher training, no cross-tokenizer logit alignment, no OPD or defense result claimed.",
+    "reused_raw_evaluation": "Original raw100 complete; prior preparation stopped on two incorrect legacy CoTs, before any SFT.",
+    "raw_correct": 7,
+    "teacher_correct": 97,
+    "source_filter": {
+      "original_count": 770,
+      "accepted": 768,
+      "rejected": [
+        {
+          "id": 409,
+          "predicted": "1",
+          "expected": "23",
+          "response_tail": "the number of remaining days:**\n   The month is 30 days long, and Frank has already worked 7 days:\n   \\[\n   30 \\text{ days} - 7 \\text{ days} = 23 \\text{ days}\n   \\]\n\n6. **Calculate the average number of cars Frank needs to sell per day for the remaining days:**\n   Since he needs to sell 23 cars in the remaining 23 days:\n   \\[\n   \\frac{23 \\text{ cars}}{23 \\text{ days}} = 1 \\text{ car/day}\n   \\]\n\nTherefore, Frank needs to sell \\(\\boxed{1}\\) car per day for the remaining 23 days to meet his quota.\n"
+        },
+        {
+          "id": 835,
+          "predicted": "400",
+          "expected": "300",
+          "response_tail": "00 + 200 = 300\\).\n\n3. **Determine the total number of cars at the end of the play:**\n   - The total number of cars at the end of the play is given as 700.\n\n4. **Calculate the number of additional cars that packed into the parking lot during the play:**\n   - Total number of cars at the end of the play = 700.\n   - Initial total number of cars = 300.\n   - Additional cars = \\(700 - 300 = 400\\).\n\nThus, the number of additional cars that packed into the parking lot during the play is \\(\\boxed{400}\\).\n"
+        }
+      ],
+      "criterion": "Existing corrected numeric answer parser, applied before native retokenization. Original historical SFT corpus unchanged."
+    },
+    "data": {
+      "source": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+      "source_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+      "retokenized": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm_sft_filtered_22480_train.jsonl",
+      "retokenized_sha256": "3e708225947fa30c120a938b557343a8cf9104da4e077853ef14acd3ce34a471",
+      "count": 768,
+      "native_tokenizer": true,
+      "max_tokens": 695,
+      "all_original_ids_in_train_first1000": true,
+      "all_cot_answers_correct": true
+    },
+    "phase": "complete",
+    "command": [
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+      "--model",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm_sft_filtered_22480_training/final",
+      "--output",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm_sft_filtered_22480_sft_val100",
+      "--split",
+      "train",
+      "--start",
+      "7000",
+      "--count",
+      "100"
+    ],
+    "child_pid": 1819368,
+    "sft": {
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm_sft_filtered_22480_training/final",
+      "correct": 6,
+      "teacher_correct": 97,
+      "vs_raw": {
+        "n": 100,
+        "initial_correct": 7,
+        "candidate_correct": 6,
+        "initial": 0.07,
+        "accuracy": 0.06,
+        "paired": {
+          "delta_pp": -1.0,
+          "wrong_to_right": 3,
+          "right_to_wrong": 4,
+          "mcnemar_exact_p": 1.0,
+          "paired_bootstrap95_pp": [
+            -6.0,
+            4.0
+          ]
+        }
+      },
+      "validation_path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm_sft_filtered_22480_sft_val100/gsm8k-results.json"
+    },
+    "next": "If useful, design an explicitly cross-tokenizer on-policy objective with its own positive baseline before testing defense. Do not crop logits or claim this SFT check is OPD.",
+    "end": 1789285107.7163923
+  },
+  "steps": "22480.batch\n22480.extern\n",
+  "pid": 4056445,
+  "command": [
+    "srun",
+    "--jobid=22480",
+    "--overlap",
+    "--exact",
+    "--cpu-bind=none",
+    "-N1",
+    "-n1",
+    "-c4",
+    "--gres=gpu:1",
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/smollm_sft_three.py",
+    "--job",
+    "22480"
+  ]
+}

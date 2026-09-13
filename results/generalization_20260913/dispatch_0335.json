@@ -1,0 +1,86 @@
+[
+  {
+    "job": "22480",
+    "pid": 4023623,
+    "cmd": [
+      "srun",
+      "--jobid=22480",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/smollm_sft_filtered.py",
+      "--job",
+      "22480"
+    ],
+    "time": 1789284847.1165662,
+    "host": "hop-amd-2.orc.gmu.edu"
+  },
+  {
+    "job": "23369",
+    "pid": 4023632,
+    "cmd": [
+      "srun",
+      "--jobid=23369",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/base_tenth_pipeline.py",
+      "--job",
+      "23369"
+    ],
+    "time": 1789284847.166507,
+    "host": "hop-amd-2.orc.gmu.edu"
+  },
+  {
+    "job": "28528",
+    "pid": 4023641,
+    "cmd": [
+      "srun",
+      "--jobid=28528",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/coder_long_fkl_pipeline.py",
+      "--job",
+      "28528"
+    ],
+    "time": 1789284847.2141259,
+    "host": "hop-amd-2.orc.gmu.edu"
+  },
+  {
+    "job": "28530",
+    "pid": 4023650,
+    "cmd": [
+      "srun",
+      "--jobid=28530",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/coder_long_low_pipeline.py",
+      "--job",
+      "28530"
+    ],
+    "time": 1789284847.263765,
+    "host": "hop-amd-2.orc.gmu.edu"
+  }
+]

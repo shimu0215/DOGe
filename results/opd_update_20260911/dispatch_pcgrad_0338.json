@@ -1,0 +1,44 @@
+[
+  {
+    "job": "28529",
+    "pid": 4028327,
+    "cmd": [
+      "srun",
+      "--jobid=28529",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/run_static_gap01_pcgrad.py",
+      "--job",
+      "28529"
+    ],
+    "time": 1789284945.4338317,
+    "host": "hop-amd-2.orc.gmu.edu"
+  },
+  {
+    "job": "28527",
+    "pid": 4028345,
+    "cmd": [
+      "srun",
+      "--jobid=28527",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/run_static_gap01_anchor72.py",
+      "--job",
+      "28527"
+    ],
+    "time": 1789284945.479058,
+    "host": "hop-amd-2.orc.gmu.edu"
+  }
+]
