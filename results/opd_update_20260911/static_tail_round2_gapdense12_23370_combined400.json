@@ -1,0 +1,24 @@
+{
+  "n": 400,
+  "correct": 178,
+  "versus_clean": {
+    "delta_pp": -8.0,
+    "wrong_to_right": 33,
+    "right_to_wrong": 65,
+    "mcnemar_exact_p": 0.0016005802102081266,
+    "paired_bootstrap95_pp": [
+      -13.0,
+      -3.25
+    ]
+  },
+  "versus_sft": {
+    "delta_pp": 0.75,
+    "wrong_to_right": 53,
+    "right_to_wrong": 50,
+    "mcnemar_exact_p": 0.8438976552528619,
+    "paired_bootstrap95_pp": [
+      -4.0,
+      5.75
+    ]
+  }
+}
