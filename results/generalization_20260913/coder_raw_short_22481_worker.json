@@ -1,0 +1,122 @@
+{
+  "job": "22481",
+  "tag": "coder_raw_short_22481",
+  "start": 1789288236.710344,
+  "complete": true,
+  "completed": [
+    "initial_val",
+    "smoke2",
+    "clean80",
+    "val40",
+    "val80",
+    "initial_test100",
+    "clean_test100"
+  ],
+  "teacher_training_performed": false,
+  "allocation": "JobId=22481 JobName=hold-1gpu-8h-c4m32-g35-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:16:01 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:14:35 EndTime=2026-09-13T07:14:35 Deadline=N/A PreemptEligibleTime=2026-09-12T23:15:35 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:14:35 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789298075.0,
+  "device": {
+    "uuid": "GPU-5f5c0036-6942-24bd-ed30-e097a1c4bdee",
+    "visible": "0",
+    "step": "5"
+  },
+  "phase": "complete",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_short_22481_clean_test100",
+    "--split",
+    "test",
+    "--start",
+    "1200",
+    "--count",
+    "100"
+  ],
+  "child_pid": 1111376,
+  "project_sft_performed": false,
+  "protocol": {
+    "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+    "initial_correct": 36,
+    "objective": "minillm",
+    "steps": 80,
+    "lr": 1e-06,
+    "max_length": 640,
+    "max_prompt_length": 256,
+    "no_repeat_ngram_size": 6,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "top_k": 0,
+    "reason": "Raw Coder under original short640/sixgram6 MiniLLM, same heldout and matched stops; independent baseline.",
+    "teacher_training": false
+  },
+  "validation": {
+    "40": {
+      "n": 100,
+      "initial_correct": 36,
+      "candidate_correct": 39,
+      "initial": 0.36,
+      "accuracy": 0.39,
+      "paired": {
+        "delta_pp": 3.0,
+        "wrong_to_right": 16,
+        "right_to_wrong": 13,
+        "mcnemar_exact_p": 0.711071103811264,
+        "paired_bootstrap95_pp": [
+          -8.0,
+          14.000000000000002
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_short_22481_val40/gsm8k-results.json"
+    },
+    "80": {
+      "n": 100,
+      "initial_correct": 36,
+      "candidate_correct": 37,
+      "initial": 0.36,
+      "accuracy": 0.37,
+      "paired": {
+        "delta_pp": 1.0,
+        "wrong_to_right": 15,
+        "right_to_wrong": 14,
+        "mcnemar_exact_p": 1.0,
+        "paired_bootstrap95_pp": [
+          -10.0,
+          11.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/80",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_short_22481_val80/gsm8k-results.json"
+    }
+  },
+  "selected_opd": {
+    "correct": 39,
+    "step": 40,
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "gain_pp": 3,
+    "mode": "minillm",
+    "lr": 1e-06
+  },
+  "clean_test": {
+    "n": 100,
+    "initial_correct": 28,
+    "candidate_correct": 28,
+    "initial": 0.28,
+    "accuracy": 0.28,
+    "paired": {
+      "delta_pp": 0.0,
+      "wrong_to_right": 10,
+      "right_to_wrong": 10,
+      "mcnemar_exact_p": 1.0,
+      "paired_bootstrap95_pp": [
+        -9.0,
+        9.0
+      ]
+    }
+  },
+  "stopped": "No positive clean test, no test reselection",
+  "end": 1789290480.1267653
+}

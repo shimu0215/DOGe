@@ -1,0 +1,215 @@
+{
+  "job": "23369",
+  "tag": "base_tenth_23369",
+  "start": 1789284848.5550742,
+  "complete": true,
+  "completed": [
+    "raw_native_val",
+    "original_teacher_val",
+    "sft2",
+    "sft_checkpoint-5_val",
+    "clean120",
+    "clean_val40",
+    "clean_val80",
+    "clean_val120",
+    "initial_test100",
+    "clean_test100",
+    "defense40",
+    "defense_test100"
+  ],
+  "teacher_training_performed": false,
+  "allocation": "JobId=23369 JobName=hold-1gpu-8h-c4m32-g36-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:28:20 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:05:48 EndTime=2026-09-13T08:05:48 Deadline=N/A PreemptEligibleTime=2026-09-13T00:06:48 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:05:48 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789301148.0,
+  "device": {
+    "uuid": "GPU-f4d4e65b-a3f0-c46c-2124-12cef395c78c",
+    "visible": "0",
+    "step": "4"
+  },
+  "scope": "Unseen pretrained checkpoint, same Qwen family; NOT a cross-family proof. Teacher remains fixed and has no new negative examples.",
+  "download": {
+    "repo": "Qwen/Qwen2.5-0.5B",
+    "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+    "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+    "weights_downloaded": true,
+    "tokenizer_size": 151665,
+    "exact_teacher_vocab_mapping": true,
+    "chat_template_present": true,
+    "eos_token_id": 151643,
+    "pad_token_id": 151643
+  },
+  "phase": "complete",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_tenth_23369_defense40_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_defense_test100",
+    "--split",
+    "test",
+    "--start",
+    "1200",
+    "--count",
+    "100"
+  ],
+  "child_pid": 387929,
+  "raw_gap": {
+    "raw_correct": 53,
+    "teacher_correct": 97,
+    "n": 100,
+    "format_note": "raw base completion versus teacher native chat; same questions and token budget"
+  },
+  "sft_protocol": {
+    "raw_weight_model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+    "prepared_format": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_base_chat_format",
+    "data": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+    "data_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+    "epochs": 0.1,
+    "learning_rate": 2e-05,
+    "selection": "Checkpoint nearest 40% on validation; ties earlier epoch. No test selection.",
+    "format_change": "Teacher ChatML tokenizer and stop configuration, identical token-to-ID mapping, no weight changes before SFT."
+  },
+  "sft_validation": {
+    "checkpoint-5": {
+      "correct": 26,
+      "epoch": 0.10362694300518134,
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_sft_checkpoint-5_val/gsm8k-results.json"
+    }
+  },
+  "selected_sft": {
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_sft/checkpoint-5",
+    "epoch": 0.10362694300518134,
+    "correct": 26
+  },
+  "clean_validation": {
+    "40": {
+      "n": 100,
+      "initial_correct": 26,
+      "candidate_correct": 59,
+      "initial": 0.26,
+      "accuracy": 0.59,
+      "paired": {
+        "delta_pp": 33.0,
+        "wrong_to_right": 36,
+        "right_to_wrong": 3,
+        "mcnemar_exact_p": 3.608874976634979e-08,
+        "paired_bootstrap95_pp": [
+          23.0,
+          43.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_tenth_23369_clean120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_clean_val40/gsm8k-results.json"
+    },
+    "80": {
+      "n": 100,
+      "initial_correct": 26,
+      "candidate_correct": 56,
+      "initial": 0.26,
+      "accuracy": 0.56,
+      "paired": {
+        "delta_pp": 30.0,
+        "wrong_to_right": 34,
+        "right_to_wrong": 4,
+        "mcnemar_exact_p": 6.038535502739251e-07,
+        "paired_bootstrap95_pp": [
+          19.0,
+          40.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_tenth_23369_clean120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/80",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_clean_val80/gsm8k-results.json"
+    },
+    "120": {
+      "n": 100,
+      "initial_correct": 26,
+      "candidate_correct": 52,
+      "initial": 0.26,
+      "accuracy": 0.52,
+      "paired": {
+        "delta_pp": 26.0,
+        "wrong_to_right": 34,
+        "right_to_wrong": 8,
+        "mcnemar_exact_p": 6.877111491121468e-05,
+        "paired_bootstrap95_pp": [
+          14.000000000000002,
+          37.0
+        ]
+      },
+      "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_tenth_23369_clean120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_clean_val120/gsm8k-results.json"
+    }
+  },
+  "selected_opd": {
+    "correct": 59,
+    "step": 40,
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_tenth_23369_clean120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "gain_pp": 33,
+    "lr": 1e-06,
+    "mode": "minillm"
+  },
+  "clean_test": {
+    "n": 100,
+    "initial_correct": 17,
+    "candidate_correct": 41,
+    "initial": 0.17,
+    "accuracy": 0.41,
+    "paired": {
+      "delta_pp": 24.0,
+      "wrong_to_right": 31,
+      "right_to_wrong": 7,
+      "mcnemar_exact_p": 0.00011616700794547796,
+      "paired_bootstrap95_pp": [
+        13.0,
+        35.0
+      ]
+    }
+  },
+  "defense_teacher": {
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_freq_anti6_anchor36_9916493/model",
+    "manifest_sha256": "376364b2e06b88e78d6a26ccd0bd34affb8c23c271393c4b59ed323ce838c25e",
+    "negative_generators": [
+      "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_training/final",
+      "/scratch/wzhao20/DOGe-official/models/qwen2.5-0.5b-instruct"
+    ],
+    "new_student_data_used": false
+  },
+  "defense_test": {
+    "vs_initial": {
+      "n": 100,
+      "initial_correct": 17,
+      "candidate_correct": 37,
+      "initial": 0.17,
+      "accuracy": 0.37,
+      "paired": {
+        "delta_pp": 20.0,
+        "wrong_to_right": 26,
+        "right_to_wrong": 6,
+        "mcnemar_exact_p": 0.0005350527353584766,
+        "paired_bootstrap95_pp": [
+          10.0,
+          30.0
+        ]
+      }
+    },
+    "vs_clean": {
+      "n": 100,
+      "initial_correct": 41,
+      "candidate_correct": 37,
+      "initial": 0.41,
+      "accuracy": 0.37,
+      "paired": {
+        "delta_pp": -4.0,
+        "wrong_to_right": 8,
+        "right_to_wrong": 12,
+        "mcnemar_exact_p": 0.5034446716308594,
+        "paired_bootstrap95_pp": [
+          -13.0,
+          5.0
+        ]
+      }
+    },
+    "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_defense_test100/gsm8k-results.json"
+  },
+  "end": 1789289401.951327
+}

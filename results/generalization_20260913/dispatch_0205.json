@@ -1,0 +1,62 @@
+[
+  {
+    "job": "22479",
+    "pid": 3651741,
+    "cmd": [
+      "srun",
+      "--jobid=22479",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/base_half_pipeline.py",
+      "--job",
+      "22479"
+    ],
+    "host": "hop-amd-2.orc.gmu.edu"
+  },
+  {
+    "job": "22481",
+    "pid": 3651750,
+    "cmd": [
+      "srun",
+      "--jobid=22481",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/coder_forwardkl.py",
+      "--job",
+      "22481"
+    ],
+    "host": "hop-amd-2.orc.gmu.edu"
+  },
+  {
+    "job": "22478",
+    "pid": 3651759,
+    "cmd": [
+      "srun",
+      "--jobid=22478",
+      "--overlap",
+      "--exact",
+      "--cpu-bind=none",
+      "-N1",
+      "-n1",
+      "-c4",
+      "--gres=gpu:1",
+      "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+      "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/eval_round2_teacher400.py",
+      "--job",
+      "22478"
+    ],
+    "host": "hop-amd-2.orc.gmu.edu"
+  }
+]

@@ -1,8 +1,11 @@
 {
   "start": 1789288840.0157301,
   "job": "23371",
-  "complete": false,
-  "completed": [],
+  "complete": true,
+  "completed": [
+    "entropy4_student_test200",
+    "entropy4_student_test600"
+  ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=23371 JobName=hold-1gpu-8h-c4m32-g37-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3603 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:25:30 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:15:10 EndTime=2026-09-13T08:15:10 Deadline=N/A PreemptEligibleTime=2026-09-13T00:16:10 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:15:10 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
   "device": {
@@ -18,20 +21,126 @@
       "static_entropy4_dense_23371"
     ]
   ],
-  "phase": "entropy4_student_test200",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
     "--model",
     "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_dense_23371_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
     "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4_23371_entropy4_student_test200",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4_23371_entropy4_student_test600",
     "--split",
     "test",
     "--start",
-    "200",
+    "600",
     "--count",
-    "200"
+    "400"
   ],
-  "child_pid": 1872253
+  "child_pid": 1914744,
+  "student_results": {
+    "entropy4": {
+      "200": {
+        "n": 200,
+        "accuracy": 0.47,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 5.0,
+            "wrong_to_right": 26,
+            "right_to_wrong": 16,
+            "mcnemar_exact_p": 0.16414940178310644,
+            "paired_bootstrap95_pp": [
+              -1.0124999999999957,
+              11.5
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": -6.0,
+            "wrong_to_right": 18,
+            "right_to_wrong": 30,
+            "mcnemar_exact_p": 0.11140289106101875,
+            "paired_bootstrap95_pp": [
+              -13.0,
+              0.5
+            ]
+          }
+        }
+      },
+      "600": {
+        "n": 400,
+        "accuracy": 0.48,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 4.0,
+            "wrong_to_right": 60,
+            "right_to_wrong": 44,
+            "mcnemar_exact_p": 0.14095628821230846,
+            "paired_bootstrap95_pp": [
+              -1.0,
+              8.75
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": -8.25,
+            "wrong_to_right": 31,
+            "right_to_wrong": 64,
+            "mcnemar_exact_p": 0.0009246444117719318,
+            "paired_bootstrap95_pp": [
+              -13.0,
+              -3.5000000000000004
+            ]
+          }
+        }
+      }
+    }
+  },
+  "student1000": {
+    "entropy4": {
+      "source": "static_entropy4_dense_23371",
+      "n": 1000,
+      "correct": 462,
+      "accuracy": 0.462,
+      "comparisons": {
+        "sft": {
+          "delta_pp": 2.7,
+          "wrong_to_right": 132,
+          "right_to_wrong": 105,
+          "mcnemar_exact_p": 0.09103110566493637,
+          "paired_bootstrap95_pp": [
+            -0.2,
+            5.7
+          ]
+        },
+        "clean": {
+          "delta_pp": -7.9,
+          "wrong_to_right": 76,
+          "right_to_wrong": 155,
+          "mcnemar_exact_p": 2.2071649409635568e-07,
+          "paired_bootstrap95_pp": [
+            -10.8,
+            -5.0
+          ]
+        }
+      },
+      "paths": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_dense_23371_student_test0/gsm8k-results.json",
+          "sha256": "1e664a48ea52b02e88a9c2d1a32315506204d0bef8176be9a748885c09ca350c"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_dense_23371_student_test1000/gsm8k-results.json",
+          "sha256": "65d0a407fbbbd197b3c51c557968d60c2104da0ea086601311bbd8b52726c891"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4_23371_entropy4_student_test200/gsm8k-results.json",
+          "sha256": "88946e639728d18e3c498882b2fca3a6b26ad31f4d55708c6947e1dfe88ab39c"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4_23371_entropy4_student_test600/gsm8k-results.json",
+          "sha256": "32d49146929ac3ccc1d89a6b57d2ba787de65ba35625c2389bca3d138bb12c71"
+        }
+      ]
+    }
+  },
+  "teacher_evaluation_performed": false,
+  "end": 1789289636.5517442
 }

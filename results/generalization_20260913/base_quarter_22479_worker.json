@@ -1,0 +1,77 @@
+{
+  "job": "22479",
+  "tag": "base_quarter_22479",
+  "start": 1789288238.9304864,
+  "complete": false,
+  "completed": [
+    "raw_native_val",
+    "original_teacher_val",
+    "sft2",
+    "sft_checkpoint-13_val",
+    "clean120"
+  ],
+  "teacher_training_performed": false,
+  "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:38:43 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789296715.0,
+  "device": {
+    "uuid": "GPU-a8c99944-94c9-11cd-0525-96f3423af497",
+    "visible": "0",
+    "step": "5"
+  },
+  "scope": "Unseen pretrained checkpoint, same Qwen family; NOT a cross-family proof. Teacher remains fixed and has no new negative examples.",
+  "download": {
+    "repo": "Qwen/Qwen2.5-0.5B",
+    "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+    "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+    "weights_downloaded": true,
+    "tokenizer_size": 151665,
+    "exact_teacher_vocab_mapping": true,
+    "chat_template_present": true,
+    "eos_token_id": 151643,
+    "pad_token_id": 151643
+  },
+  "phase": "clean_val40",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_quarter_22479_clean120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_clean_val40",
+    "--split",
+    "train",
+    "--start",
+    "7000",
+    "--count",
+    "100"
+  ],
+  "child_pid": 689824,
+  "raw_gap": {
+    "raw_correct": 53,
+    "teacher_correct": 97,
+    "n": 100,
+    "format_note": "raw base completion versus teacher native chat; same questions and token budget"
+  },
+  "sft_protocol": {
+    "raw_weight_model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+    "prepared_format": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_base_chat_format",
+    "data": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+    "data_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+    "epochs": 0.25,
+    "learning_rate": 2e-05,
+    "selection": "Checkpoint nearest 40% on validation; ties earlier epoch. No test selection.",
+    "format_change": "Teacher ChatML tokenizer and stop configuration, identical token-to-ID mapping, no weight changes before SFT."
+  },
+  "sft_validation": {
+    "checkpoint-13": {
+      "correct": 24,
+      "epoch": 0.2694300518134715,
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_sft_checkpoint-13_val/gsm8k-results.json"
+    }
+  },
+  "selected_sft": {
+    "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_sft/checkpoint-13",
+    "epoch": 0.2694300518134715,
+    "correct": 24
+  }
+}

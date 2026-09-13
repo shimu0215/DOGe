@@ -1,0 +1,146 @@
+{
+  "start": 1789290310.7105644,
+  "job": "28527",
+  "complete": true,
+  "completed": [
+    "gap01anchor72_student_test200",
+    "gap01anchor72_student_test600"
+  ],
+  "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+  "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:23:36 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "device": {
+    "visible": "0",
+    "step": "4",
+    "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9"
+  },
+  "training_performed": false,
+  "protocol": "Budgeted fixed independent student extra200 and extra400, unchanged evaluation. No teacher evaluation in this worker; skipped phases explicit, adaptive exploratory followup.",
+  "sources": [
+    [
+      "gap01anchor72",
+      "static_gap01_anchor72_28527"
+    ]
+  ],
+  "phase": "complete",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_gap01_anchor72_28527_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_gap01anchor72_student_test600",
+    "--split",
+    "test",
+    "--start",
+    "600",
+    "--count",
+    "400"
+  ],
+  "child_pid": 390153,
+  "student_results": {
+    "gap01anchor72": {
+      "200": {
+        "n": 200,
+        "accuracy": 0.54,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 12.0,
+            "wrong_to_right": 35,
+            "right_to_wrong": 11,
+            "mcnemar_exact_p": 0.0005355850721002753,
+            "paired_bootstrap95_pp": [
+              5.5,
+              18.5
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 20,
+            "right_to_wrong": 18,
+            "mcnemar_exact_p": 0.8714146793645341,
+            "paired_bootstrap95_pp": [
+              -5.0,
+              7.000000000000001
+            ]
+          }
+        }
+      },
+      "600": {
+        "n": 400,
+        "accuracy": 0.5225,
+        "comparisons": {
+          "sft": {
+            "delta_pp": 8.25,
+            "wrong_to_right": 67,
+            "right_to_wrong": 34,
+            "mcnemar_exact_p": 0.0013318251141996125,
+            "paired_bootstrap95_pp": [
+              3.25,
+              13.25
+            ]
+          },
+          "clean_opd": {
+            "delta_pp": -4.0,
+            "wrong_to_right": 33,
+            "right_to_wrong": 49,
+            "mcnemar_exact_p": 0.09703091129729906,
+            "paired_bootstrap95_pp": [
+              -8.5,
+              0.25
+            ]
+          }
+        }
+      }
+    }
+  },
+  "student1000": {
+    "gap01anchor72": {
+      "source": "static_gap01_anchor72_28527",
+      "n": 1000,
+      "correct": 490,
+      "accuracy": 0.49,
+      "comparisons": {
+        "sft": {
+          "delta_pp": 5.5,
+          "wrong_to_right": 152,
+          "right_to_wrong": 97,
+          "mcnemar_exact_p": 0.0005934513385412748,
+          "paired_bootstrap95_pp": [
+            2.4,
+            8.6
+          ]
+        },
+        "clean": {
+          "delta_pp": -5.1,
+          "wrong_to_right": 79,
+          "right_to_wrong": 130,
+          "mcnemar_exact_p": 0.0005127450042800289,
+          "paired_bootstrap95_pp": [
+            -8.0,
+            -2.4
+          ]
+        }
+      },
+      "paths": [
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_anchor72_28527_student_test0/gsm8k-results.json",
+          "sha256": "1aa150d4d453cd588f0b3564979be3a5d4b1c15ad98c51460993132a45b55d35"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_anchor72_28527_student_test1000/gsm8k-results.json",
+          "sha256": "4bafd48b630d1ab54dbb847a71a6585d1a7124868de089375f0be0f1bb2ec9a1"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_gap01anchor72_student_test200/gsm8k-results.json",
+          "sha256": "540e851b15c7def3a295b73b8ceeb7d7cbb4be42bac0ad599640811f51cd7bd0"
+        },
+        {
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_gap01anchor72_student_test600/gsm8k-results.json",
+          "sha256": "54f64aa87413402e503db653e8b2bfdc17b5d0eb010efe7203fe967c6814fce3"
+        }
+      ]
+    }
+  },
+  "teacher_evaluation_performed": false,
+  "end": 1789291067.8739963
+}

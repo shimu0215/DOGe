@@ -1,0 +1,7 @@
+# Eligible uniform-mixture strength diagnostic
+
+For original probabilities p, eligible token set E of size K, M=sum_E p_i, define q_i=(1-epsilon)p_i+epsilon M/K for i in E, and q_i=p_i otherwise. This keeps eligible mass and protected probabilities, increases entropy by concavity, and preserves pairwise eligible ordering for epsilon<1. Unlike the unsuccessful secondary-only flattening (48% student on400), it reduces the largest eligible probability as well.
+
+When the largest eligible probability m exceeds the largest protected one r, use epsilon=min(.99,max(0,.95*(m-r)/(m-M/K))) with a numerical denominator floor. The sufficient bound epsilon<(m-r)/(m-M/K) prevents a protected token overtaking that maximum. If a protected token is already maximal, use identity. This is an exact-arithmetic target property, not guaranteed sampling accuracy, finite-precision ranking, fitted-teacher preservation, or student suppression.
+
+The first experiment applies this target at eligible process positions on known student-source trajectories, identically to reward and conditional-KL scores in corrected MiniLLM. Prefix/final/special protections and student optimizer remain unchanged. Actual2-step smoke passed, average applied epsilon approximately0.95; independent120-step student evaluation is ongoing. No source detector, teacher fine-tuning, or deployment claim. Tests cover random/tied/flat distributions, mass/protected probability, entropy, ordering and deterministic position parity. The runtime diagnostic does not use student parameters to train a teacher.

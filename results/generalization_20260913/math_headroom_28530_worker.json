@@ -2,10 +2,14 @@
   "job": "28530",
   "tag": "math_headroom_28530",
   "start": 1789288566.954869,
-  "complete": false,
+  "complete": true,
   "completed": [
     "scorer_install",
-    "scorer_checks"
+    "scorer_checks",
+    "original_teacher",
+    "original_teacher_score",
+    "gsm_sft_student",
+    "gsm_sft_student_score"
   ],
   "teacher_training_performed": false,
   "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:53:27 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -15,15 +19,50 @@
     "visible": "0",
     "step": "6"
   },
-  "phase": "original_teacher",
+  "phase": "complete",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/math_headroom_eval.py",
-    "--model",
-    "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
-    "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_headroom_28530_original_teacher"
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/score_math_verify.py",
+    "--input",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_headroom_28530_gsm_sft_student/predictions.json"
   ],
-  "child_pid": 1910823,
-  "scope": "MATH test0:100 calibration only; originalteacher and GSM-SFTstudent, no new teacher training or OPD. Reserve100:200 for possible final test; no crossdataset defense claim."
+  "child_pid": 1912657,
+  "scope": "MATH test0:100 calibration only; originalteacher and GSM-SFTstudent, no new teacher training or OPD. Reserve100:200 for possible final test; no crossdataset defense claim.",
+  "results": {
+    "original_teacher": {
+      "correct": 76,
+      "n": 100,
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_headroom_28530_original_teacher/scored.json",
+      "generation": {
+        "do_sample": false,
+        "max_new_tokens": 1024,
+        "repetition_penalty": 1.0,
+        "dtype": "float16"
+      },
+      "scorer": {
+        "name": "math-verify",
+        "version": "0.9.0",
+        "isolated_dependencies": true
+      }
+    },
+    "gsm_sft_student": {
+      "correct": 37,
+      "n": 100,
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_headroom_28530_gsm_sft_student/scored.json",
+      "generation": {
+        "do_sample": false,
+        "max_new_tokens": 1024,
+        "repetition_penalty": 1.0,
+        "dtype": "float16"
+      },
+      "scorer": {
+        "name": "math-verify",
+        "version": "0.9.0",
+        "isolated_dependencies": true
+      }
+    }
+  },
+  "teacher_headroom": 39,
+  "next": "Only after headroom, build a positive MATH OPD baseline on separate train questions, then fixed GSM defense teacher.",
+  "end": 1789289705.0245245
 }

@@ -1,0 +1,63 @@
+{
+  "job": "28530",
+  "tag": "math_opd_28530",
+  "start": 1789290500.7300272,
+  "complete": false,
+  "completed": [
+    "prepare",
+    "initial_val100",
+    "initial_val100_score",
+    "smoke2"
+  ],
+  "teacher_training_performed": false,
+  "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:25:40 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789303360.0,
+  "device": {
+    "uuid": "GPU-daf511d8-e962-9aed-37e9-4ccce2230390",
+    "visible": "0",
+    "step": "7"
+  },
+  "phase": "clean80",
+  "command": [
+    "bash",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_math.sh"
+  ],
+  "child_pid": 1914982,
+  "protocol": {
+    "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+    "initial_correct": 37,
+    "original_teacher_headroom_reference": {
+      "correct": 76,
+      "n": 100,
+      "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_headroom_28530_original_teacher/scored.json",
+      "generation": {
+        "do_sample": false,
+        "max_new_tokens": 1024,
+        "repetition_penalty": 1.0,
+        "dtype": "float16"
+      },
+      "scorer": {
+        "name": "math-verify",
+        "version": "0.9.0",
+        "isolated_dependencies": true
+      }
+    },
+    "train": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_opd_28530_prompts",
+    "objective": "same corrected MiniLLM",
+    "max_length": 1536,
+    "max_prompt_length": 512,
+    "no_repeat_ngram_size": 0,
+    "lr": 1e-06,
+    "steps": 80,
+    "validation": [
+      0,
+      100
+    ],
+    "test": [
+      100,
+      200
+    ],
+    "dataset": "MATH",
+    "teacher_training": false
+  }
+}

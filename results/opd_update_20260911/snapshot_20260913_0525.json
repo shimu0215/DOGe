@@ -1,0 +1,1857 @@
+{
+  "time": 1789291248.9287033,
+  "last_account_scan_et": "2026-09-13 05:18:53",
+  "allocated_jobs": [
+    "22478",
+    "22479",
+    "22480",
+    "22481",
+    "23369",
+    "23370",
+    "23371",
+    "23372",
+    "28527",
+    "28528",
+    "28529",
+    "28530"
+  ],
+  "pending": [],
+  "workers": {
+    "results/generalization_20260913/base_quarter_22479_worker.json": {
+      "job": "22479",
+      "tag": "base_quarter_22479",
+      "start": 1789288238.9304864,
+      "complete": false,
+      "completed": [
+        "raw_native_val",
+        "original_teacher_val",
+        "sft2",
+        "sft_checkpoint-13_val",
+        "clean120"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:38:43 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789296715.0,
+      "device": {
+        "uuid": "GPU-a8c99944-94c9-11cd-0525-96f3423af497",
+        "visible": "0",
+        "step": "5"
+      },
+      "scope": "Unseen pretrained checkpoint, same Qwen family; NOT a cross-family proof. Teacher remains fixed and has no new negative examples.",
+      "download": {
+        "repo": "Qwen/Qwen2.5-0.5B",
+        "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+        "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+        "weights_downloaded": true,
+        "tokenizer_size": 151665,
+        "exact_teacher_vocab_mapping": true,
+        "chat_template_present": true,
+        "eos_token_id": 151643,
+        "pad_token_id": 151643
+      },
+      "phase": "clean_val40",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_quarter_22479_clean120_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_clean_val40",
+        "--split",
+        "train",
+        "--start",
+        "7000",
+        "--count",
+        "100"
+      ],
+      "child_pid": 689824,
+      "raw_gap": {
+        "raw_correct": 53,
+        "teacher_correct": 97,
+        "n": 100,
+        "format_note": "raw base completion versus teacher native chat; same questions and token budget"
+      },
+      "sft_protocol": {
+        "raw_weight_model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-0.5b-base",
+        "prepared_format": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_base_chat_format",
+        "data": "/scratch/wzhao20/DOGe-official/data/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/train.jsonl",
+        "data_sha256": "5d6727ad3083809cb882f57c9eb77987776816f801c763200451e0b0ce56ea7e",
+        "epochs": 0.25,
+        "learning_rate": 2e-05,
+        "selection": "Checkpoint nearest 40% on validation; ties earlier epoch. No test selection.",
+        "format_change": "Teacher ChatML tokenizer and stop configuration, identical token-to-ID mapping, no weight changes before SFT."
+      },
+      "sft_validation": {
+        "checkpoint-13": {
+          "correct": 24,
+          "epoch": 0.2694300518134715,
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_sft_checkpoint-13_val/gsm8k-results.json"
+        }
+      },
+      "selected_sft": {
+        "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_sft/checkpoint-13",
+        "epoch": 0.2694300518134715,
+        "correct": 24
+      }
+    },
+    "results/generalization_20260913/base_tenth_entropy4_23369_worker.json": {
+      "job": "23369",
+      "tag": "base_tenth_entropy4_23369",
+      "start": 1789290311.4868422,
+      "complete": false,
+      "completed": [
+        "defense40"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=23369 JobName=hold-1gpu-8h-c4m32-g36-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3602 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:59:23 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:05:48 EndTime=2026-09-13T08:05:48 Deadline=N/A PreemptEligibleTime=2026-09-13T00:06:48 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:05:48 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-gq-23369.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789301148.0,
+      "device": {
+        "uuid": "GPU-f4d4e65b-a3f0-c46c-2124-12cef395c78c",
+        "visible": "0",
+        "step": "5"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_23369_sft/checkpoint-5",
+        "teacher": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_dense_23371/model",
+        "teacher_manifest_sha256": "11e1dbb1640b0646f1d0e9911f82aa9d9a2a4413718f53429e79e3cb96751665",
+        "new_student_data_used": false,
+        "steps": 40,
+        "lr": 1e-06,
+        "objective": "same short corrected MiniLLM as completed clean arm",
+        "existing_clean": {
+          "n": 100,
+          "initial_correct": 17,
+          "candidate_correct": 41,
+          "initial": 0.17,
+          "accuracy": 0.41,
+          "paired": {
+            "delta_pp": 24.0,
+            "wrong_to_right": 31,
+            "right_to_wrong": 7,
+            "mcnemar_exact_p": 0.00011616700794547796,
+            "paired_bootstrap95_pp": [
+              13.0,
+              35.0
+            ]
+          }
+        },
+        "scope": "Adaptive new fixed teacher transfer; same Qwen family and heavily undertrained SFT initialization, not a broad robustness claim"
+      },
+      "phase": "defense_test100",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/base_tenth_entropy4_23369_defense40_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_tenth_entropy4_23369_defense_test100",
+        "--split",
+        "test",
+        "--start",
+        "1200",
+        "--count",
+        "100"
+      ],
+      "child_pid": 391089
+    },
+    "results/generalization_20260913/coder_high_entropy4_22481_worker.json": {
+      "job": "22481",
+      "tag": "coder_high_entropy4_22481",
+      "start": 1789291226.7672646,
+      "complete": false,
+      "completed": [],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22481 JobName=hold-1gpu-8h-c4m32-g35-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:05:51 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:14:35 EndTime=2026-09-13T07:14:35 Deadline=N/A PreemptEligibleTime=2026-09-12T23:15:35 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:14:35 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789298075.0,
+      "device": {
+        "uuid": "GPU-5f5c0036-6942-24bd-ed30-e097a1c4bdee",
+        "visible": "0",
+        "step": "6"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "teacher": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_dense_23371/model",
+        "teacher_manifest_sha256": "11e1dbb1640b0646f1d0e9911f82aa9d9a2a4413718f53429e79e3cb96751665",
+        "new_student_data_used": false,
+        "steps": 80,
+        "lr": 3e-06,
+        "objective": "same long unrestricted corrected MiniLLM as completed clean arm",
+        "existing_clean": {
+          "n": 100,
+          "initial_correct": 28,
+          "candidate_correct": 38,
+          "initial": 0.28,
+          "accuracy": 0.38,
+          "paired": {
+            "delta_pp": 10.0,
+            "wrong_to_right": 19,
+            "right_to_wrong": 9,
+            "mcnemar_exact_p": 0.08715855330228806,
+            "paired_bootstrap95_pp": [
+              0.0,
+              20.0
+            ]
+          }
+        },
+        "scope": "Adaptive new fixed teacher transfer; same Qwen family without project SFT, not a broad robustness claim"
+      },
+      "phase": "defense80",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_long_unrestricted.sh"
+      ],
+      "child_pid": 1112777
+    },
+    "results/generalization_20260913/coder_raw_high_28528_worker.json": {
+      "job": "28528",
+      "tag": "coder_raw_high_28528",
+      "start": 1789288236.6769283,
+      "complete": false,
+      "completed": [
+        "initial_val",
+        "smoke2",
+        "clean80",
+        "val40",
+        "val80",
+        "initial_test100",
+        "clean_test100"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=28528 JobName=hold-1gpu-8h-c4m32-g38-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=03:49:02 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu007 BatchHost=gpu007 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-cq-28528.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-cq-28528.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789303294.0,
+      "device": {
+        "uuid": "GPU-d1a6cb76-d866-5de8-cd07-ff11b2cc35c1",
+        "visible": "0",
+        "step": "5"
+      },
+      "phase": "defense80",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_long_unrestricted.sh"
+      ],
+      "child_pid": 1832385,
+      "project_sft_performed": false,
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "initial_correct": 36,
+        "objective": "minillm",
+        "steps": 80,
+        "lr": 3e-06,
+        "max_length": 1024,
+        "max_prompt_length": 256,
+        "no_repeat_ngram_size": 0,
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "top_k": 0,
+        "reason": "Remove default six-gram exclusion and increase available response budget from384 to768; actual training quality is tested, not assumed.",
+        "teacher_training": false
+      },
+      "validation": {
+        "40": {
+          "n": 100,
+          "initial_correct": 36,
+          "candidate_correct": 35,
+          "initial": 0.36,
+          "accuracy": 0.35,
+          "paired": {
+            "delta_pp": -1.0,
+            "wrong_to_right": 14,
+            "right_to_wrong": 15,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -11.0,
+              10.0
+            ]
+          },
+          "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_high_28528_clean80_opd/bs2-lr3e-06-G2-N1-NN1-lm1-len1024/pe1_rs0.5_nr8_ln_sr/40",
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_high_28528_val40/gsm8k-results.json"
+        },
+        "80": {
+          "n": 100,
+          "initial_correct": 36,
+          "candidate_correct": 46,
+          "initial": 0.36,
+          "accuracy": 0.46,
+          "paired": {
+            "delta_pp": 10.0,
+            "wrong_to_right": 19,
+            "right_to_wrong": 9,
+            "mcnemar_exact_p": 0.08715855330228806,
+            "paired_bootstrap95_pp": [
+              0.0,
+              20.0
+            ]
+          },
+          "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_high_28528_clean80_opd/bs2-lr3e-06-G2-N1-NN1-lm1-len1024/pe1_rs0.5_nr8_ln_sr/80",
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_high_28528_val80/gsm8k-results.json"
+        }
+      },
+      "selected_opd": {
+        "correct": 46,
+        "step": 80,
+        "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_high_28528_clean80_opd/bs2-lr3e-06-G2-N1-NN1-lm1-len1024/pe1_rs0.5_nr8_ln_sr/80",
+        "gain_pp": 10,
+        "mode": "minillm",
+        "lr": 3e-06
+      },
+      "clean_test": {
+        "n": 100,
+        "initial_correct": 28,
+        "candidate_correct": 38,
+        "initial": 0.28,
+        "accuracy": 0.38,
+        "paired": {
+          "delta_pp": 10.0,
+          "wrong_to_right": 19,
+          "right_to_wrong": 9,
+          "mcnemar_exact_p": 0.08715855330228806,
+          "paired_bootstrap95_pp": [
+            0.0,
+            20.0
+          ]
+        }
+      },
+      "defense_teacher": {
+        "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_tail_freq_anti6_anchor36_9916493/model",
+        "manifest_sha256": "376364b2e06b88e78d6a26ccd0bd34affb8c23c271393c4b59ed323ce838c25e",
+        "new_student_data_used": false
+      }
+    },
+    "results/generalization_20260913/coder_raw_short_22481_worker.json": {
+      "job": "22481",
+      "tag": "coder_raw_short_22481",
+      "start": 1789288236.710344,
+      "complete": true,
+      "completed": [
+        "initial_val",
+        "smoke2",
+        "clean80",
+        "val40",
+        "val80",
+        "initial_test100",
+        "clean_test100"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22481 JobName=hold-1gpu-8h-c4m32-g35-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:16:01 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:14:35 EndTime=2026-09-13T07:14:35 Deadline=N/A PreemptEligibleTime=2026-09-12T23:15:35 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:14:35 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789298075.0,
+      "device": {
+        "uuid": "GPU-5f5c0036-6942-24bd-ed30-e097a1c4bdee",
+        "visible": "0",
+        "step": "5"
+      },
+      "phase": "complete",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/evaluate_matched_stops.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_short_22481_clean_test100",
+        "--split",
+        "test",
+        "--start",
+        "1200",
+        "--count",
+        "100"
+      ],
+      "child_pid": 1111376,
+      "project_sft_performed": false,
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/qwen2.5-coder-0.5b-instruct",
+        "initial_correct": 36,
+        "objective": "minillm",
+        "steps": 80,
+        "lr": 1e-06,
+        "max_length": 640,
+        "max_prompt_length": 256,
+        "no_repeat_ngram_size": 6,
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "top_k": 0,
+        "reason": "Raw Coder under original short640/sixgram6 MiniLLM, same heldout and matched stops; independent baseline.",
+        "teacher_training": false
+      },
+      "validation": {
+        "40": {
+          "n": 100,
+          "initial_correct": 36,
+          "candidate_correct": 39,
+          "initial": 0.36,
+          "accuracy": 0.39,
+          "paired": {
+            "delta_pp": 3.0,
+            "wrong_to_right": 16,
+            "right_to_wrong": 13,
+            "mcnemar_exact_p": 0.711071103811264,
+            "paired_bootstrap95_pp": [
+              -8.0,
+              14.000000000000002
+            ]
+          },
+          "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_short_22481_val40/gsm8k-results.json"
+        },
+        "80": {
+          "n": 100,
+          "initial_correct": 36,
+          "candidate_correct": 37,
+          "initial": 0.36,
+          "accuracy": 0.37,
+          "paired": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 15,
+            "right_to_wrong": 14,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -10.0,
+              11.0
+            ]
+          },
+          "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/80",
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/coder_raw_short_22481_val80/gsm8k-results.json"
+        }
+      },
+      "selected_opd": {
+        "correct": 39,
+        "step": 40,
+        "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/coder_raw_short_22481_clean80_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/40",
+        "gain_pp": 3,
+        "mode": "minillm",
+        "lr": 1e-06
+      },
+      "clean_test": {
+        "n": 100,
+        "initial_correct": 28,
+        "candidate_correct": 28,
+        "initial": 0.28,
+        "accuracy": 0.28,
+        "paired": {
+          "delta_pp": 0.0,
+          "wrong_to_right": 10,
+          "right_to_wrong": 10,
+          "mcnemar_exact_p": 1.0,
+          "paired_bootstrap95_pp": [
+            -9.0,
+            9.0
+          ]
+        }
+      },
+      "stopped": "No positive clean test, no test reselection",
+      "end": 1789290480.1267653
+    },
+    "results/generalization_20260913/math_opd_28530_worker.json": {
+      "job": "28530",
+      "tag": "math_opd_28530",
+      "start": 1789290500.7300272,
+      "complete": false,
+      "completed": [
+        "prepare",
+        "initial_val100",
+        "initial_val100_score",
+        "smoke2"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=28530 JobName=hold-1gpu-8h-c4m32-g39-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:25:40 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:42:40 EndTime=2026-09-13T08:42:40 Deadline=N/A PreemptEligibleTime=2026-09-13T00:43:40 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:42:40 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu025 BatchHost=gpu025 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-cq-28530.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789303360.0,
+      "device": {
+        "uuid": "GPU-daf511d8-e962-9aed-37e9-4ccce2230390",
+        "visible": "0",
+        "step": "7"
+      },
+      "phase": "clean80",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/opd_math.sh"
+      ],
+      "child_pid": 1914982,
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "initial_correct": 37,
+        "original_teacher_headroom_reference": {
+          "correct": 76,
+          "n": 100,
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_headroom_28530_original_teacher/scored.json",
+          "generation": {
+            "do_sample": false,
+            "max_new_tokens": 1024,
+            "repetition_penalty": 1.0,
+            "dtype": "float16"
+          },
+          "scorer": {
+            "name": "math-verify",
+            "version": "0.9.0",
+            "isolated_dependencies": true
+          }
+        },
+        "train": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/math_opd_28530_prompts",
+        "objective": "same corrected MiniLLM",
+        "max_length": 1536,
+        "max_prompt_length": 512,
+        "no_repeat_ngram_size": 0,
+        "lr": 1e-06,
+        "steps": 80,
+        "validation": [
+          0,
+          100
+        ],
+        "test": [
+          100,
+          200
+        ],
+        "dataset": "MATH",
+        "teacher_training": false
+      }
+    },
+    "results/generalization_20260913/smollm17_textkd_22480_worker.json": {
+      "job": "22480",
+      "tag": "smollm17_textkd_22480",
+      "start": 1789288470.0340052,
+      "complete": true,
+      "completed": [
+        "smoke2",
+        "clean80",
+        "val40",
+        "val80"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22480 JobName=hold-1gpu-8h-c4m32-g35-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:18:53 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789298137.0,
+      "device": {
+        "uuid": "GPU-c7054e53-2ace-e243-47c6-5c43e7f3cb9c",
+        "visible": "0",
+        "step": "5"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm2-1.7b-instruct",
+        "initial_correct": 60,
+        "teacher_correct": 97,
+        "project_sft_performed": false,
+        "reason": "Use stronger raw student instead of degraded SFT44 checkpoint; native independent-family headroom.",
+        "objective": "Online student-prefix sampled-teacher text continuation imitation, not tokenwise KL or MiniLLM; no unrelated-vocabulary alignment.",
+        "steps": 80,
+        "lr": 3e-06,
+        "batch": 4,
+        "teacher_tokens": 128
+      },
+      "phase": "complete",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_clean80/checkpoint-80",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_val80",
+        "--split",
+        "train",
+        "--start",
+        "7000",
+        "--count",
+        "100"
+      ],
+      "child_pid": 2007972,
+      "validation": {
+        "40": {
+          "n": 100,
+          "initial_correct": 60,
+          "candidate_correct": 60,
+          "initial": 0.6,
+          "accuracy": 0.6,
+          "paired": {
+            "delta_pp": 0.0,
+            "wrong_to_right": 11,
+            "right_to_wrong": 11,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -9.0,
+              9.0
+            ]
+          },
+          "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_clean80/checkpoint-40",
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_val40/gsm8k-results.json"
+        },
+        "80": {
+          "n": 100,
+          "initial_correct": 60,
+          "candidate_correct": 53,
+          "initial": 0.6,
+          "accuracy": 0.53,
+          "paired": {
+            "delta_pp": -7.000000000000001,
+            "wrong_to_right": 10,
+            "right_to_wrong": 17,
+            "mcnemar_exact_p": 0.24778856337070465,
+            "paired_bootstrap95_pp": [
+              -17.0,
+              3.0
+            ]
+          },
+          "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_clean80/checkpoint-80",
+          "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_val80/gsm8k-results.json"
+        }
+      },
+      "selected_opd": {
+        "correct": 60,
+        "step": 40,
+        "model": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_22480_clean80/checkpoint-40",
+        "gain_pp": 0
+      },
+      "stopped": "No +3 validation gain; no cross-family defense claim",
+      "end": 1789290446.9339194
+    },
+    "results/generalization_20260913/smollm17_textkd_low_22480_worker.json": {
+      "job": "22480",
+      "tag": "smollm17_textkd_low_22480",
+      "start": 1789291226.2927938,
+      "complete": false,
+      "completed": [],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22480 JobName=hold-1gpu-8h-c4m32-g35-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:04:49 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-gq-22480.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789298137.0,
+      "device": {
+        "uuid": "GPU-c7054e53-2ace-e243-47c6-5c43e7f3cb9c",
+        "visible": "0",
+        "step": "6"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm2-1.7b-instruct",
+        "initial_correct": 60,
+        "teacher_correct": 97,
+        "project_sft_performed": false,
+        "reason": "Use stronger raw student instead of degraded SFT44 checkpoint; native independent-family headroom.",
+        "objective": "Online student-prefix sampled-teacher text continuation imitation, not tokenwise KL or MiniLLM; no unrelated-vocabulary alignment.",
+        "steps": 80,
+        "lr": 1e-06,
+        "batch": 4,
+        "teacher_tokens": 128
+      },
+      "phase": "smoke2",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/generalization_20260913/text_continuation_train.py",
+        "--student",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm2-1.7b-instruct",
+        "--teacher",
+        "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/smollm17_textkd_low_22480_smoke2",
+        "--steps",
+        "2",
+        "--save-every",
+        "2",
+        "--batch",
+        "2",
+        "--teacher-tokens",
+        "64",
+        "--lr",
+        "1e-6"
+      ],
+      "child_pid": 2069184
+    },
+    "results/opd_update_20260911/oracle_uniform99_all_23372_worker.json": {
+      "start": 1789290884.7708945,
+      "job": "23372",
+      "complete": false,
+      "completed": [
+        "target_checks",
+        "smoke_external_student"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=23372 JobName=hold-1gpu-8h-c4m32-g37-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:57:33 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:17:11 EndTime=2026-09-13T07:17:11 Deadline=N/A PreemptEligibleTime=2026-09-12T23:18:11 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:17:11 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-cq-23372.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "5",
+        "uuid": "GPU-37a8069b-922f-4de2-143c-541de7c81a73"
+      },
+      "phase": "external_student_minillm",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/oracle_uniform99_opd.sh"
+      ],
+      "child_pid": 689394,
+      "teacher_training_performed": false,
+      "eligible_standalone_defense": false,
+      "oracle_target": "all",
+      "scope": "Eligible uniform mixture up to99percent, preserving protected probabilities and total mass with originalargmax guard on known student-source trajectories, sparse8 or all eligible process positions, both reward and conditional KL. No fitting or preservation losses, no teacher training; not a standalone defense or mathematical upper bound.",
+      "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      },
+      "smoke_oracle_validation": {
+        "mode": "all",
+        "scope": "Eligible label smoothing towards uniform with epsilon up to.99, protected probability and original argmax guard, known-student-source direct target diagnostic, sparse or all eligible process positions. No trained teacher/source detector or standalone defense claim.",
+        "teacher_training_performed": false,
+        "student_parameter_signal_for_teacher": false,
+        "calls": {
+          "reward": 4,
+          "regularizer": 4
+        },
+        "selected_positions": {
+          "reward": 2260,
+          "regularizer": 2260
+        },
+        "rows": {
+          "reward": 8,
+          "regularizer": 8
+        },
+        "target_properties_checked": true,
+        "effective_epsilon": {
+          "reward": {
+            "total": 2147.0170288085938,
+            "n": 2260
+          },
+          "regularizer": {
+            "total": 2147.0170288085938,
+            "n": 2260
+          }
+        }
+      }
+    },
+    "results/opd_update_20260911/static_entropy4_anchor72_23370_worker.json": {
+      "start": 1789288235.5264935,
+      "job": "23370",
+      "complete": false,
+      "completed": [
+        "smoke",
+        "train",
+        "teacher_old200",
+        "teacher_new200",
+        "teacher_raw128",
+        "teacher_extra200"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=23370 JobName=hold-1gpu-8h-c4m32-g36-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3597 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=05:14:58 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-12T23:15:37 EndTime=2026-09-13T07:15:37 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:37 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:37 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu002 BatchHost=gpu002 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g36.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-cq-23370.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g36-cq-23370.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "5",
+        "uuid": "GPU-b3ce6d89-5d78-cd18-3856-7da5231708ab"
+      },
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. entropy4 all-vocabulary gaps.25 target ramp anti1 anchor72 answer4. No student parameter signals; fixed offline texts only.",
+      "phase": "external_student_minillm",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+      ],
+      "child_pid": 1124905,
+      "teacher_results": {
+        "old200": {
+          "greedy": {
+            "original": 0.9,
+            "candidate": 0.925,
+            "paired": {
+              "delta_pp": 2.5,
+              "wrong_to_right": 7,
+              "right_to_wrong": 2,
+              "mcnemar_exact_p": 0.1796875,
+              "paired_bootstrap95_pp": [
+                -0.5,
+                5.5
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.905,
+            "candidate": 0.915,
+            "paired": {
+              "delta_pp": 1.0,
+              "wrong_to_right": 8,
+              "right_to_wrong": 6,
+              "mcnemar_exact_p": 0.79052734375,
+              "paired_bootstrap95_pp": [
+                -2.5,
+                4.5
+              ]
+            }
+          }
+        },
+        "new200": {
+          "greedy": {
+            "original": 0.875,
+            "candidate": 0.89,
+            "paired": {
+              "delta_pp": 1.5,
+              "wrong_to_right": 6,
+              "right_to_wrong": 3,
+              "mcnemar_exact_p": 0.5078125,
+              "paired_bootstrap95_pp": [
+                -1.5,
+                4.5
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.865,
+            "candidate": 0.885,
+            "paired": {
+              "delta_pp": 2.0,
+              "wrong_to_right": 9,
+              "right_to_wrong": 5,
+              "mcnemar_exact_p": 0.4239501953125,
+              "paired_bootstrap95_pp": [
+                -1.5,
+                5.5
+              ]
+            }
+          }
+        }
+      },
+      "teacher_raw128": {
+        "original": 0.9375,
+        "candidate": 0.8828125,
+        "paired": {
+          "delta_pp": -5.46875,
+          "wrong_to_right": 4,
+          "right_to_wrong": 11,
+          "mcnemar_exact_p": 0.11846923828125,
+          "paired_bootstrap95_pp": [
+            -11.71875,
+            0.78125
+          ]
+        }
+      },
+      "raw_point_tolerance_pass": false,
+      "quality_protocol": "User-revised standard per-slice teacher screen; raw128 supplementary, not a veto",
+      "teacher_point_tolerance_pass": true,
+      "teacher_extra200": {
+        "greedy": {
+          "original": 0.935,
+          "candidate": 0.94,
+          "paired": {
+            "delta_pp": 0.5,
+            "wrong_to_right": 3,
+            "right_to_wrong": 2,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -1.5,
+              2.5
+            ]
+          }
+        },
+        "sampling": {
+          "original": 0.92,
+          "candidate": 0.925,
+          "paired": {
+            "delta_pp": 0.5,
+            "wrong_to_right": 4,
+            "right_to_wrong": 3,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -2.0,
+              3.0
+            ]
+          }
+        }
+      },
+      "extra_point_tolerance_pass": true,
+      "extra_quality_scope": "Supplementary check on previously used extra200; retain failures. Main400 admission unchanged.",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      }
+    },
+    "results/opd_update_20260911/static_entropy4_mix14b_23371_worker.json": {
+      "start": 1789290687.4170964,
+      "job": "23371",
+      "complete": false,
+      "completed": [
+        "prepare_context",
+        "smoke"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=23371 JobName=hold-1gpu-8h-c4m32-g37-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3603 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:56:17 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:56:18 EligibleTime=2026-09-12T22:56:18 AccrueTime=2026-09-12T22:56:18 StartTime=2026-09-13T00:15:10 EndTime=2026-09-13T08:15:10 Deadline=N/A PreemptEligibleTime=2026-09-13T00:16:10 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:15:10 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3599313 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu023 BatchHost=gpu023 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g37.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g37-gq-23371.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "5",
+        "uuid": "GPU-f9eb0558-9328-c940-8173-8dcc177f880d"
+      },
+      "phase": "train",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_static_entropy4.py",
+        "--teacher",
+        "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "--context",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_mix14b_23371_context",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_mix14b_23371",
+        "--steps",
+        "64",
+        "--rl-every",
+        "1",
+        "--anti-weight",
+        "1",
+        "--anchor-weight",
+        "72",
+        "--answer-weight",
+        "4",
+        "--rl-weight",
+        "1",
+        "--warmup",
+        "16",
+        "--ramp-end",
+        "48",
+        "--tail-count",
+        "16",
+        "--gap-scale",
+        "0.25",
+        "--target-ramp",
+        "--negative-positions",
+        "32"
+      ],
+      "child_pid": 2026553,
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. entropy4 all-vocabulary gaps.25 target ramp anti1 anchor72 answer4. Half of negative text rows replaced by existing14B correct CoTs; no generator weights/logits loaded, no evaluated Base/Coder/Smol negative texts."
+    },
+    "results/opd_update_20260911/static_entropy4_pcgrad72_28527_worker.json": {
+      "start": 1789291225.0666964,
+      "job": "28527",
+      "complete": false,
+      "completed": [
+        "pcgrad_checks"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:38:51 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "5",
+        "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9"
+      },
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. All-eligible gap.25 no reversal, target ramp anti1 anchor72 answer4 RL1, symmetric PCGrad. No student parameter signals; fixed offline texts only.",
+      "phase": "smoke",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_static_entropy4_pcgrad.py",
+        "--teacher",
+        "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "--context",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_mixctx_top2_9870980_context",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad72_28527_smoke",
+        "--steps",
+        "2",
+        "--rl-every",
+        "1",
+        "--anti-weight",
+        "1",
+        "--anchor-weight",
+        "72",
+        "--answer-weight",
+        "4",
+        "--rl-weight",
+        "1",
+        "--warmup",
+        "16",
+        "--ramp-end",
+        "48",
+        "--tail-count",
+        "16",
+        "--gap-scale",
+        "0.25",
+        "--target-ramp",
+        "--negative-positions",
+        "32",
+        "--warmup",
+        "0",
+        "--ramp-end",
+        "1",
+        "--rl-every",
+        "1",
+        "--max-tokens",
+        "192"
+      ],
+      "child_pid": 391453
+    },
+    "results/opd_update_20260911/static_entropy4_pcgrad_22478_worker.json": {
+      "start": 1789285435.6119084,
+      "job": "22478",
+      "complete": true,
+      "completed": [
+        "pcgrad_checks",
+        "smoke",
+        "train",
+        "teacher_old200",
+        "teacher_new200",
+        "teacher_raw128",
+        "teacher_extra200",
+        "external_student_minillm",
+        "student_test0",
+        "student_test1000"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=22478 JobName=hold-1gpu-8h-c4m32-g34-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:28:49 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T23:15:06 EndTime=2026-09-13T07:15:06 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:06 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:06 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu011 BatchHost=gpu011 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "4",
+        "uuid": "GPU-5597ad5f-bf36-02b5-b332-c18284fdf6d0"
+      },
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. All-eligible gap.25 no reversal, target ramp anti1 anchor36 answer4, symmetric PCGrad. No student parameter signals; fixed offline texts only.",
+      "phase": "complete",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_pcgrad_22478_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad_22478_student_test1000",
+        "--split",
+        "test",
+        "--start",
+        "1000",
+        "--count",
+        "200"
+      ],
+      "child_pid": 4194183,
+      "teacher_results": {
+        "old200": {
+          "greedy": {
+            "original": 0.9,
+            "candidate": 0.905,
+            "paired": {
+              "delta_pp": 0.5,
+              "wrong_to_right": 5,
+              "right_to_wrong": 4,
+              "mcnemar_exact_p": 1.0,
+              "paired_bootstrap95_pp": [
+                -2.5,
+                3.5000000000000004
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.905,
+            "candidate": 0.905,
+            "paired": {
+              "delta_pp": 0.0,
+              "wrong_to_right": 7,
+              "right_to_wrong": 7,
+              "mcnemar_exact_p": 1.0,
+              "paired_bootstrap95_pp": [
+                -4.0,
+                3.5000000000000004
+              ]
+            }
+          }
+        },
+        "new200": {
+          "greedy": {
+            "original": 0.875,
+            "candidate": 0.895,
+            "paired": {
+              "delta_pp": 2.0,
+              "wrong_to_right": 6,
+              "right_to_wrong": 2,
+              "mcnemar_exact_p": 0.2890625,
+              "paired_bootstrap95_pp": [
+                -0.5,
+                5.0
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.865,
+            "candidate": 0.88,
+            "paired": {
+              "delta_pp": 1.5,
+              "wrong_to_right": 6,
+              "right_to_wrong": 3,
+              "mcnemar_exact_p": 0.5078125,
+              "paired_bootstrap95_pp": [
+                -1.5,
+                4.5
+              ]
+            }
+          }
+        }
+      },
+      "teacher_raw128": {
+        "original": 0.9375,
+        "candidate": 0.8671875,
+        "paired": {
+          "delta_pp": -7.03125,
+          "wrong_to_right": 2,
+          "right_to_wrong": 11,
+          "mcnemar_exact_p": 0.0224609375,
+          "paired_bootstrap95_pp": [
+            -12.5,
+            -1.5625
+          ]
+        }
+      },
+      "raw_point_tolerance_pass": false,
+      "quality_protocol": "User-revised standard per-slice teacher screen; raw128 supplementary, not a veto",
+      "teacher_point_tolerance_pass": true,
+      "teacher_extra200": {
+        "greedy": {
+          "original": 0.935,
+          "candidate": 0.945,
+          "paired": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 4,
+            "right_to_wrong": 2,
+            "mcnemar_exact_p": 0.6875,
+            "paired_bootstrap95_pp": [
+              -1.5,
+              3.5000000000000004
+            ]
+          }
+        },
+        "sampling": {
+          "original": 0.92,
+          "candidate": 0.93,
+          "paired": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 6,
+            "right_to_wrong": 4,
+            "mcnemar_exact_p": 0.75390625,
+            "paired_bootstrap95_pp": [
+              -2.0,
+              4.5
+            ]
+          }
+        }
+      },
+      "extra_point_tolerance_pass": true,
+      "extra_quality_scope": "Supplementary check on previously used extra200; retain failures. Main400 admission unchanged.",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      },
+      "student_results": {
+        "0": {
+          "versus_clean_opd": {
+            "original": 0.555,
+            "candidate": 0.455,
+            "paired": {
+              "delta_pp": -10.0,
+              "wrong_to_right": 14,
+              "right_to_wrong": 34,
+              "mcnemar_exact_p": 0.005515201485501109,
+              "paired_bootstrap95_pp": [
+                -17.0,
+                -3.5000000000000004
+              ]
+            }
+          },
+          "versus_sft": {
+            "original": 0.465,
+            "candidate": 0.455,
+            "paired": {
+              "delta_pp": -1.0,
+              "wrong_to_right": 25,
+              "right_to_wrong": 27,
+              "mcnemar_exact_p": 0.8898839652765371,
+              "paired_bootstrap95_pp": [
+                -8.0,
+                6.0
+              ]
+            }
+          }
+        },
+        "1000": {
+          "versus_clean_opd": {
+            "original": 0.495,
+            "candidate": 0.385,
+            "paired": {
+              "delta_pp": -11.0,
+              "wrong_to_right": 9,
+              "right_to_wrong": 31,
+              "mcnemar_exact_p": 0.0006795482549932785,
+              "paired_bootstrap95_pp": [
+                -17.0,
+                -5.0
+              ]
+            }
+          },
+          "versus_sft": {
+            "original": 0.41,
+            "candidate": 0.385,
+            "paired": {
+              "delta_pp": -2.5,
+              "wrong_to_right": 18,
+              "right_to_wrong": 23,
+              "mcnemar_exact_p": 0.5327092552361137,
+              "paired_bootstrap95_pp": [
+                -8.5,
+                3.5000000000000004
+              ]
+            }
+          }
+        }
+      },
+      "end": 1789290595.4460638
+    },
+    "results/opd_update_20260911/static_gap01_anchor72_28527_worker.json": {
+      "start": 1789284945.903688,
+      "job": "28527",
+      "complete": true,
+      "completed": [
+        "smoke",
+        "train",
+        "teacher_old200",
+        "teacher_new200",
+        "teacher_raw128",
+        "teacher_extra200",
+        "external_student_minillm",
+        "student_test0",
+        "student_test1000"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=02:54:11 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "3",
+        "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9"
+      },
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. count16 gap.01 target ramp anti2 anchor72 answer4. No student parameter signals; fixed offline texts only.",
+      "phase": "complete",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_gap01_anchor72_28527_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_anchor72_28527_student_test1000",
+        "--split",
+        "test",
+        "--start",
+        "1000",
+        "--count",
+        "200"
+      ],
+      "child_pid": 388711,
+      "teacher_results": {
+        "old200": {
+          "greedy": {
+            "original": 0.9,
+            "candidate": 0.915,
+            "paired": {
+              "delta_pp": 1.5,
+              "wrong_to_right": 7,
+              "right_to_wrong": 4,
+              "mcnemar_exact_p": 0.548828125,
+              "paired_bootstrap95_pp": [
+                -1.5,
+                5.0
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.905,
+            "candidate": 0.9,
+            "paired": {
+              "delta_pp": -0.5,
+              "wrong_to_right": 8,
+              "right_to_wrong": 9,
+              "mcnemar_exact_p": 1.0,
+              "paired_bootstrap95_pp": [
+                -4.5,
+                3.5000000000000004
+              ]
+            }
+          }
+        },
+        "new200": {
+          "greedy": {
+            "original": 0.875,
+            "candidate": 0.885,
+            "paired": {
+              "delta_pp": 1.0,
+              "wrong_to_right": 3,
+              "right_to_wrong": 1,
+              "mcnemar_exact_p": 0.625,
+              "paired_bootstrap95_pp": [
+                -1.0,
+                3.0
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.865,
+            "candidate": 0.885,
+            "paired": {
+              "delta_pp": 2.0,
+              "wrong_to_right": 8,
+              "right_to_wrong": 4,
+              "mcnemar_exact_p": 0.3876953125,
+              "paired_bootstrap95_pp": [
+                -1.5,
+                5.5
+              ]
+            }
+          }
+        }
+      },
+      "teacher_raw128": {
+        "original": 0.9375,
+        "candidate": 0.8984375,
+        "paired": {
+          "delta_pp": -3.90625,
+          "wrong_to_right": 3,
+          "right_to_wrong": 8,
+          "mcnemar_exact_p": 0.2265625,
+          "paired_bootstrap95_pp": [
+            -9.375,
+            0.78125
+          ]
+        }
+      },
+      "raw_point_tolerance_pass": false,
+      "quality_protocol": "User-revised standard per-slice teacher screen; raw128 supplementary, not a veto",
+      "teacher_point_tolerance_pass": true,
+      "teacher_extra200": {
+        "greedy": {
+          "original": 0.935,
+          "candidate": 0.945,
+          "paired": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 5,
+            "right_to_wrong": 3,
+            "mcnemar_exact_p": 0.7265625,
+            "paired_bootstrap95_pp": [
+              -1.5124999999999957,
+              4.0
+            ]
+          }
+        },
+        "sampling": {
+          "original": 0.92,
+          "candidate": 0.92,
+          "paired": {
+            "delta_pp": 0.0,
+            "wrong_to_right": 5,
+            "right_to_wrong": 5,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -3.0,
+              3.0
+            ]
+          }
+        }
+      },
+      "extra_point_tolerance_pass": true,
+      "extra_quality_scope": "Supplementary check on previously used extra200; retain failures. Main400 admission unchanged.",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      },
+      "student_results": {
+        "0": {
+          "versus_clean_opd": {
+            "original": 0.555,
+            "candidate": 0.44,
+            "paired": {
+              "delta_pp": -11.5,
+              "wrong_to_right": 10,
+              "right_to_wrong": 33,
+              "mcnemar_exact_p": 0.0006061066312668117,
+              "paired_bootstrap95_pp": [
+                -17.5,
+                -5.5
+              ]
+            }
+          },
+          "versus_sft": {
+            "original": 0.465,
+            "candidate": 0.44,
+            "paired": {
+              "delta_pp": -2.5,
+              "wrong_to_right": 27,
+              "right_to_wrong": 32,
+              "mcnemar_exact_p": 0.6029232012571503,
+              "paired_bootstrap95_pp": [
+                -10.0,
+                5.0
+              ]
+            }
+          }
+        },
+        "1000": {
+          "versus_clean_opd": {
+            "original": 0.495,
+            "candidate": 0.425,
+            "paired": {
+              "delta_pp": -7.000000000000001,
+              "wrong_to_right": 16,
+              "right_to_wrong": 30,
+              "mcnemar_exact_p": 0.054076031858869555,
+              "paired_bootstrap95_pp": [
+                -13.5,
+                -0.5
+              ]
+            }
+          },
+          "versus_sft": {
+            "original": 0.41,
+            "candidate": 0.425,
+            "paired": {
+              "delta_pp": 1.5,
+              "wrong_to_right": 23,
+              "right_to_wrong": 20,
+              "mcnemar_exact_p": 0.7607916425613439,
+              "paired_bootstrap95_pp": [
+                -5.0,
+                8.0
+              ]
+            }
+          }
+        }
+      },
+      "end": 1789289990.0220335
+    },
+    "results/opd_update_20260911/static_gap01_last4_28529_worker.json": {
+      "start": 1789290310.7068672,
+      "job": "28529",
+      "complete": false,
+      "completed": [
+        "smoke",
+        "train"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=28529 JobName=hold-1gpu-8h-c4m32-g39-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:23:36 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-gq-28529.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-gq-28529.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "4",
+        "uuid": "GPU-e70ee1d6-21e0-11e6-ec61-5ee3b691bb77"
+      },
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. count16 gap.01 target ramp anti2 anchor72 answer4. No student parameter signals; fixed offline texts only.",
+      "phase": "teacher_old200",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/evaluate_plain.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_last4_28529/model",
+        "--examples",
+        "/scratch/wzhao20/DOGe-official/outputs/qwen2_5_0p5b_instruct_sft_14b_cot_gsm1000_correctonly_20260908/sft_gsm_test200/gsm8k-results.json",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_last4_28529_teacher_old200",
+        "--limit",
+        "200",
+        "--modes",
+        "greedy",
+        "sampling"
+      ],
+      "child_pid": 390898
+    },
+    "results/opd_update_20260911/static_gap01_pcgrad_28529_worker.json": {
+      "start": 1789284945.9032013,
+      "job": "28529",
+      "complete": true,
+      "completed": [
+        "pcgrad_checks",
+        "smoke",
+        "train",
+        "teacher_old200",
+        "teacher_new200",
+        "teacher_raw128",
+        "teacher_extra200",
+        "external_student_minillm",
+        "student_test0",
+        "student_test1000"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=28529 JobName=hold-1gpu-8h-c4m32-g39-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=02:54:11 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g39.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-gq-28529.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g39-gq-28529.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "3",
+        "uuid": "GPU-e70ee1d6-21e0-11e6-ec61-5ee3b691bb77"
+      },
+      "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. count16 gap.01 target ramp anti2 anchor36 answer4. No student parameter signals; fixed offline texts only.",
+      "phase": "complete",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_gap01_pcgrad_28529_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_pcgrad_28529_student_test1000",
+        "--split",
+        "test",
+        "--start",
+        "1000",
+        "--count",
+        "200"
+      ],
+      "child_pid": 388871,
+      "teacher_results": {
+        "old200": {
+          "greedy": {
+            "original": 0.9,
+            "candidate": 0.9,
+            "paired": {
+              "delta_pp": 0.0,
+              "wrong_to_right": 5,
+              "right_to_wrong": 5,
+              "mcnemar_exact_p": 1.0,
+              "paired_bootstrap95_pp": [
+                -3.0,
+                3.0
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.905,
+            "candidate": 0.9,
+            "paired": {
+              "delta_pp": -0.5,
+              "wrong_to_right": 8,
+              "right_to_wrong": 9,
+              "mcnemar_exact_p": 1.0,
+              "paired_bootstrap95_pp": [
+                -4.5,
+                3.5000000000000004
+              ]
+            }
+          }
+        },
+        "new200": {
+          "greedy": {
+            "original": 0.875,
+            "candidate": 0.89,
+            "paired": {
+              "delta_pp": 1.5,
+              "wrong_to_right": 5,
+              "right_to_wrong": 2,
+              "mcnemar_exact_p": 0.453125,
+              "paired_bootstrap95_pp": [
+                -1.0,
+                4.5
+              ]
+            }
+          },
+          "sampling": {
+            "original": 0.865,
+            "candidate": 0.865,
+            "paired": {
+              "delta_pp": 0.0,
+              "wrong_to_right": 7,
+              "right_to_wrong": 7,
+              "mcnemar_exact_p": 1.0,
+              "paired_bootstrap95_pp": [
+                -3.5000000000000004,
+                3.5000000000000004
+              ]
+            }
+          }
+        }
+      },
+      "teacher_raw128": {
+        "original": 0.9375,
+        "candidate": 0.859375,
+        "paired": {
+          "delta_pp": -7.8125,
+          "wrong_to_right": 1,
+          "right_to_wrong": 11,
+          "mcnemar_exact_p": 0.00634765625,
+          "paired_bootstrap95_pp": [
+            -13.28125,
+            -3.125
+          ]
+        }
+      },
+      "raw_point_tolerance_pass": false,
+      "quality_protocol": "User-revised standard per-slice teacher screen; raw128 supplementary, not a veto",
+      "teacher_point_tolerance_pass": true,
+      "teacher_extra200": {
+        "greedy": {
+          "original": 0.935,
+          "candidate": 0.945,
+          "paired": {
+            "delta_pp": 1.0,
+            "wrong_to_right": 4,
+            "right_to_wrong": 2,
+            "mcnemar_exact_p": 0.6875,
+            "paired_bootstrap95_pp": [
+              -1.5,
+              3.5000000000000004
+            ]
+          }
+        },
+        "sampling": {
+          "original": 0.92,
+          "candidate": 0.915,
+          "paired": {
+            "delta_pp": -0.5,
+            "wrong_to_right": 2,
+            "right_to_wrong": 3,
+            "mcnemar_exact_p": 1.0,
+            "paired_bootstrap95_pp": [
+              -2.5,
+              1.5
+            ]
+          }
+        }
+      },
+      "extra_point_tolerance_pass": true,
+      "extra_quality_scope": "Supplementary check on previously used extra200; retain failures. Main400 admission unchanged.",
+      "external_evaluation_protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+        "objective": "corrected_minillm",
+        "lr": 1e-06,
+        "seed": 10,
+        "actual_updates": 120,
+        "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
+      },
+      "student_results": {
+        "0": {
+          "versus_clean_opd": {
+            "original": 0.555,
+            "candidate": 0.485,
+            "paired": {
+              "delta_pp": -7.000000000000001,
+              "wrong_to_right": 13,
+              "right_to_wrong": 27,
+              "mcnemar_exact_p": 0.03847730828420026,
+              "paired_bootstrap95_pp": [
+                -13.0,
+                -1.0
+              ]
+            }
+          },
+          "versus_sft": {
+            "original": 0.465,
+            "candidate": 0.485,
+            "paired": {
+              "delta_pp": 2.0,
+              "wrong_to_right": 28,
+              "right_to_wrong": 24,
+              "mcnemar_exact_p": 0.6778086391424605,
+              "paired_bootstrap95_pp": [
+                -5.0,
+                9.0
+              ]
+            }
+          }
+        },
+        "1000": {
+          "versus_clean_opd": {
+            "original": 0.495,
+            "candidate": 0.45,
+            "paired": {
+              "delta_pp": -4.5,
+              "wrong_to_right": 18,
+              "right_to_wrong": 27,
+              "mcnemar_exact_p": 0.23269319190831084,
+              "paired_bootstrap95_pp": [
+                -11.0,
+                2.0
+              ]
+            }
+          },
+          "versus_sft": {
+            "original": 0.41,
+            "candidate": 0.45,
+            "paired": {
+              "delta_pp": 4.0,
+              "wrong_to_right": 28,
+              "right_to_wrong": 20,
+              "mcnemar_exact_p": 0.31232680747326924,
+              "paired_bootstrap95_pp": [
+                -3.0,
+                10.5
+              ]
+            }
+          }
+        }
+      },
+      "end": 1789290072.516496
+    },
+    "results/opd_update_20260911/static_repair_extension_entropy4pcgrad_22478_worker.json": {
+      "start": 1789291225.0330107,
+      "job": "22478",
+      "complete": false,
+      "completed": [],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=22478 JobName=hold-1gpu-8h-c4m32-g34-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:05:19 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T23:15:06 EndTime=2026-09-13T07:15:06 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:06 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:06 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu011 BatchHost=gpu011 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "5",
+        "uuid": "GPU-5597ad5f-bf36-02b5-b332-c18284fdf6d0"
+      },
+      "training_performed": false,
+      "protocol": "Budgeted fixed independent student extra200 and extra400, unchanged evaluation. No teacher evaluation in this worker; skipped phases explicit, adaptive exploratory followup.",
+      "sources": [
+        [
+          "entropy4pcgrad",
+          "static_entropy4_pcgrad_22478"
+        ]
+      ],
+      "phase": "entropy4pcgrad_student_test200",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_entropy4_pcgrad_22478_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_entropy4pcgrad_22478_entropy4pcgrad_student_test200",
+        "--split",
+        "test",
+        "--start",
+        "200",
+        "--count",
+        "200"
+      ],
+      "child_pid": 6775
+    },
+    "results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_worker.json": {
+      "start": 1789290310.7105644,
+      "job": "28527",
+      "complete": true,
+      "completed": [
+        "gap01anchor72_student_test200",
+        "gap01anchor72_student_test600"
+      ],
+      "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+      "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:23:36 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "device": {
+        "visible": "0",
+        "step": "4",
+        "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9"
+      },
+      "training_performed": false,
+      "protocol": "Budgeted fixed independent student extra200 and extra400, unchanged evaluation. No teacher evaluation in this worker; skipped phases explicit, adaptive exploratory followup.",
+      "sources": [
+        [
+          "gap01anchor72",
+          "static_gap01_anchor72_28527"
+        ]
+      ],
+      "phase": "complete",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_corrected_20260911/static_gap01_anchor72_28527_eval_minillm120_s10_opd/bs2-lr1e-06-G2-N1-NN1-lm1-len640/pe1_rs0.5_nr8_ln_sr/120",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_gap01anchor72_student_test600",
+        "--split",
+        "test",
+        "--start",
+        "600",
+        "--count",
+        "400"
+      ],
+      "child_pid": 390153,
+      "student_results": {
+        "gap01anchor72": {
+          "200": {
+            "n": 200,
+            "accuracy": 0.54,
+            "comparisons": {
+              "sft": {
+                "delta_pp": 12.0,
+                "wrong_to_right": 35,
+                "right_to_wrong": 11,
+                "mcnemar_exact_p": 0.0005355850721002753,
+                "paired_bootstrap95_pp": [
+                  5.5,
+                  18.5
+                ]
+              },
+              "clean_opd": {
+                "delta_pp": 1.0,
+                "wrong_to_right": 20,
+                "right_to_wrong": 18,
+                "mcnemar_exact_p": 0.8714146793645341,
+                "paired_bootstrap95_pp": [
+                  -5.0,
+                  7.000000000000001
+                ]
+              }
+            }
+          },
+          "600": {
+            "n": 400,
+            "accuracy": 0.5225,
+            "comparisons": {
+              "sft": {
+                "delta_pp": 8.25,
+                "wrong_to_right": 67,
+                "right_to_wrong": 34,
+                "mcnemar_exact_p": 0.0013318251141996125,
+                "paired_bootstrap95_pp": [
+                  3.25,
+                  13.25
+                ]
+              },
+              "clean_opd": {
+                "delta_pp": -4.0,
+                "wrong_to_right": 33,
+                "right_to_wrong": 49,
+                "mcnemar_exact_p": 0.09703091129729906,
+                "paired_bootstrap95_pp": [
+                  -8.5,
+                  0.25
+                ]
+              }
+            }
+          }
+        }
+      },
+      "student1000": {
+        "gap01anchor72": {
+          "source": "static_gap01_anchor72_28527",
+          "n": 1000,
+          "correct": 490,
+          "accuracy": 0.49,
+          "comparisons": {
+            "sft": {
+              "delta_pp": 5.5,
+              "wrong_to_right": 152,
+              "right_to_wrong": 97,
+              "mcnemar_exact_p": 0.0005934513385412748,
+              "paired_bootstrap95_pp": [
+                2.4,
+                8.6
+              ]
+            },
+            "clean": {
+              "delta_pp": -5.1,
+              "wrong_to_right": 79,
+              "right_to_wrong": 130,
+              "mcnemar_exact_p": 0.0005127450042800289,
+              "paired_bootstrap95_pp": [
+                -8.0,
+                -2.4
+              ]
+            }
+          },
+          "paths": [
+            {
+              "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_anchor72_28527_student_test0/gsm8k-results.json",
+              "sha256": "1aa150d4d453cd588f0b3564979be3a5d4b1c15ad98c51460993132a45b55d35"
+            },
+            {
+              "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_gap01_anchor72_28527_student_test1000/gsm8k-results.json",
+              "sha256": "4bafd48b630d1ab54dbb847a71a6585d1a7124868de089375f0be0f1bb2ec9a1"
+            },
+            {
+              "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_gap01anchor72_student_test200/gsm8k-results.json",
+              "sha256": "540e851b15c7def3a295b73b8ceeb7d7cbb4be42bac0ad599640811f51cd7bd0"
+            },
+            {
+              "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_repair_extension_gap01anchor72_28527_gap01anchor72_student_test600/gsm8k-results.json",
+              "sha256": "54f64aa87413402e503db653e8b2bfdc17b5d0eb010efe7203fe967c6814fce3"
+            }
+          ]
+        }
+      },
+      "teacher_evaluation_performed": false,
+      "end": 1789291067.8739963
+    }
+  }
+}
