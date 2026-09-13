@@ -1,4 +1,4 @@
-# Teacher 防 OPD：截至 2026-09-12 21:00 ET
+# Teacher 防 OPD：截至 2026-09-12 23:54 ET
 
 当前找到的是能显著削弱 OPD 收益的普通 teacher checkpoint，尚未在扩大评测中稳定把学生压回 SFT，或只留下 1–2 个百分点收益。
 
@@ -10,7 +10,7 @@
 | 原 teacher OPD | 52.5% | 54.1% | 比较基准 |
 | 次优候选重排 + 频繁正确性 RL | 43.75% | 47.3% | 常规 1000 题保持；额外 raw 400 题下降 4.5pp |
 | 加强重排抑制 + 更强分布保持约束（anchor36） | 43.25% | **46.7%** | 常规主 400 题通过；完整扩展 teacher 400 题尚未完成 |
-| 加强重排抑制 + 更强答案监督（answer4） | 43.5% | 未完成 | 常规主 400 题通过；额外学生 200 题为 50%，不能当作完整 1000 题 |
+| 加强重排抑制 + 更强答案监督（answer4） | 43.5% | 47.2% | 常规主 400 题通过；完整扩展 teacher 400 题正在补齐 |
 | 频繁难题正确性 RL（hardfreq） | 45.5% | 未完成 | 常规主 400 题及额外 200 题通过；raw128 少对 1 题 |
 | teacher 与离线 token 分歧位置的相对分数修改 | 47% | 49.7% | 常规主检查通过 |
 | 提高正确性 RL 权重（correct2） | 47% | 49.7% | 常规主检查通过 |
@@ -26,6 +26,9 @@ Anchor36 在完整 1000 题比正常 OPD 低 7.4pp，配对 bootstrap 95% CI [-1
 具体可追溯文件：PROGRESS_20260911_0955.md；results/opd_update_20260911/repaired_teachers_paired400.json；snapshot_20260912_2042.json；此前 defenses_frequent_rl_paired1000.json 和 rl_teacher_paired1000.json。短 teacher64 补测的最终状态另见后续进度记录，不能代替完整 teacher400。
 
 
-本轮资源已结束：20:59:50 ET 确认账户无运行或排队 job、无 GPU step，已删除 teacher 自动监控。没有申请、延长或取消 reservation；目标并未完成。
+上一批资源已结束：20:59:50 ET 确认账户无运行或排队 job、无 GPU step，已删除 teacher 自动监控。没有申请、延长或取消 reservation；目标并未完成。
 
 最后的 teacher64 补测因分配时限终止。Greedy 完成 64 题，候选和原 teacher 都为 57/64；sampling 仅完成前 40/64 题，两者均为 36/40。保留这些配对结果，但不把部分完成的检查算作通过，也不代替完整 teacher 扩展 400 题。原 worker 因系统终止而停留 complete=false；外部终止证据与各模式数量记录在 results/opd_update_20260911/resource_exhaustion_20260912_2100.json。下次获得 GPU 时，应补齐质量检查和缺失的扩大评测后再做结论。
+
+
+23:54 更新：新分配已用于继续研究，22480 明确排除。Answer4 缺失学生400题已完成，完整1000题为472/1000=47.2%，相对SFT高3.7pp（配对95% CI [0.7,6.8]），相对正常OPD低6.9pp（CI [-9.6,-4.2]）。与anchor36的46.7%相差+0.5pp，CI [-1.9,3.0]，没有确认两者差异。两个teacher完整扩展质量仍在进行。1.5B跨学生实验另见 CROSS_STUDENT_15B_20260913.md；当前正常OPD还未评测完，不能报告迁移效果。
