@@ -1,0 +1,52 @@
+{
+  "start": 1789292612.4954755,
+  "job": "22478",
+  "complete": false,
+  "completed": [
+    "pcgrad_checks",
+    "smoke"
+  ],
+  "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
+  "allocation": "JobId=22478 JobName=hold-1gpu-8h-c4m32-g34-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=06:28:26 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T23:15:06 EndTime=2026-09-13T07:15:06 Deadline=N/A PreemptEligibleTime=2026-09-12T23:16:06 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:15:06 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu011 BatchHost=gpu011 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-gq-22478.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "device": {
+    "visible": "0",
+    "step": "6",
+    "uuid": "GPU-5597ad5f-bf36-02b5-b332-c18284fdf6d0"
+  },
+  "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. All-eligible gap.25 no reversal, target ramp anti1 anchor36 answer4, symmetric PCGrad. Anchor all4 current-teacher rawT1 trajectories averaged, online anchor scale1 instead.25. Budgeted launch with at least4800seconds; keep incomplete allocation-expiry results explicit. No student parameter signals; fixed offline texts only.",
+  "phase": "train",
+  "command": [
+    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_static_entropy4_livegroup.py",
+    "--teacher",
+    "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+    "--context",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_mixctx_top2_9870980_context",
+    "--output",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_livegroup_22478",
+    "--steps",
+    "64",
+    "--rl-every",
+    "1",
+    "--anti-weight",
+    "1",
+    "--anchor-weight",
+    "36",
+    "--answer-weight",
+    "4",
+    "--rl-weight",
+    ".5",
+    "--warmup",
+    "16",
+    "--ramp-end",
+    "48",
+    "--tail-count",
+    "16",
+    "--gap-scale",
+    "0.25",
+    "--target-ramp",
+    "--negative-positions",
+    "32"
+  ],
+  "child_pid": 19143
+}

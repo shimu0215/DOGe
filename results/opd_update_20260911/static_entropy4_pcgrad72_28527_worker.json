@@ -4,7 +4,9 @@
   "complete": false,
   "completed": [
     "pcgrad_checks",
-    "smoke"
+    "smoke",
+    "train",
+    "teacher_old200"
   ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:38:51 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -14,39 +16,53 @@
     "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9"
   },
   "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. All-eligible gap.25 no reversal, target ramp anti1 anchor72 answer4 RL1, symmetric PCGrad. No student parameter signals; fixed offline texts only.",
-  "phase": "train",
+  "phase": "teacher_new200",
   "command": [
     "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_update_20260911/train_static_entropy4_pcgrad.py",
-    "--teacher",
-    "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
-    "--context",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_mixctx_top2_9870980_context",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/evaluate_plain.py",
+    "--model",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad72_28527/model",
+    "--examples",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_initial_test1000/gsm8k-results.json",
     "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad72_28527",
-    "--steps",
-    "64",
-    "--rl-every",
-    "1",
-    "--anti-weight",
-    "1",
-    "--anchor-weight",
-    "72",
-    "--answer-weight",
-    "4",
-    "--rl-weight",
-    "1",
-    "--warmup",
-    "16",
-    "--ramp-end",
-    "48",
-    "--tail-count",
-    "16",
-    "--gap-scale",
-    "0.25",
-    "--target-ramp",
-    "--negative-positions",
-    "32"
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad72_28527_teacher_new200",
+    "--limit",
+    "200",
+    "--modes",
+    "greedy",
+    "sampling"
   ],
-  "child_pid": 391672
+  "child_pid": 393453,
+  "teacher_results": {
+    "old200": {
+      "greedy": {
+        "original": 0.9,
+        "candidate": 0.915,
+        "paired": {
+          "delta_pp": 1.5,
+          "wrong_to_right": 6,
+          "right_to_wrong": 3,
+          "mcnemar_exact_p": 0.5078125,
+          "paired_bootstrap95_pp": [
+            -1.5,
+            4.5
+          ]
+        }
+      },
+      "sampling": {
+        "original": 0.905,
+        "candidate": 0.92,
+        "paired": {
+          "delta_pp": 1.5,
+          "wrong_to_right": 9,
+          "right_to_wrong": 6,
+          "mcnemar_exact_p": 0.60723876953125,
+          "paired_bootstrap95_pp": [
+            -2.5,
+            5.0
+          ]
+        }
+      }
+    }
+  }
 }
