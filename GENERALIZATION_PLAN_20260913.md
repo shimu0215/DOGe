@@ -54,3 +54,5 @@ PCGrad 原论文将冲突任务梯度投影到另一任务梯度的法平面：[
 01:09更新：SmolLM前缀诊断已完成，foreign平均KL变化大于self，但SmolLM仅5/64正确、teacher62/64，存在严重质量混杂，不能认定来源识别或OPD泛化。28530已接续Base的前向KL正常OPD验证，与23369共享已选1epoch SFT初始化（验证64/100），没有重复SFT，也不自动根据测试集选择。Coder初版SFT因generation config保存校验失败，已用新coder_pipeline_fixed.py重启，旧失败保留；复用其原生验证36/100和teacher97/100。新SSH45124已认证恢复，后台实验继续。
 
 01:44更新：5张泛化卡正常运行。Coder SFT两个epoch验证43/48，按预设选epoch1(43)，clean120进行中；Base MiniLLM120已训练保存，等待验证，Base FKL仍训练。1.5B第二轮接近240步，但尚无有效基线或防御结果。另6卡原研究中，gap.25密集直接干预main400达44.75（clean52.5/SFT43.75），现在开始无学生参数信号的密集目标固化和gap.01密集强度测试。详见最新PROGRESS和snapshot_20260913_0142。
+
+02:03更新：1.5B第二轮仍无验证增益，两卡转Base半epoch SFT和Coder FKL。Base/Coder/BaseFKL三旧120步训练成功，评测被停止符差异断言拦下；新增matched_stops评测恢复已实际通过40步配对比较，三条正在80/120验证，所有旧失败保留。当前新owner和准确paths见PROGRESS最新段。尚无跨学生防御结论。
