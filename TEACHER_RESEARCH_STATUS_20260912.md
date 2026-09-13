@@ -36,3 +36,21 @@ Anchor36 在完整 1000 题比正常 OPD 低 7.4pp，配对 bootstrap 95% CI [-1
 9月13日00:22后：两修复teacher扩展400完成并通过当前点值标准，尚不是统计非劣证明。原始1.5B直接OPD第一轮验证最佳89%与初始持平，尚无跨学生防御证据；正在第二轮baseline。原研究新三种teacher训练、强目标直接诊断和两固定teacher的raw400评测已派发。
 
 00:56补充：anchor36和answer4的raw T=1扩展400题均为86.75%，原teacher90.25%，下降3.5pp，配对95% CI均[-6.75,-0.25]。因此常规温度保持的结论不能推广到高温。当前11张授权GPU已分配为5张泛化相关、6张原研究，22480仍保留到独立Q3全流程结束。
+
+
+### Sep13 01:36–01:44 density strength result and continuation
+
+Account scan01:36:25: same12RUNNING (11authorized+22480Q3), no pending. All remainingtime5–7h; nextordinaryscan>=01:51. SSH45124hop-amd-2healthy. Two olddirectdiagnostics wholeCOMPLETE andnumericstepsgone, immediatelyreusedafterRUNNING/budget andruntimeemptyUUID guards.
+
+New correctedpairedmain400 jointresults, sameIDs/prompt/GT/generation:
+- gap.25 ALL179/400=44.75%, originalclean210/40052.5%, SFT175/40043.75. Suppression-7.75pp CI[-12,-3.5], residual+1pp CI[-3.75,5.75]. Individualold/new200=52%/37.5%, strongsliceheterogeneity. Exploratoryadaptive400, no statisticalequivalence/teacherpreservation/standaloneclaim. This is first promising strength evidence for gap-contractionwithDENSEcoverage, not sparse version.
+- gap.01 SPARSE201/40050.25%, vsnormal-2.25pp CI[-5.5,1], vsSFT+6.5pp CI[1.75,11.25]. Moreamplitudealoneinsufficient; don't investinbalancingthesparseversionassumingstrong.
+Snapshot results/opd_update_20260911/snapshot_20260913_0142.json includesworkerrecords/read-onlyQ3 andjointpairedresults.
+
+NEW28527.1 gpu015sameUUID2c684969-2b10-8c8b-905d-917fb50bcbd9 srun3548877hop-amd-2: run_static_tail_round2_gapdense.py --job28527. Port31255. Original7Blast2direct/noLoRA, existingfixed0.5BofflineCoT pool/no newstudent feedback; gap.25count16 targetramp anti6/anchor36/answer4/ownRL.5every1,64steps. Setnegativepositions32 soall uniformlysampled32processpositionscontribute, removinghardtop8mining: unbiasedper-contextestimateofdensepositionmean, NOTevaluatingallpositionsineverytrainingstep. Existingtrainerreused, newdriveronly; GPUactual2smokeplainexportPASSED, formal64running. Afterfullteacherqualitychecks, independentfresh0.5BOPD120/main400onlyifmainpointpass. No statementthatdensefitisalreadysuccessful.
+NEW28529.1 gpu015UUIDe70ee1d6-21e0-11e6-ec61-5ee3b691bb77 srun3548123hop-amd-2: existingrun_oracle_tail_gap01.py --targetall --port31253. Densegap.01directstrengthtest, fresh0.5B120/main400. CPUchecks andactual2smokePASSED, formalrunning. Workersstatic_tail_round2_gapdense_28527_worker.json/oracle_tail_gap01_all_28529_worker.json; dispatch_gapdense_28527.json/dispatch_gap01all_28529.json. Original6/generalization5resourcebalanceunchanged.
+
+Threeearlierround2teachersamplitude8/wide64/gapquarter allmain400pointpassandextra200pointpass, nowexternalstudentOPD. Raw128original93.75: amplitude8same93.75,wide64 88.28125(-5.46875),gapquarter89.0625(-4.6875). Rawis supplement,notveto; amplitude128passnotexpandedhighTproof. Don't reportstudentoutcomesbeforefinished.
+
+Cross1.5Bround2actualfiniteupdatesreachedMiniLLM228/240,FKL206/240. No cleanpositivebaselineyet. BaseMiniLLM120saved, validationupnext; BaseFKL102/120. CoderfixedSFTvalepoch1=43,epoch2=48; selectedepoch1byexistingclosest40rule, cleanMiniLLM92/120. Allsamefamilyunseencheckpoints,notcrossfamilyproof. Numericoracle23371actual80/120healthy.
+22480readonly: identity46/100 vsSFT43, dense_v2 48/100 vsidentity46; nowunprotected_internalized_opd, furtherdense_top16pending. WholeparentNOTcomplete, keepreserved. No q3filemutations. Latestuserstylecontrolsoptional/deferstrictness, creativityandstrength-firstprioritized, coreteachertrainingconstraintsunchanged.
