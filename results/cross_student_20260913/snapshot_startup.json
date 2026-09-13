@@ -1,0 +1,245 @@
+{
+  "time": 1789269961.0274117,
+  "data_audit": {
+    "initial_val100": {
+      "n": 100,
+      "overlap_with_opd_train": 0,
+      "sha256": "2a40851b4dabc7b69ffbbfd55d4ff29ea1ff77efa0d546180b01babb6d577c09",
+      "evaluation_split": {
+        "dataset": "openai/gsm8k",
+        "subset": "main",
+        "split": "train",
+        "indices": [
+          7000,
+          7100
+        ],
+        "evaluator_sha256": "3fa76eb5f2a876c11e014d7c560cea2e3a78678cad193fcf3221ac8524324e38"
+      }
+    },
+    "opd_train": {
+      "n": 1000,
+      "path": "/scratch/wzhao20/AKDA2/opd_antidistill_minillm/experiments/qwen2_5_0p5b_7b_sft_then_14b_opd_gsm_chatprompt_20260908/prompts/train.jsonl",
+      "sha256": "a21be9ab2ee46538a7839507ab7b84ee80e5d88c2ac246a190d43a8c8afb5b59"
+    },
+    "validation_test_disjoint_verified": false
+  },
+  "workers": {
+    "q15_clean_lr1e6_22479": {
+      "job": "22479",
+      "tag": "q15_clean_lr1e6_22479",
+      "start": 1789269662.4486878,
+      "complete": false,
+      "completed": [
+        "initial_val"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:29:07 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789296715.0,
+      "device": {
+        "uuid": "GPU-a8c99944-94c9-11cd-0525-96f3423af497",
+        "visible": "0",
+        "step": "0"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/qwen2.5-1.5b-instruct",
+        "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "lr": 1e-06,
+        "steps": 120,
+        "checkpoints": [
+          40,
+          80,
+          120
+        ],
+        "seed": 10,
+        "student_additional_sft": false,
+        "validation": "GSM8K train7000:7100",
+        "test": "GSM8K test1200:1300",
+        "selection": "Best validation accuracy; lower step breaks ties; test not used to choose settings"
+      },
+      "tokenizer_identity_verified": true,
+      "phase": "initial_test",
+      "command": [
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/baseline_20260911/evaluate.py",
+        "--model",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/qwen2.5-1.5b-instruct",
+        "--output",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/initial_test100",
+        "--split",
+        "test",
+        "--start",
+        "1200",
+        "--count",
+        "100"
+      ],
+      "child_pid": 651963
+    },
+    "q15_clean_lr3e6_22481": {
+      "job": "22481",
+      "tag": "q15_clean_lr3e6_22481",
+      "start": 1789269662.6147447,
+      "complete": false,
+      "completed": [
+        "smoke2"
+      ],
+      "teacher_training_performed": false,
+      "allocation": "JobId=22481 JobName=hold-1gpu-8h-c4m32-g35-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3599 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:06:27 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:48 EligibleTime=2026-09-12T22:34:48 AccrueTime=2026-09-12T22:34:48 StartTime=2026-09-12T23:14:35 EndTime=2026-09-13T07:14:35 Deadline=N/A PreemptEligibleTime=2026-09-12T23:15:35 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T23:14:35 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu008 BatchHost=gpu008 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g35.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g35-cq-22481.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+      "deadline": 1789298075.0,
+      "device": {
+        "uuid": "GPU-5f5c0036-6942-24bd-ed30-e097a1c4bdee",
+        "visible": "0",
+        "step": "0"
+      },
+      "protocol": {
+        "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/qwen2.5-1.5b-instruct",
+        "teacher": "/scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct",
+        "lr": 3e-06,
+        "steps": 120,
+        "checkpoints": [
+          40,
+          80,
+          120
+        ],
+        "seed": 10,
+        "student_additional_sft": false,
+        "validation": "GSM8K train7000:7100",
+        "test": "GSM8K test1200:1300",
+        "selection": "Best validation accuracy; lower step breaks ties; test not used to choose settings"
+      },
+      "tokenizer_identity_verified": true,
+      "phase": "train120",
+      "command": [
+        "bash",
+        "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+      ],
+      "child_pid": 1019265
+    }
+  },
+  "download": {
+    "path": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913/qwen2.5-1.5b-instruct",
+    "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "time": 1789269393.4067926
+  },
+  "download_script": "from huggingface_hub import snapshot_download\nfrom pathlib import Path\nimport json,time\nroot=Path('/scratch/wzhao20/opd-gate-audit-run-20260909/results/cross_student_20260913')\nroot.mkdir(exist_ok=True)\nout=root/'qwen2.5-1.5b-instruct'\npath=snapshot_download('Qwen/Qwen2.5-1.5B-Instruct',revision='989aa7980e4cf806f80c7fef2b1adb7bc71aa306',local_dir=str(out),allow_patterns=['*.json','*.safetensors','*.txt','*.model','*.jinja'],max_workers=4)\n(root/'download_complete.json').write_text(json.dumps(dict(path=path,revision='989aa7980e4cf806f80c7fef2b1adb7bc71aa306',time=time.time()),indent=2))\nprint('DOWNLOAD_COMPLETE',path,flush=True)\n",
+  "dispatch": [
+    {
+      "job": "22479",
+      "pid": 3768016,
+      "command": [
+        "srun",
+        "--jobid=22479",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/cross_student_20260913/baseline.py",
+        "--job",
+        "22479",
+        "--label",
+        "lr1e6",
+        "--lr",
+        "1e-6",
+        "--port",
+        "31021",
+        "--initial"
+      ],
+      "remaining": 27056.010313749313,
+      "time": 1789269659.0024867
+    },
+    {
+      "job": "22481",
+      "pid": 3768026,
+      "command": [
+        "srun",
+        "--jobid=22481",
+        "--overlap",
+        "--exact",
+        "--cpu-bind=none",
+        "-N1",
+        "-n1",
+        "-c4",
+        "--gres=gpu:1",
+        "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
+        "experiments/cross_student_20260913/baseline.py",
+        "--job",
+        "22481",
+        "--label",
+        "lr3e6",
+        "--lr",
+        "3e-6",
+        "--port",
+        "31023"
+      ],
+      "remaining": 28415.957177877426,
+      "time": 1789269659.0464127
+    },
+    {
+      "coordinator_pid": 3768027
+    }
+  ],
+  "coordinator": {
+    "start": 1789269659.1132576,
+    "complete": false,
+    "phase": "waiting_clean_validation"
+  },
+  "update_summaries": {
+    "q15_clean_lr3e6_22481_smoke2_updates.json": {
+      "complete": true,
+      "actual_optimizer_steps": 2,
+      "teacher_dtype": "torch.float16",
+      "student_dtype": "torch.bfloat16",
+      "optimizer_master_dtypes": [
+        "torch.float32"
+      ],
+      "error": null,
+      "latest": {
+        "step": 2,
+        "loss": 0.17382055521011353,
+        "stats": {
+          "pg_loss": 2.167441692790817e-08,
+          "reg_loss": 0.17382054030895233,
+          "rl_loss": 0.17382055521011353,
+          "reward": -0.18485182523727417,
+          "rev_kl": 0.26650604605674744,
+          "mixed_lens": 187.0,
+          "stu_lens": 187.0
+        },
+        "lr": 3e-06,
+        "valid_tokens": 374,
+        "master_delta_rms": 1.0310197922080988e-06,
+        "elapsed": 2.1983184814453125
+      }
+    },
+    "q15_clean_lr3e6_22481_train120_updates.json": {
+      "complete": false,
+      "actual_optimizer_steps": 6,
+      "teacher_dtype": "torch.float16",
+      "student_dtype": "torch.bfloat16",
+      "optimizer_master_dtypes": [
+        "torch.float32"
+      ],
+      "error": null,
+      "latest": {
+        "step": 6,
+        "loss": 0.10281399637460709,
+        "stats": {
+          "pg_loss": -0.001329932943917811,
+          "reg_loss": 0.10414393246173859,
+          "rl_loss": 0.10281399637460709,
+          "reward": -0.055400148034095764,
+          "rev_kl": 0.12071399390697479,
+          "mixed_lens": 280.0,
+          "stu_lens": 280.0
+        },
+        "lr": 3e-06,
+        "valid_tokens": 560,
+        "master_delta_rms": 6.474283509305678e-06,
+        "elapsed": 83.38358879089355
+      }
+    }
+  }
+}
