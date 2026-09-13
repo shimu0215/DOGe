@@ -1,0 +1,48 @@
+{
+  "job": "22479",
+  "tag": "base_quarter_mix14b_22479",
+  "start": 1789293930.3977416,
+  "complete": false,
+  "completed": [],
+  "teacher_training_performed": false,
+  "allocation": "JobId=22479 JobName=hold-1gpu-8h-c4m32-g34-cq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3596 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=07:13:35 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-12T22:34:47 EligibleTime=2026-09-12T22:34:47 AccrueTime=2026-09-12T22:34:47 StartTime=2026-09-12T22:51:55 EndTime=2026-09-13T06:51:55 Deadline=N/A PreemptEligibleTime=2026-09-12T22:52:55 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-12T22:51:55 Scheduler=Backfill Partition=contrib-gpuq AllocNode:Sid=hopper1:3447761 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu010 BatchHost=gpu010 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-contrib-g34.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g34-cq-22479.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
+  "deadline": 1789296715.0,
+  "device": {
+    "uuid": "GPU-a8c99944-94c9-11cd-0525-96f3423af497",
+    "visible": "0",
+    "step": "6"
+  },
+  "protocol": {
+    "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/generalization_20260913/base_quarter_22479_sft/checkpoint-13",
+    "teacher": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_mix14b_23371/model",
+    "teacher_manifest_sha256": "9b27f093e88361e37cec6ea9d16bee4979cc347b1019d143e58b3d388b78c201",
+    "new_student_data_used": false,
+    "steps": 40,
+    "lr": 1e-06,
+    "objective": "same short corrected MiniLLM as completed clean arm",
+    "existing_clean": {
+      "n": 100,
+      "initial_correct": 19,
+      "candidate_correct": 45,
+      "initial": 0.19,
+      "accuracy": 0.45,
+      "paired": {
+        "delta_pp": 26.0,
+        "wrong_to_right": 29,
+        "right_to_wrong": 3,
+        "mcnemar_exact_p": 2.5560148060321808e-06,
+        "paired_bootstrap95_pp": [
+          16.0,
+          36.0
+        ]
+      }
+    },
+    "scope": "Adaptive new fixed teacher transfer; same Qwen family and heavily undertrained SFT initialization, not a broad robustness claim"
+  },
+  "phase": "defense40",
+  "command": [
+    "bash",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
+  ],
+  "child_pid": 695770
+}

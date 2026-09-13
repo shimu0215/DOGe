@@ -6,7 +6,10 @@
     "pcgrad_checks",
     "smoke",
     "train",
-    "teacher_old200"
+    "teacher_old200",
+    "teacher_new200",
+    "teacher_raw128",
+    "teacher_extra200"
   ],
   "method_scope": "No student model or parameter-derived signal in teacher training; fixed negative CoTs only",
   "allocation": "JobId=28527 JobName=hold-1gpu-8h-c4m32-g38-gq UserId=wzhao20(684017712) GroupId=users(100) MCS_label=N/A Priority=3595 Nice=0 Account=xguo8 QOS=gpu JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=04:38:51 TimeLimit=08:00:00 TimeMin=N/A SubmitTime=2026-09-13T00:35:17 EligibleTime=2026-09-13T00:35:17 AccrueTime=2026-09-13T00:35:17 StartTime=2026-09-13T00:41:34 EndTime=2026-09-13T08:41:34 Deadline=N/A PreemptEligibleTime=2026-09-13T00:42:34 PreemptTime=None SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-13T00:41:34 Scheduler=Backfill Partition=gpuq AllocNode:Sid=hopper1:21476 ReqNodeList=(null) ExcNodeList=(null) NodeList=gpu015 BatchHost=gpu015 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 AllocTRES=cpu=4,mem=32G,node=1,billing=60,gres/gpu=1,gres/gpu:a100.80gb=1 Socks/Node=* NtasksPerN:B:S:C=0:0:*:1 CoreSpec=* MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/scratch/wzhao20/llama_factory/slurm/trl/hold-a100-1gpu-8h-c4m32-gpuq-g38.slurm WorkDir=/scratch/wzhao20/llama_factory/slurm/trl StdErr=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.err StdIn=/dev/null StdOut=/scratch/wzhao20/llama_factory/hpc-results/hold-1gpu-8h-c4m32-g38-gq-28527.out TresPerNode=gres/gpu:A100.80gb:1 TresPerTask=cpu=4 \n",
@@ -16,23 +19,12 @@
     "uuid": "GPU-2c684969-2b10-8c8b-905d-917fb50bcbd9"
   },
   "recipe_change": "Dense-target fit: uniformly sample 32 process positions, all contribute, giving an unbiased per-context dense objective estimate. All-eligible gap.25 no reversal, target ramp anti1 anchor72 answer4 RL1, symmetric PCGrad. No student parameter signals; fixed offline texts only.",
-  "phase": "teacher_new200",
+  "phase": "external_student_minillm",
   "command": [
-    "/scratch/wzhao20/conda_envs/minillm_official/bin/python",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/internalize_20260910/evaluate_plain.py",
-    "--model",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad72_28527/model",
-    "--examples",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_initial_test1000/gsm8k-results.json",
-    "--output",
-    "/scratch/wzhao20/opd-gate-audit-run-20260909/results/opd_update_20260911/static_entropy4_pcgrad72_28527_teacher_new200",
-    "--limit",
-    "200",
-    "--modes",
-    "greedy",
-    "sampling"
+    "bash",
+    "/scratch/wzhao20/opd-gate-audit-run-20260909/experiments/opd_corrected_20260911/opd.sh"
   ],
-  "child_pid": 393453,
+  "child_pid": 395725,
   "teacher_results": {
     "old200": {
       "greedy": {
@@ -63,6 +55,93 @@
           ]
         }
       }
+    },
+    "new200": {
+      "greedy": {
+        "original": 0.875,
+        "candidate": 0.905,
+        "paired": {
+          "delta_pp": 3.0,
+          "wrong_to_right": 9,
+          "right_to_wrong": 3,
+          "mcnemar_exact_p": 0.14599609375,
+          "paired_bootstrap95_pp": [
+            -0.5,
+            6.5
+          ]
+        }
+      },
+      "sampling": {
+        "original": 0.865,
+        "candidate": 0.88,
+        "paired": {
+          "delta_pp": 1.5,
+          "wrong_to_right": 7,
+          "right_to_wrong": 4,
+          "mcnemar_exact_p": 0.548828125,
+          "paired_bootstrap95_pp": [
+            -2.0,
+            4.5
+          ]
+        }
+      }
     }
+  },
+  "teacher_raw128": {
+    "original": 0.9375,
+    "candidate": 0.8828125,
+    "paired": {
+      "delta_pp": -5.46875,
+      "wrong_to_right": 3,
+      "right_to_wrong": 10,
+      "mcnemar_exact_p": 0.09228515625,
+      "paired_bootstrap95_pp": [
+        -10.9375,
+        0.0
+      ]
+    }
+  },
+  "raw_point_tolerance_pass": false,
+  "quality_protocol": "User-revised standard per-slice teacher screen; raw128 supplementary, not a veto",
+  "teacher_point_tolerance_pass": true,
+  "teacher_extra200": {
+    "greedy": {
+      "original": 0.935,
+      "candidate": 0.925,
+      "paired": {
+        "delta_pp": -1.0,
+        "wrong_to_right": 3,
+        "right_to_wrong": 5,
+        "mcnemar_exact_p": 0.7265625,
+        "paired_bootstrap95_pp": [
+          -4.0,
+          1.5
+        ]
+      }
+    },
+    "sampling": {
+      "original": 0.92,
+      "candidate": 0.95,
+      "paired": {
+        "delta_pp": 3.0,
+        "wrong_to_right": 7,
+        "right_to_wrong": 1,
+        "mcnemar_exact_p": 0.0703125,
+        "paired_bootstrap95_pp": [
+          0.5,
+          6.0
+        ]
+      }
+    }
+  },
+  "extra_point_tolerance_pass": false,
+  "extra_quality_scope": "Supplementary check on previously used extra200; retain failures. Main400 admission unchanged.",
+  "external_evaluation_protocol": {
+    "student": "/scratch/wzhao20/opd-gate-audit-run-20260909/results/baseline_20260911/short_sft/checkpoint-49",
+    "objective": "corrected_minillm",
+    "lr": 1e-06,
+    "seed": 10,
+    "actual_updates": 120,
+    "selection": "Step chosen previously by clean teacher validation, fixed before this student run"
   }
 }
