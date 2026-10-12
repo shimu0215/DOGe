@@ -32,7 +32,13 @@ def fmt(x):
     if x is None: return '-'
     return f"{x['acc']}(cap{x['cap']},{x['tok']}t)" if isinstance(x, dict) else str(x)
 
-p = argparse.ArgumentParser(); p.add_argument('--one'); p.add_argument('--tag'); p.add_argument('--all', nargs='*'); a = p.parse_args()
+def coder(d, tag):
+    r = dict(tag=tag, coder_gsm300=gsm_acc(f'{d}/coder_gsm/gsm8k-results.json'), coder_csqa=mcq(f'{C}/mcq_csqa_coder/ckc_{tag}/predictions.json'))
+    json.dump(r, open(f'{d}/coder_result.json', 'w'), indent=1); return r
+
+p = argparse.ArgumentParser(); p.add_argument('--one'); p.add_argument('--coder'); p.add_argument('--tag'); p.add_argument('--all', nargs='*'); a = p.parse_args()
+if a.coder:
+    r = coder(a.coder, a.tag); print('CODERRES', a.tag, ' '.join(f'{k}={fmt(v)}' for k, v in r.items() if k != 'tag'), flush=True)
 if a.one:
     r = one(a.one, a.tag); print('CKRES', a.tag, ' '.join(f'{k}={fmt(v)}' for k, v in r.items() if k != 'tag'), flush=True)
 if a.all is not None:
@@ -44,3 +50,7 @@ if a.all is not None:
         for f in ds:
             r = json.load(open(f)); print(os.path.basename(root), os.path.basename(os.path.dirname(f)), '|', fmt(r['t_gsm_greedy']), '|', fmt(r['t_gsm_raw']), '|',
                                           fmt(r['t_csqa_greedy']), '|', fmt(r['t_csqa_raw']), '||', fmt(r['stu_csqa']), '|', fmt(r['stu_gsm300']))
+    print('\n跨学生 Coder-0.5B 参照: GSM300 clean60 =', gsm_acc(f'{C}/fine_coder_clean/s60/gsm8k-results.json', 300), '; GSM300 initial =',
+          gsm_acc(f'{C}/ckeval_ref/coder_gsm300/gsm8k-results.json'), '; CSQA300 initial 31.0 / clean80 33.7')
+    for f in sorted(glob.glob(C + '/ckeval_coder/*/coder_result.json')):
+        r = json.load(open(f)); print('coder', r['tag'], '| GSM300', fmt(r['coder_gsm300']), '| CSQA300', fmt(r['coder_csqa']))
