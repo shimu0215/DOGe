@@ -22,14 +22,17 @@ p.add_argument('--prompts-per-step', type=int, default=8); p.add_argument('--gro
 p.add_argument('--eta', type=float, default=1.0); p.add_argument('--beta', type=float, default=0.04)
 p.add_argument('--lr', type=float, default=2e-5); p.add_argument('--rank', type=int, default=128); p.add_argument('--alpha', type=int, default=128)
 p.add_argument('--max-new', type=int, default=512); p.add_argument('--micro', type=int, default=4); p.add_argument('--seed', type=int, default=0)
+p.add_argument('--save-every', type=int, default=0, help='每 N 步存 LoRA adapter 到 ckpt/step_N(全部保留), 并覆盖 resume/ 下的优化器与指针')
+p.add_argument('--resume', action='store_true', help='从 output/resume 续训(output 目录已存在)')
+p.add_argument('--no-merge', action='store_true', help='结束时不合并导出完整模型(用 merge_ckpt.py 另行合并)')
 a = p.parse_args()
 sys.path.insert(0, a.mcq_dir)
 from mcq_data import load_mcq, SYS
 from mcq_eval import extract
 
 random.seed(a.seed); torch.manual_seed(a.seed)
-out = Path(a.output); out.mkdir(parents=True, exist_ok=False)
-(out / 'args.json').write_text(json.dumps(vars(a), indent=2))
+out = Path(a.output); out.mkdir(parents=True, exist_ok=a.resume)
+(out / ('args_resume_%d.json' % int(time.time()) if a.resume else 'args.json')).write_text(json.dumps(vars(a), indent=2))
 train, _ = load_mcq(a.dataset); random.shuffle(train)
 tok = AutoTokenizer.from_pretrained(a.teacher); tok.padding_side = 'left'
 stops = [151643, 151645]; pad = tok.pad_token_id
@@ -51,8 +54,30 @@ def seq_logp(m, ids, attn, cmask):
 def gnorm(x):  # 组内 z-score, x: [P, G]
     return (x - x.mean(1, keepdim=True)) / (x.std(1, keepdim=True) + 1e-4)
 
-log = open(out / 'train_log.jsonl', 'a'); t0 = time.time(); ptr = 0
-for step in range(1, a.steps + 1):
+start = 1; ptr = 0
+if a.resume:
+    from peft import set_peft_model_state_dict
+    from safetensors.torch import load_file
+    st = json.loads((out / 'resume' / 'state.json').read_text())
+    set_peft_model_state_dict(model, load_file(str(out / 'resume' / 'adapter' / 'adapter_model.safetensors')))
+    opt.load_state_dict(torch.load(out / 'resume' / 'opt.pt', map_location='cuda'))
+    start, ptr = st['step'] + 1, st['ptr']
+    random.setstate(tuple(st['py_rng'][:1]) + (tuple(st['py_rng'][1]),) + tuple(st['py_rng'][2:])); torch.manual_seed(a.seed + st['step'])
+    print(f'RESUMED from step {st["step"]} ptr {ptr}', flush=True)
+
+def save_ckpt(step):
+    model.save_pretrained(out / 'ckpt' / f'step_{step}')
+    tmp = out / 'resume_tmp'; tmp.mkdir(exist_ok=True)
+    model.save_pretrained(tmp / 'adapter'); torch.save(opt.state_dict(), tmp / 'opt.pt')
+    (tmp / 'state.json').write_text(json.dumps(dict(step=step, ptr=ptr, py_rng=random.getstate())))
+    old = out / 'resume_old'
+    if (out / 'resume').exists(): (out / 'resume').rename(old)
+    tmp.rename(out / 'resume')
+    if old.exists(): import shutil; shutil.rmtree(old)
+    print(f'CKPT step {step}', flush=True)
+
+log = open(out / 'train_log.jsonl', 'a'); t0 = time.time()
+for step in range(start, a.steps + 1):
     rows = train[ptr:ptr + a.prompts_per_step]; ptr += a.prompts_per_step
     prompts = [tok.apply_chat_template([{'role': 'system', 'content': SYS}, {'role': 'user', 'content': r['question']}], tokenize=False, add_generation_prompt=True) for r in rows]
     enc = tok(prompts, return_tensors='pt', padding=True).to('cuda'); P = enc['input_ids'].shape[1]
@@ -103,9 +128,12 @@ for step in range(1, a.steps + 1):
                len=sum(lens) / N, cap=sum(caps) / N, grad_norm=float(gn), corr_len_rcal=float(torch.corrcoef(torch.stack([torch.tensor(lens, device='cuda', dtype=torch.float), r_cal.view(-1)]))[0, 1]))
     if step % 10 == 1: rec['sample'] = texts[0][:600]
     print(json.dumps(rec, ensure_ascii=False), flush=True); log.write(json.dumps(rec, ensure_ascii=False) + '\n'); log.flush()
-    if (time.time() - t0) / 60 > a.max_minutes: print(f'time cap at step {step}', flush=True); break
-    if ptr + a.prompts_per_step > len(train): ptr = 0
+    if ptr + a.prompts_per_step > len(train): ptr = 0; print(f'EPOCH END at step {step}', flush=True)
+    capped = (time.time() - t0) / 60 > a.max_minutes
+    if a.save_every and (step % a.save_every == 0 or capped or step == a.steps): save_ckpt(step)
+    if capped: print(f'time cap at step {step}', flush=True); break
 
+if a.no_merge: print('DONE (no merge)', flush=True); sys.exit(0)
 model.eval(); merged = model.merge_and_unload()
 merged.save_pretrained(out / 'model', safe_serialization=True); tok.save_pretrained(out / 'model')
 (out / 'manifest.json').write_text(json.dumps(dict(steps_done=step, elapsed_min=(time.time() - t0) / 60, model=str(out / 'model')), indent=2))

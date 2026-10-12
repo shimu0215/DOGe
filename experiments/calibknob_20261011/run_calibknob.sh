@@ -21,7 +21,7 @@ fi
 [ -f $T/config.json ] || { echo "teacher 训练失败"; tail -5 $RUN/teacher.log; exit 1; }
 echo "[$(date +%T)] teacher=$T"; tail -2 $RUN/teacher/train_log.jsonl 2>/dev/null | cut -c1-300
 # (a) 学生臂: 同一 0.5B(=pi_C) 在 CSQA 上 OPD
-( JOB=$JOB TEACHER=$T NAME=ck_$NAME DATASET=csqa RUN=$RUN bash $E/mcq_opd_arm.sh > $RUN/arm.log 2>&1 ) &
+( STEPS=${ARM_STEPS:-80} JOB=$JOB TEACHER=$T NAME=ck_$NAME DATASET=csqa RUN=$RUN bash $E/mcq_opd_arm.sh > $RUN/arm.log 2>&1 ) &
 # (b) teacher 保持: GSM(未见域) + CSQA(训练域)
 $SR $PY $W/experiments/internalize_20260910/evaluate_plain.py --model $T --examples $SLICE --output $RUN/tgsm200 --limit 200 --modes greedy sampling --max-tokens 1024 > $RUN/tgsm200.log 2>&1 < /dev/null
 cd $E && $PY $E/audit_outputs.py --dir $RUN/tgsm200 --kind teacher --cap 1024 --expect 200 --log $RUN/tgsm200.log --label CK_${NAME}_gsm200 | grep "^AUDIT" | cut -c1-260
