@@ -8,7 +8,7 @@ K=$W/experiments/calibknob_20261011; E=$W/experiments/claude_20260914
 SR="srun --jobid=$JOB --overlap --exact --cpu-bind=none -N1 -n1 -c4 --gres=gpu:1"
 LEFT=$(squeue -h -j $JOB -o %L)   # [D-]HH:MM:SS
 MIN=$(echo "$LEFT" | awk -F'[-:]' '{ if (NF==4) print $1*1440+$2*60+$3; else if (NF==3) print $1*60+$2; else print $1 }')
-MAXMIN=$(( MIN - 15 )); mkdir -p $OUT
+MAXMIN=$(( MIN - 15 )); mkdir -p $(dirname $OUT)
 echo "[$(date +%T)] train_long job=$JOB left=$LEFT maxmin=$MAXMIN beta=${BETA:-0.04} resume=${RESUME:-0}" | tee -a $OUT/../$(basename $OUT).chain.log
 $SR $PY $K/calib_grpo.py --teacher /scratch/wzhao20/DOGe-official/models/qwen2.5-7b-instruct \
     --proxy /scratch/wzhao20/DOGe-official/models/qwen2.5-0.5b-instruct --mcq-dir $E --output $OUT \
