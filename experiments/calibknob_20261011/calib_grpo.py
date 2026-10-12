@@ -45,7 +45,13 @@ proxy = AutoModelForCausalLM.from_pretrained(a.proxy, torch_dtype=torch.bfloat16
 opt = torch.optim.AdamW([q for q in model.parameters() if q.requires_grad], lr=a.lr, weight_decay=0.0)
 
 def seq_logp(m, ids, attn, cmask):
-    """逐 token log p(completion token), 形状 [B, L-1], 非 completion 位置为 0."""
+    """逐 token log p(completion token), 形状 [B, L-1], 非 completion 位置为 0.
+    teacher 词表(152064)比 proxy(151936)多 128 个无文本的保留 id; 原文 R_calib 按文本重新分词打分,
+    这些 id 解码为空串 => 对 proxy 视为不存在: 输入替换为 pad, 且不计入 logp."""
+    V = m.get_input_embeddings().weight.shape[0]
+    bad = ids >= V
+    if bad.any():
+        ids = ids.masked_fill(bad, pad); cmask = cmask * (~bad).float()
     logits = m(input_ids=ids, attention_mask=attn, use_cache=False).logits[:, :-1].float()
     tgt = ids[:, 1:].clamp(max=logits.shape[-1] - 1)  # proxy 词表 151936 < teacher 152064, 防越界(仅可能是 pad 位)
     lp = torch.gather(F.log_softmax(logits, -1), 2, tgt[..., None]).squeeze(-1)
@@ -125,7 +131,7 @@ for step in range(start, a.steps + 1):
     opt.step()
     rec = dict(step=step, elapsed_min=round((time.time() - t0) / 60, 2), task_acc=float(r_task.mean()), r_calib=float(r_cal.mean()),
                r_calib_per_tok=float((r_cal.view(-1) / torch.tensor(lens, device='cuda')).mean()), kl_per_tok=kl_sum / ntok.item(),
-               len=sum(lens) / N, cap=sum(caps) / N, grad_norm=float(gn), corr_len_rcal=float(torch.corrcoef(torch.stack([torch.tensor(lens, device='cuda', dtype=torch.float), r_cal.view(-1)]))[0, 1]))
+               len=sum(lens) / N, cap=sum(caps) / N, reserved_tok=int(((comp >= 151936) & (cm > 0)).sum()), grad_norm=float(gn), corr_len_rcal=float(torch.corrcoef(torch.stack([torch.tensor(lens, device='cuda', dtype=torch.float), r_cal.view(-1)]))[0, 1]))
     if step % 10 == 1: rec['sample'] = texts[0][:600]
     print(json.dumps(rec, ensure_ascii=False), flush=True); log.write(json.dumps(rec, ensure_ascii=False) + '\n'); log.flush()
     if ptr + a.prompts_per_step > len(train): ptr = 0; print(f'EPOCH END at step {step}', flush=True)
